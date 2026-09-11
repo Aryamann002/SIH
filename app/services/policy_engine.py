@@ -37,14 +37,14 @@ class DeterministicPolicyEngine:
 
             # 3. Spoof detection score check
             if spoof_score >= settings.HIGH_RISK_SPOOF_THRESHOLD:
-                reasons.append("HIGH_SPOOF_SCORE")
+                reasons.extend(("HIGH_SPOOF_SCORE", "HIGH_SPOOF_PROBABILITY"))
                 return RiskState.HIGH, reasons
 
             if spoof_score >= settings.ELEVATED_RISK_SPOOF_THRESHOLD:
                 reasons.append("ELEVATED_SPOOF_RISK")
                 return RiskState.ELEVATED, reasons
 
-            reasons.append("NO_STRONG_SYNTHETIC_EVIDENCE")
+            reasons.extend(("NO_STRONG_SYNTHETIC_EVIDENCE", "VERIFIED_LOW_RISK"))
             return RiskState.LOW, reasons
 
         except Exception:

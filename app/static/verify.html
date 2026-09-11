@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>VigilVoice · Independent verifier</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/verify.js" defer></script>
+</head>
+<body>
+  <div class="shell verifier-shell">
+    <header class="topbar"><a class="brand" href="/">Vigil<span class="accent">Voice</span></a><span class="pill">Local simulation</span></header>
+    <main>
+      <section class="intro" aria-labelledby="verifier-title"><p class="eyebrow">INDEPENDENT VERIFIER</p><h1 id="verifier-title">Review first.<br><span>Then share the code.</span></h1><p class="lede">Confirm the recipient and amount against the intended transfer before handing its code to the operator.</p></section>
+      <div class="prototype-note"><span class="note-mark" aria-hidden="true">i</span><p><strong>This inbox simulates a separate trusted channel.</strong><br>Use a separate verifier role with the deployment's verifier key. A separate tab alone is not an independent authentication factor. Real deployment needs a verified delivery channel.</p></div>
+      <div id="notice" class="notice" role="alert" hidden></div>
+      <section class="card" aria-labelledby="inbox-title"><h2 id="inbox-title">Open a pending verification</h2>
+        <form id="inbox-form"><label for="verifier-key">Verifier key</label><input id="verifier-key" type="password" autocomplete="off" required aria-describedby="key-help"><p id="key-help" class="small muted">Provided separately by the person running the demo. It is never saved in browser storage.</p><label for="action-id">Action ID</label><input id="action-id" type="text" autocomplete="off" required placeholder="Paste the operator's action ID"><button id="open-inbox" class="button primary full" type="submit">Review action and code <span aria-hidden="true">→</span></button></form>
+      </section>
+      <section id="inbox-result" class="card" hidden aria-labelledby="review-title" aria-live="polite"><p class="eyebrow">VERIFY THESE DETAILS</p><h2 id="review-title">Is this the intended transfer?</h2><dl class="inbox-details"><dt>Recipient</dt><dd id="review-recipient"></dd><dt>Amount</dt><dd id="review-amount"></dd><dt>Action ID</dt><dd id="review-action"></dd></dl><p class="small muted">Share this code only after reviewing the exact action above.</p><div id="review-code" class="otp-display" aria-label="Single-use verification code"></div><p id="review-expiry" class="small muted" role="status"></p></section>
+    </main>
+    <footer>Simulated transfers only. <a href="/">Back to the operator dashboard</a></footer>
+  </div>
+</body>
+</html>

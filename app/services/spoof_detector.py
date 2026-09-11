@@ -1,54 +1,82 @@
+"""Local pretrained Wav2Vec2 ONNX inference; no synthetic fallback scores."""
+
+from functools import lru_cache
+from hashlib import file_digest
+from pathlib import Path
+
 import numpy as np
-from typing import Optional
+
+from app.core.config import settings
+
+
+class ModelUnavailable(RuntimeError):
+    pass
+
+
+@lru_cache(maxsize=4)
+def load_onnx(path: str):
+    """Share immutable model sessions; callers own recurrent state."""
+    try:
+        import onnxruntime as ort
+
+        resolved = Path(path).expanduser().resolve(strict=True)
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = 2
+        options.inter_op_num_threads = 1
+        session = ort.InferenceSession(
+            str(resolved), sess_options=options, providers=["CPUExecutionProvider"]
+        )
+        with resolved.open("rb") as model_file:
+            digest = file_digest(model_file, "sha256").hexdigest()
+        return session, digest
+    except Exception as exc:
+        raise ModelUnavailable("Local ONNX model cannot be loaded") from exc
 
 
 class SpoofDetector:
-    """
-    Single-model WavLM/wav2vec2 spoof detector interface.
-    Uses frozen WavLM + classification head with acoustic spectral feature fallback.
-    """
+    """Contract: normalized 16 kHz waveform -> logits [real, fake]."""
 
-    def __init__(self, onnx_model_path: Optional[str] = None):
-        self.model_name = "WavLM-Large-Spoof-Head"
+    def __init__(self, onnx_model_path: str | None = None):
         self.session = None
+        self.model_version = "unavailable"
+        try:
+            self.session, digest = load_onnx(
+                onnx_model_path or getattr(settings, "SPOOF_MODEL_PATH", "models/spoof_detector.onnx")
+            )
+            if {item.name for item in self.session.get_inputs()} != {
+                "input_values", "attention_mask"
+            }:
+                raise ModelUnavailable("Unsupported detector input contract")
+            mask = next(item for item in self.session.get_inputs() if item.name == "attention_mask")
+            if mask.type not in {"tensor(int32)", "tensor(int64)"}:
+                raise ModelUnavailable("Unsupported attention mask type")
+            self.mask_dtype = np.int32 if mask.type == "tensor(int32)" else np.int64
+            version = getattr(settings, "SPOOF_MODEL_VERSION", "wav2vec2-xlsr-int8-4b1c4a294ab6")
+            self.model_version = f"{version}:sha256:{digest}"
+        except ModelUnavailable:
+            self.session = None
 
-        if onnx_model_path:
-            try:
-                import onnxruntime as ort
-                self.session = ort.InferenceSession(onnx_model_path)
-            except Exception:
-                self.session = None
+    @property
+    def available(self) -> bool:
+        return self.session is not None
 
     def predict(self, pcm_data: np.ndarray) -> float:
-        """Predict synthetic/spoof probability score S in range [0.0, 1.0]."""
-        if len(pcm_data) == 0:
-            return 0.0
-
-        if self.session:
-            try:
-                inputs = {self.session.get_inputs()[0].name: pcm_data.reshape(1, -1)}
-                outputs = self.session.run(None, inputs)
-                score = float(outputs[0][0][1])  # Class index 1 = Spoof
-                return round(float(np.clip(score, 0.0, 1.0)), 4)
-            except Exception:
-                pass  # Fallback to acoustic feature heuristic if ONNX execution fails
-
-        # Acoustic spectral & entropy heuristic
-        variance = float(np.var(pcm_data))
-        if variance < 1e-7:
-            return 0.99  # Digital silence / generated silence artifact
-
-        # High frequency spectral energy ratio check
-        fft_vals = np.abs(np.fft.rfft(pcm_data))
-        hf_energy = float(np.sum(fft_vals[len(fft_vals) // 2 :]))
-        total_energy = float(np.sum(fft_vals)) + 1e-9
-        hf_ratio = hf_energy / total_energy
-
-        # Synthetic voice often exhibits abnormal HF artifacts or unnatural periodicity
-        if hf_ratio > 0.45 or hf_ratio < 0.02:
-            score = 0.82
-        else:
-            score = float(np.clip(1.0 - (variance * 60.0), 0.05, 0.65))
-
-        return round(score, 4)
-
+        if self.session is None:
+            raise ModelUnavailable("Spoof model is unavailable")
+        if (pcm_data.ndim != 1 or not 400 <= len(pcm_data) <= 64000
+                or not np.isfinite(pcm_data).all() or np.max(np.abs(pcm_data)) > 1):
+            raise ValueError("Expected 400..64000 finite mono PCM samples in [-1, 1]")
+        audio = np.asarray(pcm_data, dtype=np.float32)
+        audio = (audio - audio.mean()) / np.sqrt(audio.var() + 1e-7)
+        values = audio.reshape(1, -1)
+        try:
+            logits = np.asarray(self.session.run(None, {
+                "input_values": values,
+                "attention_mask": np.ones_like(values, dtype=self.mask_dtype),
+            })[0], dtype=np.float64)
+            if logits.shape != (1, 2) or not np.isfinite(logits).all():
+                raise ModelUnavailable("Invalid detector logits")
+            probabilities = np.exp(logits[0] - logits[0].max())
+            return float(probabilities[1] / probabilities.sum())
+        except Exception as exc:
+            raise ModelUnavailable("Spoof inference failed") from exc

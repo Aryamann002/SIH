@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>VigilVoice · Protected action demo</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to demo</a>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="VigilVoice home">
+        <svg viewBox="0 0 32 36" aria-hidden="true"><path d="M16 2 29 7v10c0 8-6 13-13 17C9 30 3 25 3 17V7Z"/><path d="M10 17v3m4-8v13m4-17v17m4-12v7"/></svg>
+        <span>Vigil<span class="accent">Voice</span><small>VOICE RISK · ACTION CONTROL</small></span>
+      </a>
+      <div class="header-tools"><span class="pill">SIH prototype</span><span id="service-status" class="service-status" role="status">Connecting…</span></div>
+    </header>
+
+    <main id="main">
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">A VOICE IS A SIGNAL. VERIFICATION IS A SEPARATE STEP.</p><h1 id="page-title">Listen carefully.<br><span>Authorize deliberately.</span></h1>
+        <p class="lede">Check a recording, prepare a simulated transfer, and follow the evidence through to an independently verified decision.</p></div>
+        <div class="prototype-note"><span class="note-mark" aria-hidden="true">i</span><p><strong>A working prototype, with clear boundaries.</strong><br>Transfers are simulated. Voice scores do not establish identity. Detection accuracy has not been established on a representative evaluation set.</p></div>
+      </section>
+
+      <ol class="steps" aria-label="Demonstration workflow"><li><span>01</span> Add voice evidence</li><li><span>02</span> Prepare an action</li><li><span>03</span> Verify &amp; complete</li></ol>
+      <div id="notice" class="notice" role="alert" hidden></div>
+      <div class="workspace">
+        <section class="card evidence-card" aria-labelledby="evidence-title">
+          <div class="card-heading"><div><p class="eyebrow">01 / EVIDENCE</p><h2 id="evidence-title">What does the audio tell us?</h2></div><span class="tag">File input</span></div>
+          <form id="audio-form">
+            <div class="file-zone">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 31V9m-8 8 8-8 8 8M10 29v9h28v-9"/></svg>
+              <label for="audio-file">Choose a voice recording</label>
+              <p id="audio-help">WAV · mono · 16 kHz · 16-bit PCM. Use a short speech clip.</p>
+              <input id="audio-file" type="file" accept=".wav,audio/wav,audio/x-wav" aria-describedby="audio-help" required>
+            </div>
+            <p id="file-info" class="muted small">Audio is used as temporary evidence; it is not a stored recording.</p>
+            <audio id="audio-preview" controls hidden aria-label="Preview selected recording"></audio>
+            <button id="analyze-button" class="button primary full" type="submit" disabled>Analyze recording <span aria-hidden="true">↗</span></button>
+          </form>
+          <div class="risk-heading"><h3>Current risk assessment</h3><button id="refresh-risk" class="text-button" type="button" disabled>Refresh</button></div>
+          <div id="risk-box" class="risk-box" data-tone="neutral" aria-live="polite">
+            <span class="risk-dot" aria-hidden="true"></span><div><strong id="risk-state">Awaiting evidence</strong><p id="risk-explanation">Upload speech to request an assessment. A transfer cannot be approved without usable evidence and verification.</p></div>
+          </div>
+          <dl class="metrics"><div><dt>Spoof score</dt><dd id="spoof-score">—</dd></div><div><dt>Speech evidence</dt><dd id="speech-duration">—</dd></div><div><dt>Signal / noise</dt><dd id="snr">—</dd></div></dl>
+          <p class="small muted">A model score is a signal, not a calibrated probability or proof of identity.</p>
+          <ul id="reason-codes" class="reason-codes" aria-label="Assessment reasons"></ul>
+          <div class="evidence-meta"><span>Model <strong id="model-version">Checking…</strong></span><span>Policy <strong id="threshold-profile">—</strong></span></div>
+        </section>
+
+        <div class="action-column">
+          <section class="card" aria-labelledby="action-title">
+            <div class="card-heading"><div><p class="eyebrow">02 / PROTECTED ACTION</p><h2 id="action-title">A transfer that needs permission</h2></div></div>
+            <p class="muted small">Every simulated transfer needs separate verification, including when voice risk is low.</p>
+            <form id="action-form">
+              <fieldset id="transfer-fields"><legend class="sr-only">Transfer details</legend>
+                <label for="recipient">Recipient</label><input id="recipient" name="recipient" value="Demo beneficiary" minlength="1" maxlength="120" required autocomplete="off">
+                <label for="amount">Amount <span class="muted">(whole INR · simulated)</span></label><div class="amount-field"><span aria-hidden="true">₹</span><input id="amount" name="amount" type="number" min="1" max="10000000" step="1" value="25000" required inputmode="numeric"></div>
+              </fieldset>
+              <button id="create-action" class="button primary full" type="submit">Prepare protected transfer <span aria-hidden="true">→</span></button>
+            </form>
+            <div id="action-summary" class="action-summary" hidden aria-live="polite"><div class="row"><strong id="action-status"></strong><button id="new-action" class="text-button" type="button">New transfer</button></div><p id="action-message"></p><p class="small muted">Action ID · share this with the verifier</p><div class="copy-row"><code id="action-id"></code><button id="copy-action" type="button" class="text-button">Copy</button></div></div>
+          </section>
+
+          <section class="card verification-card" aria-labelledby="verification-title">
+            <div class="card-heading"><div><p class="eyebrow">03 / INDEPENDENT VERIFICATION</p><h2 id="verification-title">Confirm the exact action</h2></div><span class="lock-icon" aria-hidden="true">↗</span></div>
+            <p class="muted small">For this local simulation, a verifier with a separate key reviews the transfer in the <a id="verifier-link" href="/verify" target="_blank" rel="noopener">verifier inbox <span aria-hidden="true">↗</span><span class="sr-only"> (opens a new tab)</span></a>, then shares its single-use code. No code appears here automatically.</p>
+            <button id="request-verification" class="button secondary full" type="button" disabled>Request verification code</button>
+            <form id="verification-form" hidden>
+              <div class="row"><label for="otp-code">Six-digit code</label><span id="challenge-expiry" class="small muted" role="status"></span></div>
+              <div class="otp-row"><input id="otp-code" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" aria-describedby="otp-help" required><button id="confirm-code" class="button secondary" type="submit">Verify code</button></div>
+              <p id="otp-help" class="small muted">Valid for 60 seconds. Three attempts maximum. The server checks expiry and action binding.</p>
+            </form>
+            <button id="complete-action" class="button primary full" type="button" hidden>Complete simulated transfer <span aria-hidden="true">→</span></button>
+            <p id="verification-message" class="small muted" role="status">Prepare a transfer to start verification.</p>
+          </section>
+        </div>
+      </div>
+
+      <section class="card timeline-card" aria-labelledby="timeline-title"><div class="card-heading"><div><p class="eyebrow">THE DECISION TRAIL</p><h2 id="timeline-title">Evidence behind every outcome</h2></div><button id="refresh-audit" class="text-button" type="button" disabled>Refresh events ↻</button></div><p id="audit-empty" class="muted small">Prepare a transfer to see its persisted audit events here.</p><ol id="audit-list" class="timeline" aria-label="Action audit events"></ol></section>
+      <footer><span>VigilVoice <span class="muted">/ A verifiable decision, from input to outcome.</span></span><span id="session-label" class="muted">No session started</span></footer>
+    </main>
+  </div>
+</body>
+</html>
