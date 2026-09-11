@@ -1,0 +1,65 @@
+{
+  "tasks": {
+    "task-1789147386271-r67e78": {
+      "taskId": "task-1789147386271-r67e78",
+      "type": "implementation",
+      "description": "Backend: protected actions, session ownership, random action-bound OTP, atomic approval, fail-closed evidence, additive schema and integration",
+      "priority": "critical",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "codex-integration"
+      ],
+      "tags": [],
+      "createdAt": "2026-09-11T17:23:06.271Z",
+      "startedAt": "2026-09-11T17:23:40.568Z",
+      "completedAt": null
+    },
+    "task-1789147386624-gqe31o": {
+      "taskId": "task-1789147386624-gqe31o",
+      "type": "implementation",
+      "description": "Audio worker: real local model feasibility, honest unavailable state, VAD window and scoring pipeline with checks",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "codex-audio"
+      ],
+      "tags": [],
+      "createdAt": "2026-09-11T17:23:06.624Z",
+      "startedAt": "2026-09-11T17:23:40.931Z",
+      "completedAt": null
+    },
+    "task-1789147386978-bhrhlb": {
+      "taskId": "task-1789147386978-bhrhlb",
+      "type": "implementation",
+      "description": "UI worker: single-screen local prototype, upload and action verification flow using agreed API",
+      "priority": "normal",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "codex-ui"
+      ],
+      "tags": [],
+      "createdAt": "2026-09-11T17:23:06.978Z",
+      "startedAt": "2026-09-11T17:23:41.277Z",
+      "completedAt": null
+    },
+    "task-1789147387326-9bwa61": {
+      "taskId": "task-1789147387326-9bwa61",
+      "type": "testing",
+      "description": "Security reviewer: independent threat review and acceptance checks for action-bound verification and failure modes",
+      "priority": "high",
+      "status": "in_progress",
+      "progress": 0,
+      "assignedTo": [
+        "codex-review"
+      ],
+      "tags": [],
+      "createdAt": "2026-09-11T17:23:07.326Z",
+      "startedAt": "2026-09-11T17:23:41.615Z",
+      "completedAt": null
+    }
+  },
+  "version": "3.0.0"
+}

@@ -1,0 +1,31 @@
+{
+  "scope": "Local prototype implementation and validation; no publishing, commits or destructive data changes",
+  "policy_receipt": "sha256:ceaddbc8412280a182fb31ac88720a51982a692384d0fcf2aa641baf1cbb9161",
+  "policy_mode": "legacy",
+  "snapshot_root": "C:\\Users\\ARYAMA~1\\AppData\\Local\\Temp\\sih-prototype-ymd2wy63",
+  "ownership": {
+    "integration": "main workspace",
+    "audio": "C:\\Users\\ARYAMA~1\\AppData\\Local\\Temp\\sih-prototype-ymd2wy63\\audio",
+    "ui": "C:\\Users\\ARYAMA~1\\AppData\\Local\\Temp\\sih-prototype-ymd2wy63\\ui",
+    "review": "read-only main workspace"
+  },
+  "baseline": {
+    "app\\main.py": "b135794d242baf646afec1f5557c5a29a06b5b57ef322f4b1ab7f14d60b9d382",
+    "app\\__init__.py": "717a703bae33182b14bb95e2f09a2dddfa154cf150b2db5f788e0e1662c98d2d",
+    "app\\core\\config.py": "1997cc1a29e81d411f16057fea31824b021e4a0e5c575a8704439b76ccc93ce6",
+    "app\\core\\database.py": "4173873ea3f931f468a5d4a0c41de590dc1dacbc2f9aaf091817a075818b4998",
+    "app\\models\\schemas.py": "2a9fc987e5d4b78f9f1490ed158fd3a89c94e01323b8c2717f747d70820b2303",
+    "app\\services\\audit.py": "db83a6120fea3706a1180303c471b003d8da013e6bdd97e6281823896084e6e5",
+    "app\\services\\policy_engine.py": "31e65fec76671b7f37ef9832687cd6e775afce2d59136539aef3fe78275f1786",
+    "app\\services\\spoof_detector.py": "384f886881405d530f742b9a9f247b9db963dcaf5c8ecc3452ebcd478e95496f",
+    "app\\services\\vad_worker.py": "16716ee8a190619d886a3e2bfe40db02ebb299e8963c668eca23a522f1f8316b",
+    "app\\api\\v1\\actions.py": "b24d76918d76d2ceb945beebfe3611f6a56c1701f5f9224e8fe99cb5159c1f86",
+    "app\\api\\v1\\router.py": "00882698a7ad0f64b7b0c4552dc9796fb6d40364561908ec1298f23540aaa7fd",
+    "app\\api\\v1\\stream.py": "0d36703b22d66e52374647a329d588c5abd62ba4dbcde67b39fd4fad2fdf384c",
+    "tests\\test_policy.py": "8f6cf9c6e9ee8b3d2404b8dd3d4dd3a9e78804f53cd5139b673d741e789ef41a",
+    "AGENTS.md": "c8d455174c85ddc2d39e38cca56492c0bdbcd0e3081b4061444cd60b6fb4f9b2",
+    "requirements.txt": "d65982d54628e654bd860c6c8bc49b791925fd2483c562d652b0f89006c254b3",
+    "init.sql": "e74d58bf178606a27e46ff308c91a2cb4bdf41d4fccff8fab3b942c8648069e6",
+    "pytest.ini": "07e12af78809b103a9e003b9bf24f9718928fa263046b37bf3ebc9ebbf802ceb"
+  }
+}
