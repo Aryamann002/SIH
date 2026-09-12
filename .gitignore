@@ -16,5 +16,6 @@ docs/evaluation-output/
 .swarm/
 ruvector.db
 .claude-flow/daemon-state.json
+.claude-flow/daemon.pid
 .claude-flow/harness-active-policy.json
 .claude-flow/metrics/

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VigilVoice — What Was Built and How to Launch It</title>
+<style>
+@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#dfe7ec;color:#122b3a;font:10.5pt/1.5 "Segoe UI",Arial,sans-serif}.page{width:210mm;height:297mm;margin:10mm auto;background:#fbfdfe;padding:17mm 18mm 15mm;position:relative;overflow:hidden;break-after:page}.page:last-child{break-after:auto}.cover{background:#0a202b;color:#edf7fa;display:flex;flex-direction:column;justify-content:center}.eyebrow{color:#168471;text-transform:uppercase;letter-spacing:.14em;font-size:9pt;font-weight:700;margin:0 0 8px}.cover .eyebrow{color:#70dfc7}h1{font-size:35pt;line-height:1.08;letter-spacing:-1.5px;margin:10px 0 18px}h2{font-size:23pt;line-height:1.15;letter-spacing:-.7px;margin:0 0 16px}h3{font-size:13pt;margin:15px 0 6px}p{margin:7px 0}.lead{font-size:16pt;max-width:150mm}.muted{color:#58707e}.cover .muted{color:#b5cbd5}.badge{display:inline-block;border:1px solid #3b655f;border-radius:20px;padding:5px 11px;margin:16px 7px 0 0;font-size:9pt}.callout{border-left:4px solid #168471;background:#e8f3f1;padding:11px 14px;margin:12px 0}.warning{border-left-color:#b47716;background:#fff3dd}.danger{border-left-color:#b64e57;background:#fdecef}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:12px 0}.card{background:#edf4f7;border:1px solid #d4e1e6;border-radius:7px;padding:12px}.card h3{margin-top:0}.flow{display:flex;align-items:stretch;gap:5px;margin:15px 0}.node{flex:1;background:#e8f3f1;border:1px solid #b3d1ca;border-radius:7px;padding:10px 6px;text-align:center;font-weight:650}.arrow{align-self:center;color:#168471;font-size:18pt}.code{background:#102832;color:#edf7fa;border-radius:7px;padding:10px 12px;margin:7px 0;font:9pt/1.55 Consolas,"Courier New",monospace;white-space:pre-wrap;overflow-wrap:anywhere}.cmd{color:#7be0ca}.path{font-family:Consolas,"Courier New",monospace;font-size:9pt;background:#e9f0f3;padding:1px 4px;border-radius:3px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5pt}th,td{text-align:left;vertical-align:top;border-bottom:1px solid #d2dfe5;padding:7px 8px}th{background:#e7f0f4;font-weight:700}ul,ol{padding-left:21px;margin:7px 0}li{margin:5px 0}.step{display:grid;grid-template-columns:28px 1fr;gap:10px;margin:10px 0}.num{width:27px;height:27px;border-radius:50%;background:#168471;color:white;display:grid;place-items:center;font-weight:700}.risk{display:inline-block;min-width:97px;text-align:center;border-radius:15px;padding:3px 8px;font-weight:700;font-size:8.5pt}.low{background:#d9f1e7;color:#126a56}.elevated{background:#fff0cf;color:#795209}.high{background:#fde0e2;color:#8d2730}.neutral{background:#e5ebef;color:#3f5968}.screen{max-width:100%;max-height:123mm;display:block;margin:10px auto;border:1px solid #b8cad3;border-radius:7px}.small{font-size:8.5pt}.check{color:#147561;font-weight:700}.pending{color:#99610e;font-weight:700}.footer{position:absolute;left:18mm;right:18mm;bottom:8mm;display:flex;justify-content:space-between;border-top:1px solid #d8e2e7;padding-top:5px;color:#6a7e8a;font-size:8pt}.cover .footer{border-color:#29444f;color:#9eb6c0}.toc a{color:#126f60;text-decoration:none}.metric{font-size:24pt;font-weight:750;color:#147866;line-height:1.1}.two-col{columns:2;column-gap:24px}.no-break{break-inside:avoid}@media print{body{background:white}.page{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}@media screen and (max-width:820px){.page{width:100%;height:auto;min-height:100vh;margin:0 0 10px;padding:8vw}.grid{grid-template-columns:1fr}.flow{flex-wrap:wrap}.footer{position:static;margin-top:25px}}
+</style>
+</head>
+<body>
+
+<section class="page cover">
+  <p class="eyebrow">VigilVoice · Prototype handbook</p>
+  <h1>What was built<br>and how to launch it</h1>
+  <p class="lead">A practical guide to the voice-risk detector, protected-action workflow, local setup, classroom demonstration, tests, and current limitations.</p>
+  <div><span class="badge">Real pretrained audio inference</span><span class="badge">Simulated transfer</span><span class="badge">Local Docker deployment</span></div>
+  <p class="muted" style="margin-top:28px">Prepared for understanding and presenting the SIH prototype · 12 September 2026</p>
+  <div class="footer"><span>VigilVoice</span><span>1 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Quick orientation</p><h2>What VigilVoice does</h2>
+  <p>VigilVoice checks a voice recording for usable speech and synthetic-speech signals before a sensitive action is allowed to continue. The voice result never approves a transfer by itself. A separate verifier must review the exact recipient and amount and provide a one-time code.</p>
+  <div class="flow"><div class="node">Record or upload speech</div><span class="arrow">→</span><div class="node">Quality + spoof assessment</div><span class="arrow">→</span><div class="node">Risk policy</div><span class="arrow">→</span><div class="node">Independent verification</div><span class="arrow">→</span><div class="node">Simulated completion</div></div>
+  <div class="grid">
+    <div class="card"><h3>What is real</h3><ul><li>Silero voice activity detection</li><li>Wav2Vec2 XLSR spoof-classifier inference</li><li>ONNX Runtime CPU execution</li><li>Quality gates and risk policy</li><li>Authenticated sessions and database records</li><li>OTP/action binding, expiry and audit trail</li></ul></div>
+    <div class="card"><h3>What is simulated</h3><ul><li>The bank/payment transfer</li><li>OTP delivery through the local verifier inbox</li><li>The verifier role on one local machine</li></ul><h3>What was not done</h3><ul><li>No model was trained by our team</li><li>No production accuracy claim</li><li>No real SMS, bank or identity integration</li></ul></div>
+  </div>
+  <div class="callout"><strong>The team contribution:</strong> connecting real model inference to a controlled action workflow that fails safely, verifies exact details, consumes approvals once, and records evidence.</div>
+  <div class="footer"><span>System purpose</span><span>2 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Architecture</p><h2>How the parts work together</h2>
+  <div class="grid">
+    <div class="card"><h3>1. Browser interface</h3><p>Native HTML, CSS and JavaScript. It accepts an existing WAV or records up to 10 seconds from the microphone, converts it to 16 kHz mono PCM WAV, previews it, and submits it only after the user clicks Analyze.</p></div>
+    <div class="card"><h3>2. FastAPI backend</h3><p>Creates private sessions, validates input, runs audio inference away from the event loop, applies the policy, owns actions and exposes the verifier/audit endpoints.</p></div>
+    <div class="card"><h3>3. Audio pipeline</h3><p>Silero finds speech and supports duration/quality evidence. Wav2Vec2 outputs a synthetic-speech score. Smoothing slows recovery while a high raw score escalates immediately.</p></div>
+    <div class="card"><h3>4. Policy and action gate</h3><p>LOW or ELEVATED evidence may request verification. HIGH, poor, insufficient, stale, invalid or unavailable evidence prevents completion.</p></div>
+    <div class="card"><h3>5. PostgreSQL</h3><p>Stores sessions, risk evaluations, immutable action details, verification challenges, hashed approval tokens and chronological audit events.</p></div>
+    <div class="card"><h3>6. Local verifier</h3><p>A separate page requires a verifier key and shows the exact recipient, amount and single-use code. It demonstrates the intended boundary but is not real independent delivery.</p></div>
+  </div>
+  <h3>Important source locations</h3>
+  <table><tr><th>Area</th><th>Files</th></tr><tr><td>Audio inference</td><td><span class="path">app/services/audio_pipeline.py</span>, <span class="path">vad_worker.py</span>, <span class="path">spoof_detector.py</span></td></tr><tr><td>Protected actions</td><td><span class="path">app/api/v1/actions.py</span>, <span class="path">app/services/action_gate.py</span></td></tr><tr><td>Browser UI</td><td><span class="path">app/static/index.html</span>, <span class="path">app.js</span>, <span class="path">microphone.js</span></td></tr><tr><td>Database</td><td><span class="path">init.sql</span>, <span class="path">config/migrations/001_protected_actions.sql</span></td></tr></table>
+  <div class="footer"><span>Architecture and files</span><span>3 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Decision logic</p><h2>What happens to each recording</h2>
+  <div class="step"><span class="num">1</span><div><strong>Validate the file.</strong> Uploads must be uncompressed, mono, 16 kHz, 16-bit PCM WAV, no more than 30 seconds. Browser recordings are capped at 10 seconds.</div></div>
+  <div class="step"><span class="num">2</span><div><strong>Check evidence quality.</strong> The system measures speech duration, clipping, loudness and an estimated signal-to-noise ratio. It does not invent a safe score when evidence is unusable.</div></div>
+  <div class="step"><span class="num">3</span><div><strong>Run spoof inference.</strong> The local ONNX classifier returns a score used by fixed policy thresholds. The score is a model signal, not a probability that a person is fraudulent.</div></div>
+  <div class="step"><span class="num">4</span><div><strong>Assign a risk state.</strong></div></div>
+  <table><tr><th>State</th><th>Meaning</th><th>Action behavior</th></tr>
+    <tr><td><span class="risk low">LOW</span></td><td>No strong synthetic signal under current settings</td><td>Can request separate verification</td></tr>
+    <tr><td><span class="risk elevated">ELEVATED</span></td><td>Some spoof signal detected</td><td>Can request verification with a warning</td></tr>
+    <tr><td><span class="risk high">HIGH</span></td><td>Strong spoof signal</td><td>Transfer is blocked</td></tr>
+    <tr><td><span class="risk neutral">POOR QUALITY</span></td><td>Clipped, quiet or degraded audio</td><td>Ask for better evidence; block</td></tr>
+    <tr><td><span class="risk neutral">INSUFFICIENT</span></td><td>Too little usable speech</td><td>Ask for longer speech; block</td></tr>
+    <tr><td><span class="risk high">UNAVAILABLE</span></td><td>Missing/stale evidence or model failure</td><td>Fail closed; block</td></tr>
+  </table>
+  <div class="callout warning"><strong>Current thresholds are exploratory.</strong> They are kept configurable for later calibration, but the running profile is deliberately labelled uncalibrated.</div>
+  <div class="footer"><span>Audio and policy behavior</span><span>4 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Launch guide</p><h2>Start the prototype on Windows</h2>
+  <h3>Prerequisites</h3>
+  <ul><li>Docker Desktop is installed and running.</li><li>Python is available for the setup helper.</li><li>Chrome or Edge is recommended for microphone recording.</li><li>The first model download needs internet. Normal inference is local afterward.</li></ul>
+  <div class="step"><span class="num">1</span><div><strong>Open PowerShell in the project folder.</strong><div class="code"><span class="cmd">cd</span> "C:\Users\Aryamann Sharma\Documents\Claude Code Workspace\SIH"</div></div></div>
+  <div class="step"><span class="num">2</span><div><strong>Download the pinned models and demo WAVs if the <span class="path">models</span> folder is empty.</strong><div class="code"><span class="cmd">python</span> scripts/fetch_models.py --samples</div><p class="small muted">Approximately 358 MB. Existing correct files are checksum-verified and reused.</p></div></div>
+  <div class="step"><span class="num">3</span><div><strong>Create local demo secrets and database settings.</strong><div class="code"><span class="cmd">python</span> scripts/configure_demo.py</div><p class="small muted">This creates the ignored <span class="path">.env</span> file without printing secrets.</p></div></div>
+  <div class="step"><span class="num">4</span><div><strong>Build and start the backend and database.</strong><div class="code"><span class="cmd">docker compose</span> up -d --build</div></div></div>
+  <div class="step"><span class="num">5</span><div><strong>Confirm both containers are running.</strong><div class="code"><span class="cmd">docker compose</span> ps
+<span class="cmd">Invoke-RestMethod</span> http://127.0.0.1:8000/healthz</div><p>You should see <span class="path">vigilvoice_backend</span>, a healthy <span class="path">vigilvoice_db</span>, and a health response with <span class="path">"status":"ok"</span>.</p></div></div>
+  <div class="footer"><span>Launch: setup and start</span><span>5 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Using the app</p><h2>Open the two local screens</h2>
+  <div class="grid"><div class="card"><h3>Operator dashboard</h3><p class="path">http://127.0.0.1:8000/</p><p>Record/upload audio, inspect the risk, prepare the simulated transfer, enter a code and review the audit.</p></div><div class="card"><h3>Verifier inbox</h3><p class="path">http://127.0.0.1:8000/verify</p><p>Enter the private verifier key and action ID, review the exact details, then share the one-time code.</p></div></div>
+  <img class="screen" src="teacher-demo.png" alt="VigilVoice operator dashboard showing microphone, upload, risk, transfer and verification panels">
+  <p class="small muted">Actual browser screenshot from the verified local build. The dashboard intentionally shows the model and policy profile and states that the score is not proof of identity.</p>
+  <div class="callout warning"><strong>Keep the verifier key private.</strong> It is stored as <span class="path">DEMO_VERIFIER_KEY</span> in the local <span class="path">.env</span>. Do not project or commit that file.</div>
+  <div class="footer"><span>Launch: browser screens</span><span>6 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Demonstration</p><h2>Run the complete workflow</h2>
+  <ol>
+    <li>At the dashboard, choose <span class="path">models/demo/genuine.wav</span> and click <strong>Analyze recording</strong>. You may also record 3–10 seconds with the microphone.</li>
+    <li>Read the risk, spoof score, speech duration, signal/noise estimate and reason codes. LOW and ELEVATED still require verification.</li>
+    <li>Enter a recipient and whole-INR amount. Click <strong>Prepare protected transfer</strong>. The details become fixed to the generated Action ID.</li>
+    <li>Click <strong>Request verification code</strong>. Open the verifier page in another tab.</li>
+    <li>Enter the verifier key from <span class="path">.env</span> and paste the Action ID. Check the recipient and amount before sharing the six-digit code.</li>
+    <li>Enter the code on the dashboard and click <strong>Complete simulated transfer</strong>. The backend rechecks that audio evidence is still safe and fresh, then consumes the approval once.</li>
+    <li>Review the audit events: action created, challenge issued, OTP verified and action completed.</li>
+    <li>Choose <strong>New transfer</strong>, analyze <span class="path">models/demo/synthetic.wav</span>, and show that HIGH evidence blocks the action.</li>
+  </ol>
+  <div class="grid"><div class="card"><h3>Time limits</h3><ul><li>File evidence: 120 seconds</li><li>Live stream evidence: 5 seconds</li><li>OTP: 60 seconds</li><li>Approval: 60 seconds</li><li>Wrong OTP attempts: maximum 3</li></ul></div><div class="card"><h3>Presenting alone</h3><p>After requesting a code, run:</p><div class="code"><span class="cmd">python</span> scripts/demo_inbox.py &lt;action-id&gt;</div><p class="small">This avoids displaying the long verifier key. It still represents simulated local delivery.</p></div></div>
+  <div class="callout">A silent 30-second fallback is available at <span class="path">docs/vigilvoice-teacher-walkthrough.mp4</span>. The seven-slide deck is <span class="path">docs/teacher-presentation.pdf</span>.</div>
+  <div class="footer"><span>Demo sequence</span><span>7 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Evidence</p><h2>What was tested</h2>
+  <div class="grid"><div class="card"><div class="metric">13</div><h3>Backend check groups passed</h3><p>Session isolation, missing/stale evidence, action-bound OTP and approvals, expiry, three-attempt lockout, concurrent single-use completion, malformed/oversized/silent/clipped audio, synthetic replacement, disconnect invalidation and unavailable models.</p></div><div class="card"><div class="metric">6</div><h3>Browser checks passed</h3><p>Native fake-microphone recording, WAV conversion, CSP-safe preview, authenticated upload to the real backend, no JavaScript exception, and no horizontal overflow at 390 px.</p></div></div>
+  <p><span class="check">✓</span> Python: 12 passed, 1 optional model smoke skipped in the normal suite.<br><span class="check">✓</span> UI and microphone Node smoke checks passed.<br><span class="check">✓</span> Ruflo deep security scan: no findings.<br><span class="check">✓</span> Models available with verified SHA256 digests.</p>
+  <h3>Exploratory 20-clip test partition</h3>
+  <table><tr><th>Running default HIGH 0.75</th><th>Result</th></tr><tr><td>Synthetic clips eligible for OTP</td><td>1 / 9 scorable (11.1%)</td></tr><tr><td>Genuine clips falsely blocked as HIGH</td><td>1 / 9 scorable (11.1%)</td></tr><tr><td>Quality rejections</td><td>2 / 20 total</td></tr><tr><td>Service unavailable</td><td>0 / 20</td></tr></table>
+  <p>An offline candidate threshold of 0.58 blocked all 9 scorable synthetic test clips but falsely blocked 3 of 9 scorable genuine clips. It was <strong>not deployed</strong>. This demonstrates the security/usability tradeoff.</p>
+  <div class="callout warning"><strong>Interpretation:</strong> 40 public English clips are useful prototype evidence, not proof of real-world accuracy. Indian-language, replay, phone-channel and unseen-generator validation remains pending.</div>
+  <div class="footer"><span>Checks and evaluation</span><span>8 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Troubleshooting</p><h2>If the prototype does not launch</h2>
+  <table><tr><th>Problem</th><th>Check or fix</th></tr>
+    <tr><td>Docker command fails</td><td>Open Docker Desktop, wait for it to finish starting, then rerun <span class="path">docker compose up -d --build</span>.</td></tr>
+    <tr><td>Models unavailable</td><td>Run <span class="path">python scripts/fetch_models.py --samples</span>, then restart the backend.</td></tr>
+    <tr><td>Port 8000 unavailable</td><td>Check <span class="path">docker compose ps</span>. Stop another local service using the port or stop the old VigilVoice stack.</td></tr>
+    <tr><td>Backend exits</td><td>Read recent logs with <span class="path">docker compose logs --tail 100 backend</span>.</td></tr>
+    <tr><td>Database is unhealthy</td><td>Read <span class="path">docker compose logs --tail 100 db</span>. Do not delete its volume while preserving data matters.</td></tr>
+    <tr><td>Microphone button disabled</td><td>Use Chrome/Edge on <span class="path">localhost</span>, allow microphone permission, or use a bundled WAV.</td></tr>
+    <tr><td>Audio rejected</td><td>Use 16 kHz mono 16-bit PCM WAV. Record clear uninterrupted speech or use the known demo files.</td></tr>
+    <tr><td>Evidence/code expired</td><td>Analyze again and create a new transfer. Expired or locked challenges cannot be reset.</td></tr>
+  </table>
+  <h3>Useful commands</h3>
+  <div class="code"><span class="cmd">docker compose</span> ps
+<span class="cmd">docker compose</span> logs --tail 100 backend
+<span class="cmd">docker compose</span> restart backend
+<span class="cmd">python -m pytest</span> -q
+<span class="cmd">node</span> tests/ui_smoke.cjs
+<span class="cmd">node</span> tests/microphone_smoke.cjs</div>
+  <h3>Stop the application</h3>
+  <div class="code"><span class="cmd">docker compose</span> down</div>
+  <p>This stops the containers and preserves PostgreSQL data in its Docker volume. The current application is local-only and binds its ports to <span class="path">127.0.0.1</span>.</p>
+  <div class="footer"><span>Recovery and shutdown</span><span>9 / 10</span></div>
+</section>
+
+<section class="page">
+  <p class="eyebrow">Current status</p><h2>Is this an MVP?</h2>
+  <p><strong>Yes, for a supervised classroom or judging demonstration.</strong> It has a complete input-to-decision flow, real inference, failure handling, verification, audit evidence, reproducible launch instructions and measured limitations.</p>
+  <div class="grid"><div class="card"><h3 class="check">Ready now</h3><ul><li>Local Docker launch</li><li>WAV and microphone input</li><li>Real pretrained model execution</li><li>Quality and spoof policy</li><li>Protected simulated action</li><li>Verification and audit trail</li><li>Slides, guide and fallback video</li></ul></div><div class="card"><h3 class="pending">Needed before real users</h3><ul><li>Consented Indian-language/phone/replay data</li><li>Representative threshold calibration</li><li>Fine-tuning if evaluation justifies it</li><li>Real trusted OTP delivery</li><li>User accounts and HTTPS deployment</li><li>Audio retention policy</li><li>Load and field testing</li></ul></div></div>
+  <h3>Recommended next order</h3>
+  <ol><li>Rehearse the current demonstration with the real laptop microphone.</li><li>Collect and label target-domain audio with consent.</li><li>Evaluate with speaker/source-separated validation and untouched test sets.</li><li>Choose an acceptable missed-attack versus false-block tradeoff.</li><li>Only then consider fine-tuning, real verification delivery and a wider pilot.</li></ol>
+  <div class="callout danger"><strong>Presentation wording:</strong> “We built a working guarded prototype using pretrained models and measured it on a small public set.” Do not say the team trained the detector or that its real-world accuracy is established.</div>
+  <p class="small muted">Detailed local references: <span class="path">docs/teacher-demo-guide.md</span>, <span class="path">docs/evaluation-report.md</span>, <span class="path">docs/model-setup.md</span>, and <span class="path">docs/teacher-build-receipt.json</span>.</p>
+  <div class="footer"><span>Readiness and next work</span><span>10 / 10</span></div>
+</section>
+
+</body>
+</html>

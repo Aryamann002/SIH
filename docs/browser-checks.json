@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-09-11T23:11:49.095542+00:00",
+  "passed": true,
+  "checks": [
+    "Native fake microphone recording",
+    "16 kHz PCM WAV conversion",
+    "Blob preview allowed by CSP",
+    "Real authenticated backend upload",
+    "No JavaScript exceptions",
+    "390px mobile layout has no horizontal overflow"
+  ],
+  "recording": {
+    "name": "microphone.wav",
+    "type": "audio/wav",
+    "size": 130604
+  },
+  "risk_state": "LOW",
+  "limitation": "Automated fake audio device; physical microphone and OS permission interaction need manual rehearsal."
+}

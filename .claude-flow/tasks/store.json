@@ -59,6 +59,58 @@
       "createdAt": "2026-09-11T17:23:07.326Z",
       "startedAt": "2026-09-11T17:23:41.615Z",
       "completedAt": null
+    },
+    "task-1789167855058-jz5hq9": {
+      "taskId": "task-1789167855058-jz5hq9",
+      "type": "review",
+      "description": "Read-only failure-path and PDF scope review",
+      "priority": "normal",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-09-11T23:04:15.058Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1789167874007-xsicts": {
+      "taskId": "task-1789167874007-xsicts",
+      "type": "implementation",
+      "description": "Teacher demo microphone record-convert-upload by teacher_mic in isolated snapshot",
+      "priority": "normal",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-09-11T23:04:34.007Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1789167875715-y33lpp": {
+      "taskId": "task-1789167875715-y33lpp",
+      "type": "testing",
+      "description": "Public corpus evaluation by teacher_eval in isolated snapshot",
+      "priority": "normal",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-09-11T23:04:35.715Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1789167877354-js4qb6": {
+      "taskId": "task-1789167877354-js4qb6",
+      "type": "implementation",
+      "description": "Root integrates demo checks presentation and receipt",
+      "priority": "normal",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [],
+      "createdAt": "2026-09-11T23:04:37.354Z",
+      "startedAt": null,
+      "completedAt": null
     }
   },
   "version": "3.0.0"

@@ -1,10 +1,10 @@
 {
-  "id": "swarm-1789147385604-cmc69l",
+  "id": "swarm-1789167751093-bue8av",
   "topology": "hierarchical",
   "maxAgents": 4,
-  "strategy": "specialized",
+  "strategy": "development",
   "v3Mode": false,
   "permissions": null,
-  "initializedAt": "2026-09-11T17:23:05.604Z",
+  "initializedAt": "2026-09-11T23:02:31.093Z",
   "status": "ready"
 }

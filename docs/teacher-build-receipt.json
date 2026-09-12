@@ -1,0 +1,58 @@
+{
+  "created_at": "2026-09-12T03:40:00Z",
+  "scope": "Local teacher-ready prototype, evaluation, presentation artifacts and checks; no publication, commit, payment or production deployment",
+  "base_commit": "0cf3320",
+  "source_state": "Dirty workspace snapshot bound by the file hashes below; HEAD alone is not the build identity",
+  "ruflo": {
+    "swarm_id": "swarm-1789167751093-bue8av",
+    "policy_mode": "legacy",
+    "policy_outcome": "allowed",
+    "policy_receipt": "sha256:f8b43f1f90588b185f6c14914a2b4f6be031af24854c09f629caadfce7789e95",
+    "note": "Ruflo recorded coordination; Codex workers implemented and integrated the files. Ruflo task rows remained pending because its local CLI did not expose a completion command."
+  },
+  "claims": {
+    "trained_by_team": false,
+    "audio_inference": "Real local third-party pretrained ONNX models",
+    "transactions": "Simulated",
+    "verification_delivery": "Local in-memory simulation",
+    "calibrated": false,
+    "evaluation": "40 public English clips; exploratory",
+    "threshold_candidate_promoted": false
+  },
+  "validation": {
+    "python": "12 passed, 1 skipped",
+    "ui_smoke": "passed",
+    "microphone_smoke": "passed",
+    "backend_check_groups": 13,
+    "browser_check_groups": 6,
+    "security_scan": "Ruflo deep scan: 0 findings",
+    "pdf": "7 pages; text extracted from every page",
+    "walkthrough": "5 real browser checkpoints; silent; 30 seconds; final synthetic screenshot omitted after Chrome timeout; HIGH/BLOCKED covered by backend checks"
+  },
+  "sha256": {
+    "AGENTS.md": "c8d455174c85ddc2d39e38cca56492c0bdbcd0e3081b4061444cd60b6fb4f9b2",
+    "app/api/v1/actions.py": "d6b35d6763cdc2e18d24462905b6872eebf7e1c9fb00f51cf7ab67474c266157",
+    "app/main.py": "da4df6732557e4a7bdd3ebba33ce830e006c73e3c5740aed52c164311da25278",
+    "app/static/app.js": "a88c86ec09c939b2c9acaf54d74546334cce55d36ce75b30b5ce919bbe0da51a",
+    "app/static/index.html": "45e2211f9d3a3db6628897e3cbb242f72e80b265b7f720608f13464a47812eb0",
+    "app/static/microphone.js": "96f17f6c0c04af66cde2a31e9df2d17fc8738721bb02629176a7e48f266dff8f",
+    "scripts/check_browser.py": "b12dcf8cdf43ea25793267bb5f139e703d204b2c0a3cc81f0355e07cd5d4d9e5",
+    "scripts/check_demo.py": "a7e12a52b4046503e6adff11e3ac894a6ea862165c727e7e06b14c59cf17db7a",
+    "scripts/evaluate_audio.py": "8e5a9099e3a9f7a027b6e934d47be7d25286e26919f2d08d2e109a15120b0977",
+    "scripts/prepare_evaluation.py": "c8c7fe7cff99a381b8ca2d0b743ca57ae81eae2a46ffbb125f500ec8519249be",
+    "tests/microphone_smoke.cjs": "e9f430342e0379f0ccc3f8e2e744db1d5435c8c56b796413ce2a714067ff9ca2",
+    "tests/test_evaluation.py": "708ea58e645afdecf25a982b33c28de01ac3acfadd08482a3301dcf884b92af6",
+    "tests/ui_smoke.cjs": "109af49363d43aa4c099ae0143498321159bed784431d236bc8a78bbe562999c",
+    "docs/demo-checks.json": "2e8a501bf5bbc41bcaf33431c6fb892c4e4a2c065b00ec2f0146e51a8b8c642b",
+    "docs/browser-checks.json": "e04335fb536f4f5da1cdf940b1a8172bf9c070686903ba9c374edeb4b2eadd75",
+    "docs/evaluation-output/report.json": "e2610ae11644b5ad0b6705d71d2385435df77d74a7bfc9ec96a486b3386401cb",
+    "models/evaluation/manifest.csv": "b99293367043ef1b0459c045cbfd7c79e97b3d7938f0b51eca9a723f1b0965ab",
+    "models/silero_vad.onnx": "2623a2953f6ff3d2c1e61740c6cdb7168133479b267dfef114a4a3cc5bdd788f",
+    "models/spoof_detector.onnx": "7af799e8443c3d030bb3ef644ffc6e74f5b6fddcd6a4286ee9abe9e828cb762e",
+    "docs/teacher-presentation.pdf": "5433d453ffe0038ed3d463a114bdaffd401b2291af4558a74e95b71437599965",
+    "docs/vigilvoice-teacher-walkthrough.mp4": "8da36c6ac12405db5e53601467cbefe198b3b369cf63473ae608bfc1cf0b4fac",
+    "docs/vigilvoice-build-and-launch-guide.html": "05cd683e8b0bef4dd72a5cbb86e16b3f56aee80984a168f3b088b76035e8f522",
+    "docs/VigilVoice-Build-and-Launch-Guide.pdf": "8d8d542f5109d1d568ffdb13345b52df1b7c7f75dcb3182edce3222b25f27399"
+  },
+  "evaluation_note": "The evaluator receipt binds the inference source from its isolated snapshot. Integrated inference modules match those hashes; scripts/evaluate_audio.py changed only its default output directory after the run."
+}

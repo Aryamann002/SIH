@@ -1,7 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null };
+const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null };
 const explanations = {
   LOW: ["good", "Low voice risk. Independent verification is still required before this simulated transfer can complete."],
   ELEVATED: ["warning", "The audio contains elevated spoof signals. Review the exact transfer independently before proceeding."],
@@ -36,8 +36,11 @@ function notice(message, tone = "error") {
 
 function renderControls() {
   const { busy, action, challenge, approval } = state;
-  $("analyze-button").disabled = busy || !$("audio-file").files.length;
+  $("analyze-button").disabled = busy || !state.audioFile;
   $("audio-file").disabled = busy;
+  $("record-start").disabled = busy || !MicrophoneAudio.supported();
+  $("record-stop").disabled = !state.microphone?.ready;
+  $("record-cancel").disabled = !state.microphone;
   $("refresh-risk").disabled = busy || !state.session;
   $("create-action").disabled = busy || Boolean(action);
   $("transfer-fields").disabled = busy || Boolean(action);
@@ -146,9 +149,10 @@ async function refreshAudit() {
   }
 }
 
-$("audio-file").addEventListener("change", () => {
+function selectAudio(file) {
   if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-  const file = $("audio-file").files[0];
+  state.audioUrl = null;
+  state.audioFile = file || null;
   $("audio-preview").hidden = !file;
   if (file) {
     state.audioUrl = URL.createObjectURL(file);
@@ -159,12 +163,47 @@ $("audio-file").addEventListener("change", () => {
     $("file-info").textContent = "Choose a recording to start.";
   }
   renderControls();
+}
+
+$("audio-file").addEventListener("change", () => selectAudio($("audio-file").files[0]));
+$("record-start").addEventListener("click", () => run(async () => {
+  if (!MicrophoneAudio.supported()) throw new Error("Microphone recording needs a supported browser on localhost or HTTPS. Use a WAV upload.");
+  $("record-status").textContent = "Waiting for microphone permission…";
+  state.microphone = MicrophoneAudio.record(() => {
+    $("record-status").textContent = "Recording. Speak clearly for 3–10 seconds, then stop. Stops automatically at 10 seconds.";
+    renderControls();
+  });
+  renderControls();
+  try {
+    const recording = await state.microphone.result;
+    state.microphone = null;
+    renderControls();
+    $("record-status").textContent = "Preparing WAV recording…";
+    const file = await MicrophoneAudio.toWav(recording);
+    $("audio-file").value = "";
+    selectAudio(file);
+    $("record-status").textContent = "Recording ready. Preview it, then select Analyze recording to submit it.";
+  } catch (error) {
+    $("record-status").textContent = "Recording stopped. You can try again or upload a WAV file.";
+    throw error;
+  } finally { state.microphone = null; }
+}));
+$("record-stop").addEventListener("click", () => {
+  state.microphone?.stop();
+  renderControls();
 });
+$("record-cancel").addEventListener("click", () => state.microphone?.cancel());
+window.addEventListener("pagehide", () => {
+  state.microphone?.cancel();
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+});
+if (!MicrophoneAudio.supported()) $("record-status").textContent = "Microphone recording is unavailable here. Open in a supported browser on localhost or HTTPS, or upload a WAV file.";
+renderControls();
 
 $("audio-form").addEventListener("submit", (event) => {
   event.preventDefault();
   run(async () => {
-    const file = $("audio-file").files[0];
+    const file = state.audioFile;
     if (!file) throw new Error("Choose a WAV recording first.");
     const id = await ensureSession();
     $("analyze-button").textContent = "Analyzing recording…";

@@ -23,9 +23,10 @@ function load(page, fetch) {
   const window = { setInterval: (callback) => intervals.push(callback), setTimeout: (callback) => callback(), addEventListener() {} };
   const context = vm.createContext({
     document: { getElementById: (id) => { assert.ok(elements[id], `Missing element: ${id}`); return elements[id]; }, createElement: () => new Element() },
-    window, fetch, File: class File {}, URL: { createObjectURL: () => "blob:test", revokeObjectURL() {} },
+    window, fetch, File: class File { constructor(_bits = [], name = "fixture.wav") { this.name = name; this.size = 32044; } }, URL: { createObjectURL: () => "blob:test", revokeObjectURL() {} },
     navigator: { clipboard: { writeText: async () => {} } }, console,
   });
+  if (page === "app") vm.runInContext(fs.readFileSync(path.join(root, "microphone.js"), "utf8"), context);
   vm.runInContext(fs.readFileSync(path.join(root, `${page}.js`), "utf8"), context);
   return { elements, intervals, context };
 }
@@ -57,10 +58,23 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   assert.equal(ui.elements["risk-state"].textContent, "SERVICE UNAVAILABLE");
   assert.equal(ui.elements["spoof-score"].textContent, "—");
   ui.elements["audio-file"].files = [vm.runInContext("new File()", ui.context)];
+  await fire(ui, "audio-file", "change");
   await fire(ui, "audio-form", "submit");
   assert.equal(ui.elements["risk-state"].textContent, "LOW");
   assert.equal(ui.elements["reason-codes"].children[0].textContent, "<img src=x onerror=alert(1)>");
   assert.equal(calls.find((call) => call.url.endsWith("/audio")).headers["Content-Type"], "audio/wav");
+  assert.equal(ui.elements["record-start"].disabled, true, "Unsupported microphone must leave WAV upload available");
+  vm.runInContext(`
+    MicrophoneAudio.supported = () => true;
+    MicrophoneAudio.record = () => ({ result: Promise.resolve({}), ready: false });
+    MicrophoneAudio.toWav = async () => new File([], "microphone.wav");
+  `, ui.context);
+  await fire(ui, "record-start");
+  assert.match(ui.elements["record-status"].textContent, /Recording ready/);
+  assert.equal(ui.elements["analyze-button"].disabled, false);
+  assert.equal(calls.filter((call) => call.url.endsWith("/audio")).length, 1, "Recording must wait for explicit analysis before uploading");
+  await fire(ui, "audio-form", "submit");
+  assert.equal(calls.filter((call) => call.url.endsWith("/audio")).at(-1).body.name, "microphone.wav", "Recorded WAV must reuse authenticated upload flow");
 
   ui.elements.recipient.value = "Demo beneficiary";
   ui.elements.amount.value = "25000.50";

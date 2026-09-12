@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-09-12T03:35:11.268524+00:00",
+  "format": "Silent guided walkthrough assembled from real browser checkpoints; simulated transfer",
+  "secrets": "Verifier key never captured; one-time code redacted before screenshot; no session or approval tokens exported",
+  "checkpoints": [
+    {
+      "image": "01-dashboard.png",
+      "detector_available": true,
+      "sha256": "f2f459e96abc6e28aed18adb6a83b442ef21c556362bccae8b6c0fd4413c0ec6"
+    },
+    {
+      "image": "02-genuine.png",
+      "risk": "ELEVATED",
+      "sha256": "383e272bdeca0b3ce04d496e0418e2607abdc7aec64fa7f1b7a154ea0e162b12"
+    },
+    {
+      "image": "03-verification-required.png",
+      "action_status": "PENDING",
+      "action_id": "02735010-efcb-48d4-a98f-ceb603965619",
+      "sha256": "d92d21f15fcf6b30674a85031a03ebc0df83a50af2091c5241d78415676a185f"
+    },
+    {
+      "image": "04-independent-review.png",
+      "key_field_empty": true,
+      "code_redacted": true,
+      "sha256": "e37ceae7bd1e5d78af17305f8264510ba12c8f28379f3f52042951b67ba274b4"
+    },
+    {
+      "image": "05-completed.png",
+      "action_status": "COMPLETED",
+      "events": [
+        "ACTION CREATED",
+        "OTP CHALLENGE ISSUED",
+        "OTP VERIFIED",
+        "ACTION COMPLETED"
+      ],
+      "sha256": "2fe2f92ebde8f973da919ec94437f7f7e9cd693c36f1e83f2203cebdff664713"
+    }
+  ],
+  "omission": "Chrome timed out capturing the final synthetic screenshot; backend HIGH/BLOCKED behavior is covered by demo-checks.json.",
+  "video_sha256": "8da36c6ac12405db5e53601467cbefe198b3b369cf63473ae608bfc1cf0b4fac"
+}

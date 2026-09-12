@@ -2,6 +2,8 @@
 
 This is a local, simulated-transfer demo. It does not move money and its voice score does not establish identity.
 
+For a classroom presentation, start with [teacher-demo-guide.md](teacher-demo-guide.md), [the slides](teacher-presentation.pdf), and [the measured evaluation](evaluation-report.md).
+
 ## Start
 
 ```powershell
@@ -10,6 +12,8 @@ docker compose up -d --build
 ```
 
 Open `http://127.0.0.1:8000/`. The included audio samples are in `models/demo/`.
+
+Chrome/Edge can record up to 10 seconds from the microphone, preview the converted WAV, and submit it with **Analyze recording**. Use localhost or HTTPS; allow microphone access. This is record-then-analyze input. WAV upload remains available.
 
 The operator creates a session, uploads a 16 kHz mono 16-bit WAV file, prepares a transfer, and requests independent verification. Open `/verify` in a separate tab, enter the local verifier key from `.env`, and use the displayed code in the operator tab. Completion requires the one-time approval token and the exact stored transfer details.
 

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VigilVoice · Teacher Presentation</title>
+<style>
+@page{size:A4 landscape;margin:0}*{box-sizing:border-box}body{margin:0;background:#dce5ec;color:#122b3a;font:18px/1.5 'Segoe UI',Arial,sans-serif}.slide{width:297mm;min-height:210mm;margin:15px auto;padding:17mm 20mm;background:#f8fbfd;position:relative;break-after:page}.slide:last-child{break-after:auto}.dark{background:#0b202b;color:#edf7fc}.eyebrow{font-size:13px;letter-spacing:.15em;font-weight:700;color:#147766;text-transform:uppercase}.dark .eyebrow{color:#77e4cb}h1{font-size:60px;line-height:1.08;letter-spacing:-2px;margin:25px 0}h2{font-size:37px;line-height:1.16;letter-spacing:-1px;margin:12px 0 22px}h3{font-size:22px;margin:0 0 10px}p{margin:12px 0}.lead{font-size:25px;max-width:860px}.muted{color:#4d6574}.dark .muted{color:#b8cdd8}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:25px 0}.card{padding:23px;background:#eaf2f5;border-left:4px solid #178775;border-radius:6px}.dark .card{background:#163442}.tag{display:inline-block;padding:5px 12px;border:1px solid #a6c8c3;border-radius:30px;font-size:14px;margin:12px 8px 0 0}ul,ol{padding-left:23px}li{margin:10px 0}footer{position:absolute;bottom:10mm;left:20mm;right:20mm;display:flex;justify-content:space-between;font-size:12px;color:#617987}.dark footer{color:#a8c1cc}.flow{display:flex;align-items:center;gap:10px;margin:32px 0}.node{flex:1;text-align:center;background:#e5f2ee;border:1px solid #9fc7bc;border-radius:10px;padding:18px 10px;font-weight:650;font-size:17px}.arrow{color:#258974;font-size:25px}.note{font-size:16px;padding:14px 18px;border-left:3px solid #b78021;background:#fff2db;margin-top:20px}.small{font-size:15px}table{width:100%;border-collapse:collapse;font-size:17px}th,td{padding:12px;text-align:left;border-bottom:1px solid #c9d9e1}th{background:#e7f0f5}.stat{font-size:42px;font-weight:700;line-height:1.2;color:#147766}a{color:#147766}.dark a{color:#77e4cb}@media print{body{background:white}.slide{margin:0;height:210mm;min-height:0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}}@media screen and (max-width:1125px){.slide{width:100%;min-height:100vh;padding:8vw}h1{font-size:45px}.grid{grid-template-columns:1fr}.flow{flex-wrap:wrap}footer{position:static;margin-top:30px}}
+.evidence .grid{margin:16px 0;gap:20px}.evidence .card{padding:16px}.evidence .card p{font-size:16px;margin:8px 0}.evidence .stat{font-size:34px}.evidence th,.evidence td{padding:8px 12px}.evidence .small{font-size:14px}
+</style></head><body>
+<section class="slide dark">
+<p class="eyebrow">SIH · Working local prototype · 12 September 2026</p>
+<h1>VigilVoice<br>Voice evidence.<br>Verified actions.</h1>
+<p class="lead">A voice-risk detector connected to a guarded approval workflow.</p>
+<p class="muted">Real pretrained audio inference · Separate verification · Simulated transfers · Auditable decisions</p>
+<span class="tag">Teacher demonstration</span><span class="tag">No money moves</span>
+<footer><span>VigilVoice</span><span>01 / 07</span></footer></section>
+<section class="slide">
+<p class="eyebrow">The problem and the response</p><h2>A convincing voice should not be enough<br>to authorize a sensitive action.</h2>
+<div class="grid"><div class="card"><h3>The risk</h3><p>A synthetic recording can sound persuasive. Poor recordings also make audio assessment unreliable.</p><p>The operator needs a clear decision process when evidence is risky or missing.</p></div><div class="card"><h3>Our prototype</h3><p>Assess speech quality and spoof signals, then require verification of the exact recipient and amount.</p><p>Block completion when evidence is unsafe, missing, stale, or verification fails.</p></div></div>
+<p class="note">The audio score is a risk signal. It does not establish identity, intent, or a calibrated probability of fraud.</p>
+<footer><span>Problem → protected action</span><span>02 / 07</span></footer></section>
+<section class="slide">
+<p class="eyebrow">What is implemented</p><h2>One traceable path from speech to decision.</h2>
+<div class="flow"><div class="node">WAV upload<br>or mic recording</div><span class="arrow">→</span><div class="node">Silero VAD<br>+ quality gate</div><span class="arrow">→</span><div class="node">Wav2Vec2<br>spoof signal</div><span class="arrow">→</span><div class="node">Threshold<br>policy</div></div>
+<div class="flow"><div class="node">Exact action<br>recipient + amount</div><span class="arrow">→</span><div class="node">Separate verifier<br>one-time code</div><span class="arrow">→</span><div class="node">Fresh evidence<br>+ single-use approval</div><span class="arrow">→</span><div class="node">Simulated result<br>+ audit trail</div></div>
+<p class="muted">FastAPI · PostgreSQL · ONNX Runtime on CPU · Native browser UI · Docker</p>
+<p class="small">Model weights are from third parties. Our implementation integrates inference with verification, failure handling, and action control. Browser microphone input is record-then-analyze.</p>
+<footer><span>Implemented system</span><span>03 / 07</span></footer></section>
+<section class="slide">
+<p class="eyebrow">Live demonstration · localhost:8000</p><h2>Three cases the audience can follow.</h2>
+<table><thead><tr><th>Input</th><th>What to demonstrate</th><th>Expected workflow</th></tr></thead><tbody>
+<tr><td>Bundled genuine speech</td><td>Analyze → prepare transfer → verifier reviews details → code → complete</td><td>LOW/ELEVATED still requires verification</td></tr>
+<tr><td>Bundled synthetic speech</td><td>Analyze → prepare another transfer</td><td>HIGH blocks completion</td></tr>
+<tr><td>Your microphone</td><td>Record 3–10 seconds → stop → preview → analyze</td><td>Show the actual output, including false alarms or quality rejection</td></tr>
+</tbody></table>
+<p class="note">A second tab simulates delivery; it is not an independent authentication factor. Every transfer is simulated. Keep the verifier key private.</p>
+<p class="small muted">Rehearsal: file evidence 120s · code 60s · approval 60s · maximum 3 incorrect code attempts. Expired/blocked action? Start a new transfer.</p>
+<footer><span>See teacher-demo-guide.md for the speaking script</span><span>04 / 07</span></footer></section>
+<section class="slide evidence">
+<p class="eyebrow">Measured evidence</p><h2>Working controls, exploratory ML results.</h2>
+<div class="grid"><div class="card"><div class="stat">13</div><h3>Backend check groups passed</h3><p>Action binding, session isolation, concurrent completion, code limits/expiry, stale evidence, unsafe audio, and disconnect handling.</p><p class="small">Real running API and models; expiry tests age only their own test records.</p></div><div class="card"><div class="stat">40</div><h3>Public labeled audio clips</h3><p>20 validation + 20 test clips. Source-recording groups separated; bundled demo sources excluded.</p><p class="small">Exploratory experiment. Training-data overlap, speaker overlap, and target-language coverage are unverified.</p></div></div>
+<table><thead><tr><th>20-clip test partition</th><th>Default HIGH 0.75</th><th>Offline candidate 0.58</th></tr></thead><tbody><tr><td>Synthetic clips eligible for verification</td><td>1 / 9 scorable</td><td>0 / 9 scorable</td></tr><tr><td>Genuine clips falsely blocked as HIGH</td><td>1 / 9 scorable</td><td>3 / 9 scorable</td></tr><tr><td>Quality rejections (excluded above)</td><td>2 / 20 total</td><td>2 / 20 total</td></tr></tbody></table>
+<p class="small">Candidate chosen on validation only; remains offline. Lowering the threshold caught more synthetic clips but blocked more genuine speech. Median offline file inference: 3.06s; p95: 7.79s.</p>
+<p class="small muted">Full results and exact denominators: evaluation-report.md. Software checks demonstrate those scenarios, not production security certification.</p>
+<footer><span>Evidence with limits</span><span>05 / 07</span></footer></section>
+<section class="slide">
+<p class="eyebrow">Honest prototype boundaries</p><h2>What we can—and cannot—claim today.</h2>
+<table><thead><tr><th>Implemented and demonstrated</th><th>Still pending</th></tr></thead><tbody>
+<tr><td>Real pretrained VAD and spoof inference</td><td>Our own model training or fine-tuning</td></tr>
+<tr><td>Public-corpus experiment with held-out test partition</td><td>Representative Indian-language, replay and phone-channel validation</td></tr>
+<tr><td>Offline threshold candidate evaluation</td><td>Production threshold/probability calibration</td></tr>
+<tr><td>Local verifier and transaction simulation</td><td>Trusted delivery and real payment integration</td></tr>
+<tr><td>Microphone recording and WAV input</td><td>Continuous browser streaming and field/load trials</td></tr>
+</tbody></table>
+<p class="note">Present this as an engineering prototype. Do not claim an accuracy percentage for real-world use or that all SIH PDF promises are complete.</p>
+<footer><span>Known limitations are part of the result</span><span>06 / 07</span></footer></section>
+<section class="slide dark">
+<p class="eyebrow">Next development steps</p><h2>Make the evidence stronger,<br>then expand deployment.</h2>
+<ol class="lead"><li>Collect consented Indian-language, noisy phone, replay, and diverse synthetic speech.</li><li>Use separated source/speaker splits to evaluate and calibrate; fine-tune only if the results justify it.</li><li>Add trusted verification delivery, accounts, HTTPS, and explicit audio retention.</li><li>Measure concurrency and stream latency before a wider pilot.</li></ol>
+<p class="muted">Today’s deliverable: a reproducible local demonstration, test receipts, and an honest evaluation report.</p>
+<footer><span>Demo guide · Evaluation report · Source code</span><span>07 / 07</span></footer></section>
+</body></html>

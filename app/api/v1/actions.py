@@ -28,9 +28,10 @@ async def event(db, action, name, reason=None, details=None):
                                 reason, details, action["action_id"])
 
 
-async def reject(db, action, reason, status="BLOCKED"):
-    await db.execute(text("UPDATE protected_actions SET status=:status WHERE action_id=:id"),
-                     {"status": status, "id": action["action_id"]})
+async def reject(db, action, reason, status="BLOCKED", risk=None):
+    action = {**action, "risk_state": risk.value if risk is not None else action["risk_state"]}
+    await db.execute(text("UPDATE protected_actions SET status=:status,risk_state=:risk WHERE action_id=:id"),
+                     {"status": status, "risk": action["risk_state"], "id": action["action_id"]})
     await event(db, action, "ACTION_BLOCKED", reason)
     await db.commit()
     demo_verifier.inbox.pop(action["action_id"], None)
@@ -75,7 +76,7 @@ async def request_verification(action_id: UUID, token: str = Depends(bearer), db
         raise HTTPException(409, "This action is not awaiting verification.")
     risk, _ = await evidence(db, session)
     if not eligible(risk):
-        await reject(db, action, "Current audio evidence does not permit verification.")
+        await reject(db, action, "Current audio evidence does not permit verification.", risk=risk)
     existing = (await db.execute(text("SELECT challenge_id,expires_at,status FROM verification_challenges WHERE action_id=:id"),
                                  {"id": action_id})).mappings().first()
     if existing:
@@ -104,7 +105,7 @@ async def confirm(action_id: UUID, req: OTPVerifyRequest, token: str = Depends(b
         raise HTTPException(409, "This action is not awaiting verification.")
     risk, _ = await evidence(db, session)
     if not eligible(risk):
-        await reject(db, action, "Current audio evidence does not permit verification.")
+        await reject(db, action, "Current audio evidence does not permit verification.", risk=risk)
     challenge = (await db.execute(text("""
         SELECT * FROM verification_challenges WHERE action_id=:action AND challenge_id=:id FOR UPDATE
     """), {"action": action_id, "id": req.challenge_id})).mappings().first()
@@ -145,7 +146,7 @@ async def complete(action_id: UUID, req: CompleteRequest, token: str = Depends(b
         raise HTTPException(409, "An unused verified approval is required.")
     risk, info = await evidence(db, session)
     if not eligible(risk):
-        await reject(db, action, "Audio evidence is stale, unavailable, or unsafe.")
+        await reject(db, action, "Audio evidence is stale, unavailable, or unsafe.", risk=risk)
     approval = (await db.execute(text("SELECT * FROM approval_tokens WHERE action_id=:id FOR UPDATE"), {"id": action_id})).mappings().first()
     if approval is None or approval["consumed_at"] is not None or not hmac.compare_digest(approval["token_hash"], digest(req.approval_token)):
         raise HTTPException(403, "Invalid approval token for this action.")

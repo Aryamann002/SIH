@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-09-11T23:08:00.669913+00:00",
+  "passed": true,
+  "elapsed_seconds": 16.817,
+  "checks": [
+    {
+      "name": "Real local models and demo verifier available",
+      "passed": true
+    },
+    {
+      "name": "Missing evidence blocks; session credentials isolate access",
+      "passed": true
+    },
+    {
+      "name": "OTP and approval are bound to exact action; verifier and payload boundaries enforced",
+      "passed": true
+    },
+    {
+      "name": "Concurrent completion succeeds exactly once with a persisted audit event",
+      "passed": true
+    },
+    {
+      "name": "Three incorrect OTPs block action and cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "Expired OTP cannot approve (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Expired approval cannot complete (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Stale evidence blocks completion; stored action and audit show current unsafe risk",
+      "passed": true
+    },
+    {
+      "name": "Synthetic demo clip blocks new action and previously verified completion",
+      "passed": true
+    },
+    {
+      "name": "Malformed, truncated, wrong-rate and oversized audio fail closed",
+      "passed": true
+    },
+    {
+      "name": "Silence, clipping and too-short audio never fabricate a safe score",
+      "passed": true
+    },
+    {
+      "name": "WebSocket replacement and disconnect invalidate earlier file evidence",
+      "passed": true
+    },
+    {
+      "name": "Missing-model pipeline returns unavailable with no score (isolated process setting)",
+      "passed": true
+    }
+  ],
+  "error": null,
+  "scope": "Local simulated transactions; real pretrained inference. Not accuracy or production security certification.",
+  "script_sha256": "a7e12a52b4046503e6adff11e3ac894a6ea862165c727e7e06b14c59cf17db7a"
+}
