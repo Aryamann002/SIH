@@ -1,5 +1,20 @@
 # SIH
 
+## Active presentation plan - read first
+
+Read [docs/final-development-plan.md](docs/final-development-plan.md) at the start
+of every session. It contains the user's October 3, 2026 presentation target,
+accepted model flexibility, backend scope, task ledger, evidence and latest handoff.
+Before editing, inspect `git status --short` and resume a dependency-ready task.
+Always update its status/evidence after material progress and append a dated
+handoff before ending a development session, including blockers and the next action.
+Mark DONE only after the stated acceptance checks pass; reopen tasks when changes
+invalidate evidence. The saved plan is the progress source of truth if Ruflo is unavailable.
+
+The application is VigilVoice: Python/FastAPI, PostgreSQL, ONNX Runtime and native
+browser JavaScript. The TypeScript/npm overview below is generated orchestration
+scaffolding; use the application commands in the saved plan and prototype runbook.
+
 > Multi-agent orchestration framework for agentic coding
 
 ## Project Overview

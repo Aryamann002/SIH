@@ -19,3 +19,6 @@ ruvector.db
 .claude-flow/daemon.pid
 .claude-flow/harness-active-policy.json
 .claude-flow/metrics/
+
+# Ruflo local secrets and runtime data
+.claude-flow/sessions/
