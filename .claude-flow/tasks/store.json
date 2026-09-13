@@ -111,6 +111,54 @@
       "createdAt": "2026-09-11T23:04:37.354Z",
       "startedAt": null,
       "completedAt": null
+    },
+    "task-1789246826541-vbuauz": {
+      "taskId": "task-1789246826541-vbuauz",
+      "type": "implementation",
+      "description": "B01 make required VigilVoice backend source reproducible from a clean checkout",
+      "priority": "critical",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [
+        "B01",
+        "presentation"
+      ],
+      "createdAt": "2026-09-12T21:00:26.541Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1789246829147-vn2xsd": {
+      "taskId": "task-1789246829147-vn2xsd",
+      "type": "testing",
+      "description": "B02 reproduce VigilVoice backend Docker, migration, model and API baseline",
+      "priority": "critical",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [
+        "B02",
+        "presentation"
+      ],
+      "createdAt": "2026-09-12T21:00:29.147Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1789246831635-ttewu3": {
+      "taskId": "task-1789246831635-ttewu3",
+      "type": "research",
+      "description": "D01 freeze licensed four-language evaluation protocol and numerical gates",
+      "priority": "high",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [],
+      "tags": [
+        "D01",
+        "presentation"
+      ],
+      "createdAt": "2026-09-12T21:00:31.635Z",
+      "startedAt": null,
+      "completedAt": null
     }
   },
   "version": "3.0.0"

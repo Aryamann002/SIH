@@ -10,7 +10,7 @@
 __pycache__/
 .pytest_cache/
 .coverage
-models/
+/models/
 docs/evaluation-output/
 .claude/
 .swarm/

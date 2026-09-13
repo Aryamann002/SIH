@@ -8,9 +8,9 @@ User requirement: a presentation-ready system with a fully working backend and a
 
 ## Resume here
 
-- **Current stage:** plan complete; final development has not started.
-- **Next task:** B01, make a clean checkout contain every required backend module, then reproduce startup and the baseline checks.
-- **Known release blocker:** `.gitignore` contains `models/`, which also ignores required `app/models/schemas.py`. That file exists locally but `git ls-files app/models` is empty. Local test success does not prove a clean checkout can run.
+- **Current stage:** B01, B02 and D01 are complete; D02 data acquisition and B03 readiness can proceed in parallel.
+- **Next task:** begin consent/access-safe D02 acquisition while implementing B03 readiness and configuration validation.
+- **Known release blocker:** B01 fixed the broad ignore rule and proved a clean Python 3.11 image imports the app. Packaging still needs pinned dependencies and a safe Docker context in R01; the host Python 3.13 environment currently has SQLAlchemy 2.0.30 and cannot import SQLAlchemy.
 - **Critical path:** B01 -> B02/B03 -> S01/S02 -> M02/M03 -> V01/V02 -> R01/R02 -> R03/R04. Dataset work D01/D02 starts alongside backend work because model selection depends on it.
 - **Next checkpoint:** end of Day 2, September 15: reproducible backend baseline and fixed evaluation protocol.
 - **Final acceptance:** NOT VERIFIED. Fresh unit/mock checks passed on Day 0; no live backend or real-model checks were rerun in the planning session.
@@ -81,9 +81,9 @@ Statuses: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requires 
 | ID | Window / owner | Status | Work and completion check | Evidence / next action |
 |---|---|---|---|---|
 | PLAN | Day 0 / integration | DONE | Read PDFs/source, save agreed 20-day scope, task ledger and session instructions | This document; AGENTS.md and CLAUDE.md entry points; Day 0 log below |
-| B01 | Days 1-2 / integration | TODO | Correct the broad model ignore rule without exposing weights; ensure `app/models/schemas.py` and all required imports are included in the reviewable source; verify an isolated clean source export builds and imports the app | Start with `git check-ignore -v app/models/schemas.py`; no commit/push implied |
-| B02 | Days 1-2 / backend | TODO | Reproduce local Docker startup, additive migration twice, model checksum checks and existing unit/API checks; save environment and exact-source baseline evidence | Reuse configure_demo.py, migrate.py, check_demo.py and model smoke; preserve database records |
-| D01 | Days 1-2 / evaluation | TODO | Choose regional language from accessible permitted data, inventory sources/consent and freeze split, metrics, latency and false-block targets before tuning | Protocol and manifest design described below; record sources actually obtained |
+| B01 | Days 1-2 / integration | DONE | Correct the broad model ignore rule without exposing weights; ensure `app/models/schemas.py` and all required imports are included in the reviewable source; verify an isolated clean source export builds and imports the app | Root `/models/` remains ignored; `app/models/schemas.py` is addable; clean export tests 12 passed/1 skipped; image `sha256:1a7e7e98a2ff3f8f18dca0f26023c8cdd2292b2d10e9b63df400b8ab48236ef7` imported `app.main` on Python 3.11 |
+| B02 | Days 1-2 / backend | DONE | Reproduce local Docker startup, additive migration twice, model checksum checks and existing unit/API checks; save environment and exact-source baseline evidence | [B02 receipt](validation/b02-baseline-2026-09-13.md): rebuilt stack, four idempotent migration runs, pinned checksums, real-model smoke, unit/UI and two 13-group API runs passed; existing DB volume preserved |
+| D01 | Days 1-2 / evaluation | DONE | Choose regional language from accessible permitted data, inventory sources/consent and freeze split, metrics, latency and false-block targets before tuning | [Frozen protocol](evaluation-protocol.md): Marathi selected; sources/access/consent inventoried; source grouping, untouched test, manifest fields and numerical targets frozen before tuning |
 | B03 | Days 3-4 / backend | TODO | Add readiness for DB/schema, both models and demo verifier; bounded model warmup; validate finite/ordered thresholds, durations, positive TTLs and consistent OTP limits | Missing dependencies or invalid settings must not report ready; keep liveness inexpensive |
 | B04 | Days 3-5 / backend | TODO | Verify action state machine, ownership, payload binding, approval replay/races, audit rollback and post-restart denial/recovery | Extend existing API checks using isolated test records; zero unauthorized completions |
 | B05 | Days 4-5 / backend | TODO | Define single-worker capacity and verifier restart behavior; bound upload/auth/inference waits and concurrent sessions; correct expired-challenge and unavailable UI recovery | Lost local inbox data leads to a clearly explained new action/verification; never bypass approval or persist plaintext codes |
@@ -200,6 +200,14 @@ Next exact action:
 - Plan validation: all 10 local Markdown links resolve; 23 unique task IDs, only PLAN marked DONE; document below 500 lines; deadline arithmetic verified; `git diff --check` passed. Application/source/test diffs remain empty. Ruflo context index was retrieved successfully after saving.
 - Existing configuration/runtime changes were preserved. No application code, model, threshold, dataset, database, deployment or source-control publication was changed by this planning task.
 - Next exact action after implementation is requested: B01, correct the root model-artifact ignore scope and include the required schema module in a reviewable source snapshot; verify clean-source import/startup, then B02 and D01.
+
+### 2026-09-13 12:55 Asia/Calcutta | Codex integration | B01, B02, D01
+
+- Status changes: B01, B02 and D01 moved from pending/in-progress to DONE after their stated checks passed.
+- Changes and source state: narrowed the root model ignore rule to `/models/`, exposing required `app/models/schemas.py` without exposing weights; added the B02 receipt and froze the four-language evaluation protocol with Marathi selected. Pre-existing Ruflo state changes were preserved. Baseline commit is `df2e83ee6249bfa0d056e169810152ba3870de43`; the required untracked schema and ignore-file hashes are recorded in the B02 receipt.
+- Checks: clean source export -> 12 passed, 1 skipped; clean Python 3.11 image build/import -> passed; Compose rebuild/start -> passed while preserving the existing PostgreSQL container/volume; additive migration -> passed four times across pre/post rebuild; pinned model hashes -> passed; real-model unittest -> 5 passed; UI and microphone smoke -> passed; rebuilt-stack API/action suite -> all 13 groups passed; `git diff --check` -> passed. Evidence: [B02 receipt](validation/b02-baseline-2026-09-13.md), backend image `sha256:6b4e46cb7ff23cd134a9346b505c93614ec914da36e92b3229be21cd3425716a`.
+- Blockers/decisions: host Python 3.13.5 with SQLAlchemy 2.0.30 cannot import SQLAlchemy, so Python 3.11 Docker remains the verified runtime. AI4Bharat data/model candidates require gated contact-sharing acceptance; no acceptance or download was performed. Team speakers/consent and a second permitted generator family are still missing for D02. Existing 40 English clips remain regression-only and cannot support final four-language claims.
+- Next exact action: start B03 readiness/configuration validation in the existing backend paths while D02 obtains explicit consent and approved dataset/model access; do not tune thresholds before the frozen manifest is assembled.
 
 ### PDF source fingerprints
 

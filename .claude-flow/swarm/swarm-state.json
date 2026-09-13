@@ -54,6 +54,24 @@
       },
       "createdAt": "2026-09-12T19:02:59.156Z",
       "updatedAt": "2026-09-12T19:02:59.156Z"
+    },
+    "swarm-1789246724633-vpeobb": {
+      "swarmId": "swarm-1789246724633-vpeobb",
+      "topology": "hierarchical",
+      "maxAgents": 4,
+      "status": "running",
+      "agents": [],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical",
+        "maxAgents": 4,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-09-12T20:58:44.633Z",
+      "updatedAt": "2026-09-12T20:58:44.633Z"
     }
   },
   "version": "3.0.0"
