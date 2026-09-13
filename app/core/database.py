@@ -6,7 +6,13 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=False,
+    pool_timeout=settings.DATABASE_TIMEOUT_SECONDS,
+    connect_args={"timeout": settings.DATABASE_TIMEOUT_SECONDS,
+                  "command_timeout": settings.DATABASE_TIMEOUT_SECONDS},
+)
 AsyncSessionLocal = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
@@ -49,6 +55,22 @@ async def database_status():
         return await asyncio.wait_for(probe(), timeout=2)
     except Exception:
         return False, False
+
+
+async def invalidate_interrupted_audio():
+    async with AsyncSessionLocal() as session:
+        await session.execute(text("""
+            WITH interrupted AS (
+                UPDATE sessions
+                SET status='DISCONNECTED', generation=NULL, latest_evaluation_id=NULL
+                WHERE status IN ('LIVE', 'PROCESSING_FILE')
+                RETURNING session_id
+            )
+            INSERT INTO audit_logs (session_id,event_type,risk_state,reason_code,details)
+            SELECT session_id,'AUDIO_UNAVAILABLE','SERVICE_UNAVAILABLE','BACKEND_RESTART','{}'::jsonb
+            FROM interrupted
+        """))
+        await session.commit()
 
 
 async def get_db():

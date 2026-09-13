@@ -52,6 +52,7 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
     if (url.endsWith("/verification")) return response({ challenge_id: "challenge-id", expires_at: future() });
     if (url.endsWith("/confirm")) return response({ approval_token: "approval-secret", expires_at: future() });
     if (url.endsWith("/complete")) return failComplete ? response({ detail: "Evidence is stale" }, 409) : response({ action_id: actionId, status: "COMPLETED", risk_state: "LOW", allowed: true });
+    if (url.endsWith(actionId)) return response({ action_id: actionId, status: "VERIFIED", risk_state: "LOW", allowed: false });
     throw new Error(`Unexpected URL: ${url}`);
   });
   await settle();
@@ -93,6 +94,8 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   ui.elements["otp-code"].value = "654321";
   await fire(ui, "verification-form", "submit");
   assert.equal(ui.elements["complete-action"].hidden, false);
+  assert.equal(ui.elements["action-status"].textContent, "VERIFIED");
+  assert.equal(ui.elements["request-verification"].disabled, true, "Verified actions cannot request another code");
   assert.deepEqual(JSON.parse(calls.find((call) => call.url.endsWith("/confirm")).body), { challenge_id: "challenge-id", otp_code: "654321" });
   await fire(ui, "complete-action");
   assert.match(ui.elements.notice.textContent, /409: Evidence is stale/);
@@ -101,6 +104,20 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   await fire(ui, "complete-action");
   assert.equal(ui.elements["action-status"].textContent, "COMPLETED");
   assert.equal(ui.elements["complete-action"].hidden, true);
+
+  const expired = load("app", async (url) => url.endsWith("/system")
+    ? response({ ready: true, demo_verification_enabled: true })
+    : response({ action_id: actionId, status: "EXPIRED", risk_state: "LOW", allowed: false }));
+  await settle();
+  vm.runInContext(`
+    state.action = { action_id: "${actionId}", status: "PENDING", risk_state: "LOW" };
+    state.challenge = { challenge_id: "challenge-id", expires_at: new Date(Date.now() - 1).toISOString() };
+    renderAction(); renderControls();
+  `, expired.context);
+  expired.intervals[0]();
+  assert.equal(expired.elements["request-verification"].disabled, true, "Expired codes cannot be reissued for the same action");
+  assert.equal(expired.elements["verification-form"].hidden, true);
+  assert.match(expired.elements["verification-message"].textContent, /New transfer/);
   assert.deepEqual(JSON.parse(calls.find((call) => call.url.endsWith("/complete")).body), { approval_token: "approval-secret" });
   assert.ok(calls.every((call) => !call.url.includes("/demo/inbox")), "The operator must never fetch verifier codes");
   await fire(ui, "new-action");
@@ -125,5 +142,14 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   vm.runInContext("expiresAt = Date.now() - 1", verifier.context);
   verifier.intervals[0]();
   assert.equal(verifier.elements["review-code"].textContent, "Expired");
+  assert.match(verifier.elements["review-expiry"].textContent, /select New transfer/);
+
+  const lostVerifier = load("verify", async () => response({ detail: "No unexpired verification message for this action." }, 404));
+  lostVerifier.elements["verifier-key"].value = "verifier-secret";
+  lostVerifier.elements["action-id"].value = actionId;
+  await fire(lostVerifier, "inbox-form", "submit");
+  assert.match(lostVerifier.elements.notice.textContent, /backend restart/);
+  assert.match(lostVerifier.elements.notice.textContent, /New transfer/);
+  assert.equal(lostVerifier.elements["verifier-key"].value, "");
   console.log("UI smoke passed: authenticated file flow, immutable action, independent verification, denied completion, audit rendering, and expiry.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

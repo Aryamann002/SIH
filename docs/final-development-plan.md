@@ -8,12 +8,12 @@ User requirement: a presentation-ready system with a fully working backend and a
 
 ## Resume here
 
-- **Current stage:** B01-B03 and D01 are complete; B04 protected-action failure/restart verification is next while D02 remains access/consent dependent.
-- **Next task:** execute B04 against isolated test records, starting with audit rollback and restart-state denial/recovery without resetting the demo database.
-- **Known release blocker:** B01 fixed the broad ignore rule and proved a clean Python 3.11 image imports the app. Packaging still needs pinned dependencies and a safe Docker context in R01; the host Python 3.13 environment currently has SQLAlchemy 2.0.30 and cannot import SQLAlchemy.
+- **Current stage:** B01-B05 and D01 are complete; S01 continuous browser streaming is next while D02 remains access/consent dependent.
+- **Next task:** execute S01 in the existing microphone and WebSocket paths: authenticated AudioWorklet PCM streaming with the current WAV path retained as fallback.
+- **Known release blocker:** packaging still needs pinned dependencies and a safe Docker context in R01. The current host Python 3.13 environment now passes the local suite, but Python 3.11 Docker remains the verified release runtime.
 - **Critical path:** B01 -> B02/B03 -> S01/S02 -> M02/M03 -> V01/V02 -> R01/R02 -> R03/R04. Dataset work D01/D02 starts alongside backend work because model selection depends on it.
 - **Next checkpoint:** end of Day 2, September 15: reproducible backend baseline and fixed evaluation protocol.
-- **Final acceptance:** NOT VERIFIED. B02/B03 now prove clean startup, executable models, aggregate readiness and the existing 13-group local API flow; continuous streaming, representative evaluation, injected failure/restart checks and physical rehearsals remain open.
+- **Final acceptance:** NOT VERIFIED. B02-B04 prove clean startup, executable models, aggregate readiness, action rollback and hard-restart denial/recovery; continuous streaming, representative evaluation, broader failure/capacity checks and physical rehearsals remain open.
 
 ## What "fully working for presentation" means
 
@@ -50,7 +50,7 @@ Decisions resolving differences between PDFs:
 |---|---|---|
 | Local Python checks | B03: **20 passed, 1 skipped**, 22 validation subtests; Python 3.11 focused readiness: **8 passed** | Final-source regression and later-stage failure/stress evidence remain required. |
 | UI logic checks | `node tests/ui_smoke.cjs` and `node tests/microphone_smoke.cjs`: **passed**, run during planning | These use simulated browser/API objects; physical microphone, actual streaming and browser-to-database workflow remain unverified today. |
-| Protected actions | Existing session ownership, generation fencing, expiry, OTP lockout, atomic single-use completion and audit; historical 13-group API receipt | Revalidate on final source; cover database/audit failure, restarts and races during active streaming. |
+| Protected actions | B04: ownership, payload/action binding, expiry, OTP lockout, atomic replay/race behavior, audit rollback and hard-restart denial/recovery passed | Revalidate on final source and during later active-stream failure/capacity work. |
 | Audio | Local Silero + INT8 Wav2Vec2; per-session VAD; shared upload/stream pipeline; immediate HIGH escalation with slower score recovery | Current browser has no continuous stream client. One CPU inference slot; no measured live capacity. |
 | Models and evaluation | Historical 40 English clips; default test missed 1/9 scorable spoof and falsely blocked 1/9 scorable genuine; candidate 0.58 falsely blocked 3/9 genuine | Representative language/channel evaluation and defensible threshold choice. Candidate threshold is not deployed. |
 | Timing | Historical offline median 3.06s, p95 7.79s per file; model load 7.07s | Capture-to-alert, API overhead, warm startup and limited concurrency on the presentation laptop. |
@@ -85,8 +85,8 @@ Statuses: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requires 
 | B02 | Days 1-2 / backend | DONE | Reproduce local Docker startup, additive migration twice, model checksum checks and existing unit/API checks; save environment and exact-source baseline evidence | [B02 receipt](validation/b02-baseline-2026-09-13.md): rebuilt stack, four idempotent migration runs, pinned checksums, real-model smoke, unit/UI and two 13-group API runs passed; existing DB volume preserved |
 | D01 | Days 1-2 / evaluation | DONE | Choose regional language from accessible permitted data, inventory sources/consent and freeze split, metrics, latency and false-block targets before tuning | [Frozen protocol](evaluation-protocol.md): Marathi selected; sources/access/consent inventoried; source grouping, untouched test, manifest fields and numerical targets frozen before tuning |
 | B03 | Days 3-4 / backend | DONE | Add readiness for DB/schema, both models and demo verifier; bounded model warmup; validate finite/ordered thresholds, durations, positive TTLs and consistent OTP limits | [B03 receipt](validation/b03-readiness-2026-09-13.md): full schema/executable-model/verifier readiness, fail-closed dependency cases and startup validation passed; final review found no blocker |
-| B04 | Days 3-5 / backend | TODO | Verify action state machine, ownership, payload binding, approval replay/races, audit rollback and post-restart denial/recovery | Extend existing API checks using isolated test records; zero unauthorized completions |
-| B05 | Days 4-5 / backend | TODO | Define single-worker capacity and verifier restart behavior; bound upload/auth/inference waits and concurrent sessions; correct expired-challenge and unavailable UI recovery | Lost local inbox data leads to a clearly explained new action/verification; never bypass approval or persist plaintext codes |
+| B04 | Days 3-5 / backend | DONE | Verify action state machine, ownership, payload binding, approval replay/races, audit rollback and post-restart denial/recovery | [B04 receipt](validation/b04-actions-2026-09-13.md): 14 API groups, injected audit rollback, 5 hard-restart groups, focused unit/UI checks passed; zero unauthorized completions |
+| B05 | Days 4-5 / backend | DONE | Define single-worker capacity and verifier restart behavior; bound upload/auth/inference waits and concurrent sessions; correct expired-challenge and unavailable UI recovery | [B05 receipt](validation/b05-capacity-verifier-2026-09-13.md): one active audio session, sessions 2/3 rejected promptly, bounded DB/upload/inference waits, explicit lost-delivery expiry/new-action recovery, 15 live and 5 hard-restart groups passed |
 | D02 | Days 2-8 / evaluation | TODO | Assemble four-language source-disjoint corpus with real/synthetic labels, quality/channel annotations, license/consent and hashes; keep demo/training/test separate | Target 320 independent source clips as below; incomplete slices remain visible |
 | S01 | Days 6-7 / browser + backend | TODO | Add native AudioWorklet capture/resampling and authenticated WebSocket client; await ready then stream mono 16kHz PCM16 at a measured cadence; retain recording/WAV fallback | Real speech reaches the existing pipeline while capture continues; repair stale test_client.py handshake |
 | S02 | Days 7-8 / backend | TODO | Bound capture/transport/inference backlog; use server-owned receipt/freshness information; stale/duplicate/out-of-order/gapped input cannot refresh old evidence as new speech | Test delayed frames, saturation, source replacement and genuine-to-synthetic-to-genuine transition; HIGH during a pending action must not be silently erased before completion |
@@ -216,6 +216,22 @@ Next exact action:
 - Checks: 20 passed/1 skipped plus 22 validation subtests; Python 3.11 focused readiness 8 passed; UI/microphone smoke passed; rebuilt Compose stack ready; missing verifier/model/DB and invalid NaN configuration all failed closed; final 13-group live API/action suite passed; read-only re-review found no blocker.
 - Blockers/decisions: Ruflo CLI routing failed before execution with npm `Invalid Version`; implementation continued using the Git ledger and a read-only analysis swarm. D02 still needs team consent, accepted gated access and a second permitted generator family. No data was downloaded or threshold tuned.
 - Next exact action: B04, extend isolated API checks for database/audit rollback and restart-state denial/recovery, preserving existing demo records; continue consent/access work for D02 independently.
+
+### 2026-09-13 14:02 Asia/Calcutta | Codex integration + Ruflo/read-only swarm | B04
+
+- Status changes: B04 moved from TODO through IN_PROGRESS to DONE after its transaction-failure and hard-restart checks passed.
+- Changes and source state: fixed startup handling for interrupted `LIVE`/`PROCESSING_FILE` sessions and extended `scripts/check_demo.py` with audit rollback plus two restart phases. Baseline is `5a5e62b`; the reviewable B04 patch, receipts and Ruflo state are uncommitted. Existing PostgreSQL records/volume were preserved.
+- Checks: syntax and diff checks passed; focused Python 3.11 tests 15 passed/1 skipped; live API suite 14/14 passed; hard restart 5/5 passed; UI and microphone smoke passed; final `/readyz` returned 200. Exact hashes and limits are in the [B04 receipt](validation/b04-actions-2026-09-13.md).
+- Blockers/decisions: Ruflo v3.35.0 core memory/routing/swarm paths now work; latest-package resolution remains unnecessary because only optional doctor warnings remain. The runtime image omits pytest, so explicit unittest files were run; dependency/test packaging remains R01. D02 access/consent remains open.
+- Next exact action: B05, use the restart harness to make lost/expired verifier recovery explicit and bound upload/auth/inference/concurrent-session waits without persisting plaintext verification codes.
+
+### 2026-09-13 22:30 Asia/Calcutta | Codex integration + Ruflo/read-only swarm | B05
+
+- Status changes: B05 moved from TODO through IN_PROGRESS to DONE after focused, live-capacity and hard-restart checks passed.
+- Changes and source state: bounded PostgreSQL waits, upload reads, audio admission and inference; fixed WebSocket overload codes and fail-closed source replacement; made lost verifier delivery expire the old challenge/action; corrected operator/verifier recovery text and removed identity/probability-overclaiming reason labels. Baseline is `5a5e62b`; B04/B05 remain an uncommitted reviewable source state bound to image `sha256:a41f612317a99a5a8944ce66ade05ccb1dadfc7db9b68b5c906c5d53c9a59d37`.
+- Checks: host pytest 23 passed/1 skipped plus 26 subtests; Python 3.11 focused unittest 11 passed; UI and microphone smoke passed; rebuilt live suite 15/15 passed; hard SIGKILL restart suite 5/5 passed; final readiness returned 200. Evidence: [B05 receipt](validation/b05-capacity-verifier-2026-09-13.md) and linked machine receipts.
+- Blockers/decisions: capacity is intentionally one active audio session in one Uvicorn worker; sessions 2/3 fail promptly and were measured only as admission checks, not long-run capacity. The first restart rerun exposed and fixed a harness-only variable shadow, then both full suites passed on the final source. Ruflo stored `patterns/vigilvoice-b05-handoff`; immediate semantic search returned no result, so this Git ledger remains authoritative. D02 still needs consent/access and a second permitted generator family.
+- Next exact action: S01, add native continuous browser PCM streaming using the existing WebSocket contract while retaining WAV upload as fallback; then S02 bounds stream freshness/backlog.
 
 ### PDF source fingerprints
 

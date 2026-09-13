@@ -9,10 +9,25 @@ from app.core.config import settings
 from app.core.database import database_status, get_db
 from app.services import demo_verifier
 from app.services.action_gate import bearer, digest, evidence, owned_session
-from app.services.audio_evidence import begin_audio, end_audio, evaluate_wav, infer, record_evidence, unavailable
+from app.services.audio_evidence import audio_capacity, begin_audio, end_audio, evaluate_wav, infer, record_evidence, unavailable
 from app.services.audit import AuditService
 
 router = APIRouter()
+
+
+async def read_audio(request: Request) -> bytes:
+    async def collect():
+        data = bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data) > settings.MAX_AUDIO_BYTES:
+                raise HTTPException(413, "Maximum audio size is 30 seconds of 16 kHz mono PCM WAV.")
+        return bytes(data)
+
+    try:
+        return await asyncio.wait_for(collect(), timeout=settings.AUDIO_UPLOAD_TIMEOUT_SECONDS)
+    except TimeoutError as exc:
+        raise HTTPException(408, "Audio upload timed out; action remains unapproved.") from exc
 
 
 @router.post("/sessions", status_code=201)
@@ -39,27 +54,28 @@ async def get_session(session_id: UUID, token: str = Depends(bearer), db: AsyncS
 @router.post("/sessions/{session_id}/audio")
 async def upload_audio(session_id: UUID, request: Request, token: str = Depends(bearer), db: AsyncSession = Depends(get_db)):
     await owned_session(db, session_id, token, lock=True)
-    generation = await begin_audio(db, session_id, "PROCESSING_FILE")
+    generation = None
     try:
-        data = bytearray()
-        async for chunk in request.stream():
-            data.extend(chunk)
-            if len(data) > settings.MAX_AUDIO_BYTES:
-                raise HTTPException(413, "Maximum audio size is 30 seconds of 16 kHz mono PCM WAV.")
-        result = await infer(lambda: evaluate_wav(bytes(data)))
-        await record_evidence(db, session_id, generation, result, "FILE_READY")
-        return {"session_id": session_id, **result}
+        generation = await begin_audio(db, session_id, "PROCESSING_FILE")
+        async with audio_capacity():
+            data = await read_audio(request)
+            result = await infer(lambda: evaluate_wav(data))
+            await record_evidence(db, session_id, generation, result, "FILE_READY")
+            return {"session_id": session_id, **result}
     except ValueError as exc:
         await db.rollback()
-        await end_audio(db, session_id, generation, "INVALID_AUDIO")
+        if generation:
+            await end_audio(db, session_id, generation, "INVALID_AUDIO")
         raise HTTPException(422, str(exc))
     except HTTPException:
         await db.rollback()
-        await end_audio(db, session_id, generation, "AUDIO_REQUEST_FAILED")
+        if generation:
+            await end_audio(db, session_id, generation, "AUDIO_REQUEST_FAILED")
         raise
     except Exception:
         await db.rollback()
-        await end_audio(db, session_id, generation, "INFERENCE_FAILED_OR_TIMED_OUT")
+        if generation:
+            await end_audio(db, session_id, generation, "INFERENCE_FAILED_OR_TIMED_OUT")
         raise HTTPException(503, "Audio inference is unavailable; action remains unapproved.")
 
 
@@ -79,7 +95,7 @@ async def readiness():
                  info["detector_available"], verifier_available))
     return {**info, "available": ready, "ready": ready, "database_available": database_available,
             "schema_available": schema_available, "demo_verification_enabled": verifier_available,
-            "simulated_transfers": True}
+            "audio_session_capacity": 1, "simulated_transfers": True}
 
 
 @router.get("/system")

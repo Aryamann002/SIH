@@ -5,12 +5,14 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
+from app.core.database import invalidate_interrupted_audio
 from app.api.v1.router import api_router
 from app.api.v1.sessions import model_status, readiness
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    await invalidate_interrupted_audio()
     await model_status()
     yield
 

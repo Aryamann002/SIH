@@ -10,7 +10,11 @@ from app.core.config import settings
 
 
 async def migrate():
-    connection = await asyncpg.connect(settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"))
+    connection = await asyncpg.connect(
+        settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
+        timeout=settings.DATABASE_TIMEOUT_SECONDS,
+        command_timeout=settings.DATABASE_TIMEOUT_SECONDS,
+    )
     try:
         async with connection.transaction():
             await connection.execute("SELECT pg_advisory_xact_lock(26104)")

@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-09-13T08:38:54.719569+00:00",
+  "passed": true,
+  "elapsed_seconds": 4.32,
+  "checks": [
+    {
+      "name": "Completed action and exactly-once audit survive restart",
+      "passed": true
+    },
+    {
+      "name": "Restart invalidates live evidence and denies prior approval",
+      "passed": true
+    },
+    {
+      "name": "Expired approval is not revived by restart",
+      "passed": true
+    },
+    {
+      "name": "Lost verifier inbox cannot bypass pending challenge",
+      "passed": true
+    },
+    {
+      "name": "New action recovers after restart with fresh verification",
+      "passed": true
+    }
+  ],
+  "error": null,
+  "scope": "Hard backend restart with isolated test records; no plaintext OTP persisted.",
+  "script_sha256": "4a06cf499a8e0b5074c11413e2717098918a8b97b29d4c322a3ae2856e47170b"
+}

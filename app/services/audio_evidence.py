@@ -3,6 +3,7 @@ import io
 import json
 import wave
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import asynccontextmanager
 from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy import text
@@ -12,11 +13,24 @@ from app.services.audit import AuditService
 # ponytail: one CPU inference slot for this local demo; add measured worker capacity after load testing.
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="audio-inference")
 _slot = asyncio.Lock()
+_audio_session = asyncio.Lock()
+
+
+@asynccontextmanager
+async def audio_capacity():
+    try:
+        await asyncio.wait_for(_audio_session.acquire(), timeout=settings.AUDIO_CAPACITY_WAIT_SECONDS)
+    except TimeoutError:
+        raise HTTPException(503, "Audio session capacity reached; retry after the active analysis finishes.")
+    try:
+        yield
+    finally:
+        _audio_session.release()
 
 
 async def infer(fn):
     try:
-        await asyncio.wait_for(_slot.acquire(), timeout=1)
+        await asyncio.wait_for(_slot.acquire(), timeout=settings.AUDIO_INFERENCE_QUEUE_TIMEOUT_SECONDS)
     except TimeoutError:
         raise HTTPException(503, "Audio inference is busy; retry shortly.")
     future = asyncio.get_running_loop().run_in_executor(_executor, fn)

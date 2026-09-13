@@ -16,7 +16,10 @@ $("inbox-form").addEventListener("submit", async (event) => {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(actionId)) throw new Error("Enter a valid action ID.");
     const response = await fetch(`/api/v1/demo/inbox/${encodeURIComponent(actionId)}`, { headers: { "X-Demo-Verifier-Key": verifierKey }, cache: "no-store" });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(`${response.status}: ${typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail || data)}`);
+    if (!response.ok) {
+      if (response.status === 404) throw new Error("No active code. Check the action ID; after expiry or a backend restart, the operator must select New transfer and request fresh verification.");
+      throw new Error(`${response.status}: ${typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail || data)}`);
+    }
     if (data.action_id !== actionId || !/^[0-9]{6}$/.test(data.otp_code) || !(Date.parse(data.expires_at) > Date.now())) throw new Error("The server did not return a valid code for this action.");
     $("review-recipient").textContent = String(data.payload?.recipient || "Not provided");
     const amount = Number(data.payload?.amount);
@@ -38,7 +41,7 @@ $("inbox-form").addEventListener("submit", async (event) => {
 function updateExpiry() {
   if (!expiresAt) return;
   const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
-  $("review-expiry").textContent = remaining ? `Expires in ${remaining} seconds. Single-use, and bound to this action.` : "Code expired. Ask the operator to request verification again.";
+  $("review-expiry").textContent = remaining ? `Expires in ${remaining} seconds. Single-use, and bound to this action.` : "Code expired. Ask the operator to select New transfer and request fresh verification.";
   if (!remaining) $("review-code").textContent = "Expired";
 }
 window.setInterval(updateExpiry, 1000);

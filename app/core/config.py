@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "VIGILVOICE Voice Trust Gate"
     API_V1_STR: str = "/api/v1"
     DATABASE_URL: str = "postgresql+asyncpg://vigilvoice@db:5432/vigilvoice"
+    DATABASE_TIMEOUT_SECONDS: float = Field(default=2.0, gt=0, allow_inf_nan=False)
 
     MIN_SNR_DB: float = Field(default=10.0, allow_inf_nan=False)
     MIN_SPEECH_DURATION_MS: int = Field(default=1500, gt=0)
@@ -29,6 +30,9 @@ class Settings(BaseSettings):
     VAD_THRESHOLD: float = Field(default=0.5, gt=0, le=1, allow_inf_nan=False)
     AUDIO_WINDOW_SECONDS: float = Field(default=2.0, gt=0, le=4, allow_inf_nan=False)
     MIN_RMS: float = Field(default=0.003, ge=0, le=1, allow_inf_nan=False)
+    AUDIO_UPLOAD_TIMEOUT_SECONDS: float = Field(default=5.0, gt=0, allow_inf_nan=False)
+    AUDIO_CAPACITY_WAIT_SECONDS: float = Field(default=0.1, gt=0, allow_inf_nan=False)
+    AUDIO_INFERENCE_QUEUE_TIMEOUT_SECONDS: float = Field(default=1.0, gt=0, allow_inf_nan=False)
     AUDIO_INFERENCE_TIMEOUT_SECONDS: float = Field(default=10.0, gt=0, allow_inf_nan=False)
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")

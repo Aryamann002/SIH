@@ -23,6 +23,8 @@ class ConfigTests(unittest.TestCase):
             {"MIN_SPEECH_DURATION_MS": 2001, "AUDIO_WINDOW_SECONDS": 2},
             {"AUDIO_WINDOW_SECONDS": 4.01}, {"EMA_ALPHA": 0}, {"VAD_THRESHOLD": 0},
             {"MIN_RMS": 1.01}, {"AUDIO_INFERENCE_TIMEOUT_SECONDS": 0},
+            {"DATABASE_TIMEOUT_SECONDS": 0}, {"AUDIO_UPLOAD_TIMEOUT_SECONDS": 0},
+            {"AUDIO_CAPACITY_WAIT_SECONDS": 0}, {"AUDIO_INFERENCE_QUEUE_TIMEOUT_SECONDS": 0},
             {"OTP_TTL_SECONDS": 0}, {"APPROVAL_TTL_SECONDS": 0},
             {"FILE_EVIDENCE_TTL_SECONDS": 0}, {"STREAM_EVIDENCE_TTL_SECONDS": 0},
             {"MAX_OTP_ATTEMPTS": 2}, {"MAX_OTP_ATTEMPTS": 4},
@@ -131,13 +133,16 @@ class ReadinessTests(unittest.TestCase):
         from app.main import lifespan
 
         warmup = AsyncMock(return_value={"available": False})
+        invalidate = AsyncMock()
 
         async def run():
-            with patch("app.main.model_status", warmup):
+            with patch("app.main.model_status", warmup), \
+                    patch("app.main.invalidate_interrupted_audio", invalidate):
                 async with lifespan(None):
                     pass
 
         asyncio.run(run())
+        invalidate.assert_awaited_once()
         warmup.assert_awaited_once()
 
 

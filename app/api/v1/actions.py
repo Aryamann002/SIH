@@ -81,7 +81,15 @@ async def request_verification(action_id: UUID, token: str = Depends(bearer), db
                                  {"id": action_id})).mappings().first()
     if existing:
         if existing["status"] == "PENDING" and existing["expires_at"] > await db_now(db):
-            return ChallengeResponse(**existing)
+            demo_verifier.prune()
+            if action_id in demo_verifier.inbox:
+                return ChallengeResponse(**existing)
+            await db.execute(text("UPDATE verification_challenges SET status='EXPIRED' WHERE challenge_id=:id"),
+                             {"id": existing["challenge_id"]})
+            await reject(db, action, "Verification delivery was lost; create a new action.", "EXPIRED")
+        if existing["status"] == "PENDING":
+            await db.execute(text("UPDATE verification_challenges SET status='EXPIRED' WHERE challenge_id=:id"),
+                             {"id": existing["challenge_id"]})
         await reject(db, action, "Verification expired or exhausted; create a new action.", "EXPIRED")
     if not settings.DEMO_VERIFIER_KEY:
         raise HTTPException(503, "Independent verification delivery is not configured.")

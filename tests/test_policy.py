@@ -32,7 +32,7 @@ def test_high_risk_spoof():
         snr_db=15.0, speech_duration_ms=2000, spoof_score=0.85
     )
     assert state == RiskState.HIGH
-    assert "HIGH_SPOOF_PROBABILITY" in reasons
+    assert reasons == ["HIGH_SPOOF_SCORE"]
 
 
 def test_elevated_risk_spoof():
@@ -43,9 +43,9 @@ def test_elevated_risk_spoof():
     assert "ELEVATED_SPOOF_RISK" in reasons
 
 
-def test_verified_low_risk():
+def test_low_score_is_not_identity_verification():
     state, reasons = DeterministicPolicyEngine.evaluate(
         snr_db=15.0, speech_duration_ms=2000, spoof_score=0.15
     )
     assert state == RiskState.LOW
-    assert "VERIFIED_LOW_RISK" in reasons
+    assert reasons == ["NO_STRONG_SYNTHETIC_EVIDENCE"]

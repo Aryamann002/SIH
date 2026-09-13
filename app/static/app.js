@@ -1,7 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null };
+const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null, verifierAvailable: false };
 const explanations = {
   LOW: ["good", "Low voice risk. Independent verification is still required before this simulated transfer can complete."],
   ELEVATED: ["warning", "The audio contains elevated spoof signals. Review the exact transfer independently before proceeding."],
@@ -47,8 +47,8 @@ function renderControls() {
   $("create-action").hidden = Boolean(action);
   $("new-action").disabled = busy;
   $("refresh-audit").disabled = busy || !action;
-  $("request-verification").disabled = busy || !action || ended() || active(challenge) || active(approval);
-  $("verification-form").hidden = !challenge || Boolean(approval) || ended();
+  $("request-verification").disabled = busy || action?.status !== "PENDING" || Boolean(challenge) || Boolean(approval) || !state.verifierAvailable;
+  $("verification-form").hidden = !active(challenge) || Boolean(approval) || ended();
   $("confirm-code").disabled = busy || !active(challenge) || ended();
   $("otp-code").disabled = busy || !active(challenge) || ended();
   $("complete-action").hidden = !approval || ended();
@@ -63,8 +63,17 @@ async function run(task) {
   try { await task(); }
   catch (error) {
     notice(error.message || String(error));
-    if (state.action) await refreshAudit().catch(() => {});
+    if (state.action) {
+      await refreshAction().catch(() => {});
+      await refreshAudit().catch(() => {});
+    }
   } finally { state.busy = false; renderControls(); }
+}
+
+async function refreshAction() {
+  if (!state.action) return;
+  state.action = { ...state.action, ...await api(`/actions/${state.action.action_id}`) };
+  renderAction();
 }
 
 async function ensureSession() {
@@ -247,12 +256,14 @@ $("request-verification").addEventListener("click", () => run(async () => {
 $("verification-form").addEventListener("submit", (event) => {
   event.preventDefault();
   run(async () => {
-    if (!state.action || !active(state.challenge) || ended()) throw new Error("There is no active challenge. Request a new code.");
+    if (!state.action || !active(state.challenge) || ended()) throw new Error("There is no active challenge. Select New transfer; codes cannot be reissued for this action.");
     const otp_code = $("otp-code").value.trim();
     if (!/^[0-9]{6}$/.test(otp_code)) throw new Error("Enter the six-digit verification code.");
     const approval = await api(`/actions/${state.action.action_id}/confirm`, { method: "POST", body: JSON.stringify({ challenge_id: state.challenge.challenge_id, otp_code }) });
     if (!approval.approval_token || !active(approval)) throw new Error("The server did not return a valid action approval.");
     state.approval = approval;
+    state.action.status = "VERIFIED";
+    renderAction();
     $("otp-code").value = "";
     $("verification-message").textContent = "Code verified for this action. Complete the transfer before the approval expires; the backend rechecks current evidence.";
     await refreshAudit();
@@ -260,7 +271,7 @@ $("verification-form").addEventListener("submit", (event) => {
 });
 
 $("complete-action").addEventListener("click", () => run(async () => {
-  if (!state.action || !active(state.approval) || ended()) throw new Error("Approval is missing or expired. Request verification again.");
+  if (!state.action || !active(state.approval) || ended()) throw new Error("Approval is missing or expired. Select New transfer.");
   const action = await api(`/actions/${state.action.action_id}/complete`, { method: "POST", body: JSON.stringify({ approval_token: state.approval.approval_token }) });
   if (action.status !== "COMPLETED" || action.allowed !== true) throw new Error(action.message || "The backend did not approve this transfer.");
   state.action = { ...state.action, ...action };
@@ -297,16 +308,17 @@ window.setInterval(() => {
   if (state.challenge) {
     const remaining = Math.max(0, Math.ceil((Date.parse(state.challenge.expires_at) - Date.now()) / 1000));
     $("challenge-expiry").textContent = remaining ? `${remaining}s remaining` : "Code expired";
+    if (!remaining && !state.approval) $("verification-message").textContent = "Code expired. Select New transfer; codes cannot be reissued for this action.";
   }
   if (state.approval && !active(state.approval)) {
     state.approval = null;
-    state.challenge = null;
-    $("verification-message").textContent = "Approval expired. Request verification again; the transfer is still unapproved.";
+    $("verification-message").textContent = "Approval expired. Select New transfer; this action cannot receive another code.";
   }
   renderControls();
 }, 1000);
 
 api("/system").then((system) => {
+  state.verifierAvailable = Boolean(system.demo_verification_enabled);
   $("service-status").textContent = system.ready ? "System ready" : "System unavailable";
   $("service-status").dataset.ready = String(Boolean(system.ready));
   $("model-version").textContent = system.model_version || "Unavailable";
@@ -315,6 +327,7 @@ api("/system").then((system) => {
     $("verifier-link").hidden = true;
     $("verification-message").textContent = "The local verifier inbox is disabled on this server.";
   }
+  renderControls();
 }).catch((error) => {
   $("service-status").textContent = "Backend unavailable";
   $("model-version").textContent = "Unavailable";
