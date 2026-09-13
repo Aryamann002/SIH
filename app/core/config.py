@@ -1,5 +1,5 @@
 import secrets
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,30 +8,38 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     DATABASE_URL: str = "postgresql+asyncpg://vigilvoice@db:5432/vigilvoice"
 
-    MIN_SNR_DB: float = 10.0
-    MIN_SPEECH_DURATION_MS: int = 1500
-    HIGH_RISK_SPOOF_THRESHOLD: float = 0.75
-    ELEVATED_RISK_SPOOF_THRESHOLD: float = 0.40
+    MIN_SNR_DB: float = Field(default=10.0, allow_inf_nan=False)
+    MIN_SPEECH_DURATION_MS: int = Field(default=1500, gt=0)
+    HIGH_RISK_SPOOF_THRESHOLD: float = Field(default=0.75, ge=0, le=1, allow_inf_nan=False)
+    ELEVATED_RISK_SPOOF_THRESHOLD: float = Field(default=0.40, ge=0, le=1, allow_inf_nan=False)
 
     VERIFICATION_SECRET: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     DEMO_VERIFIER_KEY: str = ""
-    OTP_TTL_SECONDS: int = 60
-    APPROVAL_TTL_SECONDS: int = 60
-    MAX_OTP_ATTEMPTS: int = 3
-    FILE_EVIDENCE_TTL_SECONDS: int = 120
-    STREAM_EVIDENCE_TTL_SECONDS: int = 5
-    MAX_AUDIO_BYTES: int = 960044
+    OTP_TTL_SECONDS: int = Field(default=60, gt=0)
+    APPROVAL_TTL_SECONDS: int = Field(default=60, gt=0)
+    MAX_OTP_ATTEMPTS: int = Field(default=3, ge=3, le=3)
+    FILE_EVIDENCE_TTL_SECONDS: int = Field(default=120, gt=0)
+    STREAM_EVIDENCE_TTL_SECONDS: int = Field(default=5, gt=0)
+    MAX_AUDIO_BYTES: int = Field(default=960044, gt=44, le=960044)
     SILERO_MODEL_PATH: str = "models/silero_vad.onnx"
     SPOOF_MODEL_PATH: str = "models/spoof_detector.onnx"
     SPOOF_MODEL_VERSION: str = "wav2vec2-xlsr-int8-4b1c4a294ab6"
     THRESHOLD_PROFILE: str = "prototype-uncalibrated-v1"
-    EMA_ALPHA: float = 0.3
-    VAD_THRESHOLD: float = 0.5
-    AUDIO_WINDOW_SECONDS: float = 2.0
-    MIN_RMS: float = 0.003
-    AUDIO_INFERENCE_TIMEOUT_SECONDS: float = 10.0
+    EMA_ALPHA: float = Field(default=0.3, gt=0, le=1, allow_inf_nan=False)
+    VAD_THRESHOLD: float = Field(default=0.5, gt=0, le=1, allow_inf_nan=False)
+    AUDIO_WINDOW_SECONDS: float = Field(default=2.0, gt=0, le=4, allow_inf_nan=False)
+    MIN_RMS: float = Field(default=0.003, ge=0, le=1, allow_inf_nan=False)
+    AUDIO_INFERENCE_TIMEOUT_SECONDS: float = Field(default=10.0, gt=0, allow_inf_nan=False)
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+
+    @model_validator(mode="after")
+    def validate_policy(self):
+        if self.ELEVATED_RISK_SPOOF_THRESHOLD >= self.HIGH_RISK_SPOOF_THRESHOLD:
+            raise ValueError("ELEVATED_RISK_SPOOF_THRESHOLD must be below HIGH_RISK_SPOOF_THRESHOLD")
+        if self.MIN_SPEECH_DURATION_MS > self.AUDIO_WINDOW_SECONDS * 1000:
+            raise ValueError("MIN_SPEECH_DURATION_MS must fit inside AUDIO_WINDOW_SECONDS")
+        return self
 
 
 settings = Settings()

@@ -1,3 +1,4 @@
+import asyncio
 import hmac
 import secrets
 from uuid import UUID, uuid4
@@ -5,7 +6,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import database_status, get_db
 from app.services import demo_verifier
 from app.services.action_gate import bearer, digest, evidence, owned_session
 from app.services.audio_evidence import begin_audio, end_audio, evaluate_wav, infer, record_evidence, unavailable
@@ -62,14 +63,28 @@ async def upload_audio(session_id: UUID, request: Request, token: str = Depends(
         raise HTTPException(503, "Audio inference is unavailable; action remains unapproved.")
 
 
-@router.get("/system")
-async def system():
+async def model_status():
     from app.services.audio_pipeline import AudioPipeline
     try:
-        info = await infer(AudioPipeline.status)
+        return await infer(AudioPipeline.status)
     except Exception:
-        info = {"detector_available": False, "model_version": "unavailable"}
-    return {**info, "demo_verification_enabled": bool(settings.DEMO_VERIFIER_KEY), "simulated_transfers": True}
+        return {"available": False, "vad_available": False, "detector_available": False,
+                "model_version": "unavailable", "vad_model_version": "unavailable", "calibrated": False}
+
+
+async def readiness():
+    (database_available, schema_available), info = await asyncio.gather(database_status(), model_status())
+    verifier_available = bool(settings.DEMO_VERIFIER_KEY)
+    ready = all((database_available, schema_available, info["vad_available"],
+                 info["detector_available"], verifier_available))
+    return {**info, "available": ready, "ready": ready, "database_available": database_available,
+            "schema_available": schema_available, "demo_verification_enabled": verifier_available,
+            "simulated_transfers": True}
+
+
+@router.get("/system")
+async def system():
+    return await readiness()
 
 
 @router.get("/demo/inbox/{action_id}")

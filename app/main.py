@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -5,10 +6,18 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from app.api.v1.router import api_router
+from app.api.v1.sessions import model_status, readiness
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await model_status()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -46,3 +55,9 @@ async def verification_screen():
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok", "service": settings.PROJECT_NAME}
+
+
+@app.get("/readyz")
+async def readiness_check():
+    info = await readiness()
+    return JSONResponse(status_code=200 if info["ready"] else 503, content=info)

@@ -95,8 +95,11 @@ async def main(output):
 
     try:
         system = request("/system")
-        assert system.get("available") and system["demo_verification_enabled"], "Local models and verifier required"
-        passed("Real local models and demo verifier available")
+        assert system.get("ready") and all(system[key] for key in (
+            "database_available", "schema_available", "vad_available",
+            "detector_available", "demo_verification_enabled"
+        )), system
+        passed("Database schema, local models and demo verifier ready")
         genuine = Path("models/demo/genuine.wav").read_bytes()
         synthetic = Path("models/demo/synthetic.wav").read_bytes()
         owner, stranger = session(), session()

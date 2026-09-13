@@ -307,10 +307,10 @@ window.setInterval(() => {
 }, 1000);
 
 api("/system").then((system) => {
-  $("service-status").textContent = system.detector_available ? "Detector available" : "Detector unavailable";
-  $("service-status").dataset.ready = String(Boolean(system.detector_available));
+  $("service-status").textContent = system.ready ? "System ready" : "System unavailable";
+  $("service-status").dataset.ready = String(Boolean(system.ready));
   $("model-version").textContent = system.model_version || "Unavailable";
-  if (!system.detector_available) renderRisk({ risk_state: "SERVICE_UNAVAILABLE", reason_codes: ["MODEL_UNAVAILABLE"], model_version: system.model_version });
+  if (!system.ready) renderRisk({ risk_state: "SERVICE_UNAVAILABLE", reason_codes: ["SERVING_PATH_UNAVAILABLE"], model_version: system.model_version });
   if (!system.demo_verification_enabled) {
     $("verifier-link").hidden = true;
     $("verification-message").textContent = "The local verifier inbox is disabled on this server.";

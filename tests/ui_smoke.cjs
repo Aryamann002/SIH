@@ -43,7 +43,7 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   let blockNext = false;
   const ui = load("app", async (url, options = {}) => {
     calls.push({ url, ...options });
-    if (url.endsWith("/system")) return response({ detector_available: false, model_version: null, demo_verification_enabled: true });
+    if (url.endsWith("/system")) return response({ ready: false, detector_available: true, model_version: "test-model", demo_verification_enabled: true });
     if (url.endsWith("/sessions")) return response({ session_id: "session-id", session_token: "session-secret" });
     assert.equal(options.headers.Authorization, "Bearer session-secret", "Every session-owned request must carry its bearer token");
     if (url.endsWith("/audio")) return response({ risk_state: "LOW", spoof_score: 0.1, snr_db: 23, speech_duration_ms: 2100, reason_codes: ["<img src=x onerror=alert(1)>"], model_version: "test-model", threshold_profile: "test-policy" });

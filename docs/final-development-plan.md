@@ -8,12 +8,12 @@ User requirement: a presentation-ready system with a fully working backend and a
 
 ## Resume here
 
-- **Current stage:** B01, B02 and D01 are complete; D02 data acquisition and B03 readiness can proceed in parallel.
-- **Next task:** begin consent/access-safe D02 acquisition while implementing B03 readiness and configuration validation.
+- **Current stage:** B01-B03 and D01 are complete; B04 protected-action failure/restart verification is next while D02 remains access/consent dependent.
+- **Next task:** execute B04 against isolated test records, starting with audit rollback and restart-state denial/recovery without resetting the demo database.
 - **Known release blocker:** B01 fixed the broad ignore rule and proved a clean Python 3.11 image imports the app. Packaging still needs pinned dependencies and a safe Docker context in R01; the host Python 3.13 environment currently has SQLAlchemy 2.0.30 and cannot import SQLAlchemy.
 - **Critical path:** B01 -> B02/B03 -> S01/S02 -> M02/M03 -> V01/V02 -> R01/R02 -> R03/R04. Dataset work D01/D02 starts alongside backend work because model selection depends on it.
 - **Next checkpoint:** end of Day 2, September 15: reproducible backend baseline and fixed evaluation protocol.
-- **Final acceptance:** NOT VERIFIED. Fresh unit/mock checks passed on Day 0; no live backend or real-model checks were rerun in the planning session.
+- **Final acceptance:** NOT VERIFIED. B02/B03 now prove clean startup, executable models, aggregate readiness and the existing 13-group local API flow; continuous streaming, representative evaluation, injected failure/restart checks and physical rehearsals remain open.
 
 ## What "fully working for presentation" means
 
@@ -48,13 +48,13 @@ Decisions resolving differences between PDFs:
 
 | Area | Evidence as of September 13 | Final work remaining |
 |---|---|---|
-| Local Python checks | `python -m pytest -q -p no:cacheprovider`: **12 passed, 1 skipped**, 0.44s, run during planning | Real-model smoke, live API, clean-checkout and final regression evidence remain required. |
+| Local Python checks | B03: **20 passed, 1 skipped**, 22 validation subtests; Python 3.11 focused readiness: **8 passed** | Final-source regression and later-stage failure/stress evidence remain required. |
 | UI logic checks | `node tests/ui_smoke.cjs` and `node tests/microphone_smoke.cjs`: **passed**, run during planning | These use simulated browser/API objects; physical microphone, actual streaming and browser-to-database workflow remain unverified today. |
 | Protected actions | Existing session ownership, generation fencing, expiry, OTP lockout, atomic single-use completion and audit; historical 13-group API receipt | Revalidate on final source; cover database/audit failure, restarts and races during active streaming. |
 | Audio | Local Silero + INT8 Wav2Vec2; per-session VAD; shared upload/stream pipeline; immediate HIGH escalation with slower score recovery | Current browser has no continuous stream client. One CPU inference slot; no measured live capacity. |
 | Models and evaluation | Historical 40 English clips; default test missed 1/9 scorable spoof and falsely blocked 1/9 scorable genuine; candidate 0.58 falsely blocked 3/9 genuine | Representative language/channel evaluation and defensible threshold choice. Candidate threshold is not deployed. |
 | Timing | Historical offline median 3.06s, p95 7.79s per file; model load 7.07s | Capture-to-alert, API overhead, warm startup and limited concurrency on the presentation laptop. |
-| Packaging and readiness | Docker/PostgreSQL exist; required schema module is ignored; `/healthz` is static; no `.dockerignore` | Reproducible source package, dependency/model provenance, actual readiness and safe build context. |
+| Packaging and readiness | B01 source repair plus B02 clean build; B03 liveness/readiness verifies DB, full runtime schema, executable models and verifier | Dependency pinning, `.dockerignore`, offline package and final immutable source/model receipts remain. |
 | Presentation assets | Existing slides, handbook, screenshot and 30-second silent video | Refresh for streaming and final metrics; existing video omits the synthetic HIGH/BLOCKED checkpoint. |
 
 Historical evidence: [teacher build receipt](teacher-build-receipt.json), [API checks](demo-checks.json), [browser checks](browser-checks.json), [evaluation report](evaluation-report.md), [model setup](model-setup.md). Existing Ruflo task rows are stale; a prior receipt says its CLI could not mark them complete. The task ledger below is authoritative for this milestone.
@@ -84,7 +84,7 @@ Statuses: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requires 
 | B01 | Days 1-2 / integration | DONE | Correct the broad model ignore rule without exposing weights; ensure `app/models/schemas.py` and all required imports are included in the reviewable source; verify an isolated clean source export builds and imports the app | Root `/models/` remains ignored; `app/models/schemas.py` is addable; clean export tests 12 passed/1 skipped; image `sha256:1a7e7e98a2ff3f8f18dca0f26023c8cdd2292b2d10e9b63df400b8ab48236ef7` imported `app.main` on Python 3.11 |
 | B02 | Days 1-2 / backend | DONE | Reproduce local Docker startup, additive migration twice, model checksum checks and existing unit/API checks; save environment and exact-source baseline evidence | [B02 receipt](validation/b02-baseline-2026-09-13.md): rebuilt stack, four idempotent migration runs, pinned checksums, real-model smoke, unit/UI and two 13-group API runs passed; existing DB volume preserved |
 | D01 | Days 1-2 / evaluation | DONE | Choose regional language from accessible permitted data, inventory sources/consent and freeze split, metrics, latency and false-block targets before tuning | [Frozen protocol](evaluation-protocol.md): Marathi selected; sources/access/consent inventoried; source grouping, untouched test, manifest fields and numerical targets frozen before tuning |
-| B03 | Days 3-4 / backend | TODO | Add readiness for DB/schema, both models and demo verifier; bounded model warmup; validate finite/ordered thresholds, durations, positive TTLs and consistent OTP limits | Missing dependencies or invalid settings must not report ready; keep liveness inexpensive |
+| B03 | Days 3-4 / backend | DONE | Add readiness for DB/schema, both models and demo verifier; bounded model warmup; validate finite/ordered thresholds, durations, positive TTLs and consistent OTP limits | [B03 receipt](validation/b03-readiness-2026-09-13.md): full schema/executable-model/verifier readiness, fail-closed dependency cases and startup validation passed; final review found no blocker |
 | B04 | Days 3-5 / backend | TODO | Verify action state machine, ownership, payload binding, approval replay/races, audit rollback and post-restart denial/recovery | Extend existing API checks using isolated test records; zero unauthorized completions |
 | B05 | Days 4-5 / backend | TODO | Define single-worker capacity and verifier restart behavior; bound upload/auth/inference waits and concurrent sessions; correct expired-challenge and unavailable UI recovery | Lost local inbox data leads to a clearly explained new action/verification; never bypass approval or persist plaintext codes |
 | D02 | Days 2-8 / evaluation | TODO | Assemble four-language source-disjoint corpus with real/synthetic labels, quality/channel annotations, license/consent and hashes; keep demo/training/test separate | Target 320 independent source clips as below; incomplete slices remain visible |
@@ -208,6 +208,14 @@ Next exact action:
 - Checks: clean source export -> 12 passed, 1 skipped; clean Python 3.11 image build/import -> passed; Compose rebuild/start -> passed while preserving the existing PostgreSQL container/volume; additive migration -> passed four times across pre/post rebuild; pinned model hashes -> passed; real-model unittest -> 5 passed; UI and microphone smoke -> passed; rebuilt-stack API/action suite -> all 13 groups passed; `git diff --check` -> passed. Evidence: [B02 receipt](validation/b02-baseline-2026-09-13.md), backend image `sha256:6b4e46cb7ff23cd134a9346b505c93614ec914da36e92b3229be21cd3425716a`.
 - Blockers/decisions: host Python 3.13.5 with SQLAlchemy 2.0.30 cannot import SQLAlchemy, so Python 3.11 Docker remains the verified runtime. AI4Bharat data/model candidates require gated contact-sharing acceptance; no acceptance or download was performed. Team speakers/consent and a second permitted generator family are still missing for D02. Existing 40 English clips remain regression-only and cannot support final four-language claims.
 - Next exact action: start B03 readiness/configuration validation in the existing backend paths while D02 obtains explicit consent and approved dataset/model access; do not tune thresholds before the frozen manifest is assembled.
+
+### 2026-09-13 13:27 Asia/Calcutta | Codex integration + read-only swarm | B03
+
+- Status changes: B03 moved from TODO through IN_PROGRESS to DONE after live success/failure checks and final review passed.
+- Changes and source state: added centralized numeric settings validation; complete runtime-schema/database readiness; cached executable VAD/detector startup warmup; aggregate `/readyz` and `/api/v1/system` state; UI readiness and focused tests. The existing PostgreSQL volume and unrelated Ruflo state were preserved. Baseline, patch/test objects and rebuilt image are bound in the [B03 receipt](validation/b03-readiness-2026-09-13.md).
+- Checks: 20 passed/1 skipped plus 22 validation subtests; Python 3.11 focused readiness 8 passed; UI/microphone smoke passed; rebuilt Compose stack ready; missing verifier/model/DB and invalid NaN configuration all failed closed; final 13-group live API/action suite passed; read-only re-review found no blocker.
+- Blockers/decisions: Ruflo CLI routing failed before execution with npm `Invalid Version`; implementation continued using the Git ledger and a read-only analysis swarm. D02 still needs team consent, accepted gated access and a second permitted generator family. No data was downloaded or threshold tuned.
+- Next exact action: B04, extend isolated API checks for database/audit rollback and restart-state denial/recovery, preserving existing demo records; continue consent/access work for D02 independently.
 
 ### PDF source fingerprints
 

@@ -1,7 +1,9 @@
 """One synchronous pipeline shared by upload and WebSocket routes."""
 
+from functools import lru_cache
 from hashlib import sha256
 import json
+import numpy as np
 
 from app.core.config import settings
 from app.services.policy_engine import DeterministicPolicyEngine
@@ -27,12 +29,24 @@ class AudioPipeline:
         self.threshold_profile = f"{getattr(settings, 'THRESHOLD_PROFILE', 'prototype-uncalibrated-v1')}:{digest}"
 
     @staticmethod
+    @lru_cache(maxsize=1)
     def status() -> dict:
         vad, detector = SileroVADWorker(), SpoofDetector()
+        vad_available, detector_available = vad.available, detector.available
+        if vad_available:
+            try:
+                vad.process_chunk(bytes(1024))
+            except Exception:
+                vad_available = False
+        if detector_available:
+            try:
+                detector.predict(np.zeros(32000, dtype=np.float32))
+            except Exception:
+                detector_available = False
         return {
-            "available": vad.available and detector.available,
-            "vad_available": vad.available,
-            "detector_available": detector.available,
+            "available": vad_available and detector_available,
+            "vad_available": vad_available,
+            "detector_available": detector_available,
             "model_version": detector.model_version,
             "vad_model_version": vad.model_version,
             "calibrated": False,
