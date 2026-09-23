@@ -1,6 +1,6 @@
 # VigilVoice final development plan and progress
 
-Last updated: **2026-09-13 (Asia/Calcutta)**. Planning baseline: `396f36c9d4f3e48fba4ebaa3aad7a670daf28af4`, with pre-existing local configuration/runtime changes.
+Last updated: **2026-09-23 (Asia/Calcutta)**. Planning baseline: `396f36c9d4f3e48fba4ebaa3aad7a670daf28af4`, with pre-existing local configuration/runtime changes.
 
 Presentation target: **2026-10-03**, derived from the user's instruction on September 13: "in 20 days". Day 0 is September 13; Days 1-20 are September 14-October 3. Confirm the exact presentation time during rehearsal scheduling.
 
@@ -240,6 +240,14 @@ Next exact action:
 - Checks: pytest 23 passed/1 skipped plus 26 subtests; microphone and UI smoke passed; live backend suite 15/15 passed; repaired client streamed 24 real-WAV frames; Chrome fake device produced eight updates while capture stayed ready, reached LOW at 1.5s, then passed WAV fallback; final readiness returned 200. Evidence: [S01 receipt](validation/s01-browser-streaming-2026-09-13.md).
 - Blockers/decisions: S01 uses browser-native resampling and adds no dependency or reconnect queue. Fake-device browser proof is not physical microphone evidence. Backpressure, server-owned timing, delayed/replayed-frame handling and retained HIGH evidence remain S02; D02 access/consent remains open.
 - Next exact action: S02, add the minimum bounded-frame and server-owned freshness protocol to the existing stream, then test stale/gapped input and genuine-to-synthetic-to-genuine action blocking.
+
+### 2026-09-23 19:37 Asia/Calcutta | Codex integration | documentation
+
+- Status changes: none. S02 remains the next development task.
+- Changes and source state: added the root README with current setup, workflow, checks and measured limits. S01 is now in commit `b8d7375`; this documentation change is uncommitted. Existing Ruflo policy state was left untouched.
+- Checks: README commands, routes and claims checked against application code, Compose, model setup and S01 receipt; `git diff --check` passed before this log update.
+- Blockers/decisions: no new development evidence. Streaming freshness, representative evaluation and physical rehearsals remain open.
+- Next exact action: implement S02 against the existing 200 ms stream, then test stale/gapped frames and action blocking during changing risk.
 
 ### PDF source fingerprints
 
