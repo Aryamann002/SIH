@@ -1,4 +1,5 @@
 import asyncio
+import json
 from uuid import UUID
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from app.core.database import AsyncSessionLocal
@@ -15,7 +16,16 @@ async def stream_audio_gateway(websocket: WebSocket, session_id: UUID):
     async with AsyncSessionLocal() as db:
         try:
             # Credentials are the first frame, never a URL/query string written to access logs.
-            auth = await asyncio.wait_for(websocket.receive_json(), timeout=5)
+            message = await asyncio.wait_for(websocket.receive(), timeout=5)
+            if message["type"] == "websocket.disconnect":
+                raise WebSocketDisconnect(message.get("code", 1000))
+            raw = message.get("text")
+            if not isinstance(raw, str) or len(raw) > 256:
+                raise ValueError("Send session credentials as the first JSON text frame.")
+            try:
+                auth = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                raise ValueError("Send session credentials as the first JSON text frame.") from exc
             token = auth.get("session_token", "") if isinstance(auth, dict) else ""
             if not isinstance(token, str) or not 32 <= len(token) <= 128:
                 raise HTTPException(401, "Session token required.")

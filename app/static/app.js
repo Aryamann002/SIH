@@ -1,7 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null, verifierAvailable: false };
+const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null, live: null, systemReady: false, verifierAvailable: false };
 const explanations = {
   LOW: ["good", "Low voice risk. Independent verification is still required before this simulated transfer can complete."],
   ELEVATED: ["warning", "The audio contains elevated spoof signals. Review the exact transfer independently before proceeding."],
@@ -36,9 +36,11 @@ function notice(message, tone = "error") {
 
 function renderControls() {
   const { busy, action, challenge, approval } = state;
-  $("analyze-button").disabled = busy || !state.audioFile;
-  $("audio-file").disabled = busy;
-  $("record-start").disabled = busy || !MicrophoneAudio.supported();
+  $("live-start").disabled = busy || Boolean(state.live) || Boolean(state.microphone) || !state.systemReady || !MicrophoneAudio.liveSupported();
+  $("live-stop").disabled = !state.live;
+  $("analyze-button").disabled = busy || Boolean(state.live) || !state.audioFile;
+  $("audio-file").disabled = busy || Boolean(state.live);
+  $("record-start").disabled = busy || Boolean(state.live) || !MicrophoneAudio.supported();
   $("record-stop").disabled = !state.microphone?.ready;
   $("record-cancel").disabled = !state.microphone;
   $("refresh-risk").disabled = busy || !state.session;
@@ -84,6 +86,45 @@ async function ensureSession() {
     $("session-label").textContent = `Session ${session.session_id.slice(0, 8)} · credentials stay in this tab`;
   }
   return state.session.session_id;
+}
+
+function openStream(session) {
+  return new Promise((resolve, reject) => {
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(`${protocol}//${location.host}/api/v1/stream/ws/${encodeURIComponent(session.session_id)}`);
+    let settled = false;
+    let timer;
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      socket.close();
+      reject(error);
+    };
+    timer = window.setTimeout(() => fail(new Error("Live stream handshake timed out. Use a WAV upload.")), 5000);
+    socket.onopen = () => socket.send(JSON.stringify({ session_token: session.session_token }));
+    socket.onerror = () => fail(new Error("Live stream connection failed. Use a WAV upload."));
+    socket.onclose = (event) => fail(new Error(`Live stream closed before ready (${event.code}). Use a WAV upload.`));
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type !== "ready" || message.session_id !== session.session_id) throw new Error("Unexpected stream handshake.");
+        settled = true;
+        window.clearTimeout(timer);
+        resolve(socket);
+      } catch (error) { fail(error); }
+    };
+  });
+}
+
+function stopLive(message = "Live detection stopped. WAV recording and upload remain available.", failed = false) {
+  const live = state.live;
+  state.live = null;
+  live?.capture?.stop();
+  if (live?.socket?.readyState < 2) live.socket.close(1000, "Stopped by operator");
+  $("live-status").textContent = message;
+  if (failed) notice(`${message} Current evidence is unavailable.`);
+  renderControls();
 }
 
 function renderRisk(data) {
@@ -175,6 +216,40 @@ function selectAudio(file) {
 }
 
 $("audio-file").addEventListener("change", () => selectAudio($("audio-file").files[0]));
+$("live-start").addEventListener("click", () => run(async () => {
+  $("live-status").textContent = "Waiting for microphone permission…";
+  const capture = await MicrophoneAudio.stream(
+    (frame) => {
+      if (state.live?.socket.readyState === WebSocket.OPEN) state.live.socket.send(frame);
+    },
+    (error) => stopLive(error.message, true),
+  );
+  $("live-status").textContent = "Microphone ready. Authenticating live stream…";
+  let socket;
+  try { await ensureSession(); socket = await openStream(state.session); }
+  catch (error) { capture.stop(); throw error; }
+  const live = { capture, socket, results: 0 };
+  state.live = live;
+  socket.onmessage = (event) => {
+    try {
+      const result = JSON.parse(event.data);
+      live.results += 1;
+      renderRisk(result);
+      $("live-status").textContent = `Live detection active · ${live.results} risk update${live.results === 1 ? "" : "s"}`;
+    } catch { stopLive("Live stream returned invalid data. Use a WAV upload.", true); }
+  };
+  socket.onerror = () => {};
+  socket.onclose = (event) => {
+    if (state.live === live) stopLive(event.code === 1000
+      ? "Live detection stopped. WAV recording and upload remain available."
+      : `Live stream ended (${event.code}). Use a WAV upload.`, event.code !== 1000);
+  };
+  try { await capture.start(); }
+  catch (error) { stopLive("Live microphone could not start. Use a WAV upload.", true); throw error; }
+  $("live-status").textContent = "Live detection active · listening for speech";
+  renderControls();
+}));
+$("live-stop").addEventListener("click", () => stopLive());
 $("record-start").addEventListener("click", () => run(async () => {
   if (!MicrophoneAudio.supported()) throw new Error("Microphone recording needs a supported browser on localhost or HTTPS. Use a WAV upload.");
   $("record-status").textContent = "Waiting for microphone permission…";
@@ -203,10 +278,12 @@ $("record-stop").addEventListener("click", () => {
 });
 $("record-cancel").addEventListener("click", () => state.microphone?.cancel());
 window.addEventListener("pagehide", () => {
+  stopLive();
   state.microphone?.cancel();
   if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
 });
 if (!MicrophoneAudio.supported()) $("record-status").textContent = "Microphone recording is unavailable here. Open in a supported browser on localhost or HTTPS, or upload a WAV file.";
+if (!MicrophoneAudio.liveSupported()) $("live-status").textContent = "Continuous microphone detection is unavailable here. Use WAV recording or upload.";
 renderControls();
 
 $("audio-form").addEventListener("submit", (event) => {
@@ -318,6 +395,7 @@ window.setInterval(() => {
 }, 1000);
 
 api("/system").then((system) => {
+  state.systemReady = Boolean(system.ready);
   state.verifierAvailable = Boolean(system.demo_verification_enabled);
   $("service-status").textContent = system.ready ? "System ready" : "System unavailable";
   $("service-status").dataset.ready = String(Boolean(system.ready));

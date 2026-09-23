@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-09-13T17:41:42.858434+00:00",
+  "passed": true,
+  "checks": [
+    "Authenticated AudioWorklet stream",
+    "Repeated live inference while capture continued",
+    "Safe live stop and WAV fallback",
+    "Native fake microphone recording",
+    "16 kHz PCM WAV conversion",
+    "Blob preview allowed by CSP",
+    "Real authenticated backend upload",
+    "No JavaScript exceptions",
+    "390px mobile layout has no horizontal overflow"
+  ],
+  "live": {
+    "results": 8,
+    "ready": true,
+    "risk": "LOW",
+    "speech": "1.5 s"
+  },
+  "recording": {
+    "name": "microphone.wav",
+    "type": "audio/wav",
+    "size": 134444
+  },
+  "risk_state": "LOW",
+  "limitation": "Automated fake audio device; physical microphone and OS permission interaction need manual rehearsal."
+}

@@ -5,6 +5,53 @@ const MicrophoneAudio = {
     return Boolean(globalThis.navigator?.mediaDevices?.getUserMedia && globalThis.MediaRecorder && globalThis.AudioContext && globalThis.OfflineAudioContext);
   },
 
+  liveSupported() {
+    return Boolean(globalThis.navigator?.mediaDevices?.getUserMedia && globalThis.AudioContext && globalThis.AudioWorkletNode && globalThis.WebSocket);
+  },
+
+  async stream(onFrame, onEnded) {
+    let stream, context, source, node, capture, stopped = false;
+    const stop = (error) => {
+      if (stopped) return;
+      stopped = true;
+      if (capture) capture.ready = false;
+      node?.disconnect();
+      source?.disconnect();
+      stream?.getTracks().forEach((track) => { track.onended = null; track.stop(); });
+      context?.close().catch(() => {});
+      if (error) onEnded(error);
+    };
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: {
+        channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+      } });
+      context = new AudioContext({ sampleRate: 16000, latencyHint: "interactive" });
+      if (context.sampleRate !== 16000) throw new Error("Browser could not provide 16 kHz microphone audio.");
+      await context.audioWorklet.addModule("/static/pcm-worklet.js");
+      source = context.createMediaStreamSource(stream);
+      node = new AudioWorkletNode(context, "pcm16-capture");
+      node.port.onmessage = (event) => { if (!stopped) onFrame(event.data); };
+      capture = {
+        ready: false,
+        async start() {
+          if (stopped) throw new Error("Microphone disconnected. Use a WAV upload.");
+          if (capture.ready) return;
+          source.connect(node);
+          node.connect(context.destination);
+          await context.resume();
+          if (stopped) throw new Error("Microphone disconnected. Use a WAV upload.");
+          capture.ready = true;
+        },
+        stop,
+      };
+      stream.getAudioTracks().forEach((track) => { track.onended = () => stop(new Error("Microphone disconnected. Use a WAV upload.")); });
+      return capture;
+    } catch (error) {
+      stop();
+      throw new Error(`Live microphone unavailable: ${error.message}. Use a WAV upload.`);
+    }
+  },
+
   record(onStarted) {
     let recorder, stream, timer, finished = false, resolve, reject;
     const chunks = [];

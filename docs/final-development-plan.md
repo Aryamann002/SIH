@@ -8,12 +8,12 @@ User requirement: a presentation-ready system with a fully working backend and a
 
 ## Resume here
 
-- **Current stage:** B01-B05 and D01 are complete; S01 continuous browser streaming is next while D02 remains access/consent dependent.
-- **Next task:** execute S01 in the existing microphone and WebSocket paths: authenticated AudioWorklet PCM streaming with the current WAV path retained as fallback.
+- **Current stage:** B01-B05, D01 and S01 are complete; S02 stream freshness/backlog controls are next while D02 remains access/consent dependent.
+- **Next task:** execute S02 on the existing 200 ms browser/WebSocket path: bound queued audio, add server-owned receipt/freshness checks and preserve HIGH evidence during pending actions.
 - **Known release blocker:** packaging still needs pinned dependencies and a safe Docker context in R01. The current host Python 3.13 environment now passes the local suite, but Python 3.11 Docker remains the verified release runtime.
 - **Critical path:** B01 -> B02/B03 -> S01/S02 -> M02/M03 -> V01/V02 -> R01/R02 -> R03/R04. Dataset work D01/D02 starts alongside backend work because model selection depends on it.
 - **Next checkpoint:** end of Day 2, September 15: reproducible backend baseline and fixed evaluation protocol.
-- **Final acceptance:** NOT VERIFIED. B02-B04 prove clean startup, executable models, aggregate readiness, action rollback and hard-restart denial/recovery; continuous streaming, representative evaluation, broader failure/capacity checks and physical rehearsals remain open.
+- **Final acceptance:** NOT VERIFIED. B02-B05 and S01 prove clean startup, executable models, readiness, protected-action recovery, bounded single-session admission and authenticated continuous browser streaming; stream freshness/backlog, representative evaluation, broader failure checks and physical rehearsals remain open.
 
 ## What "fully working for presentation" means
 
@@ -49,9 +49,9 @@ Decisions resolving differences between PDFs:
 | Area | Evidence as of September 13 | Final work remaining |
 |---|---|---|
 | Local Python checks | B03: **20 passed, 1 skipped**, 22 validation subtests; Python 3.11 focused readiness: **8 passed** | Final-source regression and later-stage failure/stress evidence remain required. |
-| UI logic checks | `node tests/ui_smoke.cjs` and `node tests/microphone_smoke.cjs`: **passed**, run during planning | These use simulated browser/API objects; physical microphone, actual streaming and browser-to-database workflow remain unverified today. |
+| UI logic checks | S01: VM contract checks plus headless Chrome AudioWorklet fake-device stream and WAV fallback passed | Physical microphone and full browser-to-action workflow remain unverified today. |
 | Protected actions | B04: ownership, payload/action binding, expiry, OTP lockout, atomic replay/race behavior, audit rollback and hard-restart denial/recovery passed | Revalidate on final source and during later active-stream failure/capacity work. |
-| Audio | Local Silero + INT8 Wav2Vec2; per-session VAD; shared upload/stream pipeline; immediate HIGH escalation with slower score recovery | Current browser has no continuous stream client. One CPU inference slot; no measured live capacity. |
+| Audio | Local Silero + INT8 Wav2Vec2; native 16 kHz AudioWorklet sends authenticated 200 ms PCM16 frames; headless Chrome reached LOW at 1.5s while capture continued | Backlog/freshness and long-run physical-device capacity remain unverified. |
 | Models and evaluation | Historical 40 English clips; default test missed 1/9 scorable spoof and falsely blocked 1/9 scorable genuine; candidate 0.58 falsely blocked 3/9 genuine | Representative language/channel evaluation and defensible threshold choice. Candidate threshold is not deployed. |
 | Timing | Historical offline median 3.06s, p95 7.79s per file; model load 7.07s | Capture-to-alert, API overhead, warm startup and limited concurrency on the presentation laptop. |
 | Packaging and readiness | B01 source repair plus B02 clean build; B03 liveness/readiness verifies DB, full runtime schema, executable models and verifier | Dependency pinning, `.dockerignore`, offline package and final immutable source/model receipts remain. |
@@ -88,7 +88,7 @@ Statuses: `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requires 
 | B04 | Days 3-5 / backend | DONE | Verify action state machine, ownership, payload binding, approval replay/races, audit rollback and post-restart denial/recovery | [B04 receipt](validation/b04-actions-2026-09-13.md): 14 API groups, injected audit rollback, 5 hard-restart groups, focused unit/UI checks passed; zero unauthorized completions |
 | B05 | Days 4-5 / backend | DONE | Define single-worker capacity and verifier restart behavior; bound upload/auth/inference waits and concurrent sessions; correct expired-challenge and unavailable UI recovery | [B05 receipt](validation/b05-capacity-verifier-2026-09-13.md): one active audio session, sessions 2/3 rejected promptly, bounded DB/upload/inference waits, explicit lost-delivery expiry/new-action recovery, 15 live and 5 hard-restart groups passed |
 | D02 | Days 2-8 / evaluation | TODO | Assemble four-language source-disjoint corpus with real/synthetic labels, quality/channel annotations, license/consent and hashes; keep demo/training/test separate | Target 320 independent source clips as below; incomplete slices remain visible |
-| S01 | Days 6-7 / browser + backend | TODO | Add native AudioWorklet capture/resampling and authenticated WebSocket client; await ready then stream mono 16kHz PCM16 at a measured cadence; retain recording/WAV fallback | Real speech reaches the existing pipeline while capture continues; repair stale test_client.py handshake |
+| S01 | Days 6-7 / browser + backend | DONE | Add native AudioWorklet capture/resampling and authenticated WebSocket client; await ready then stream mono 16kHz PCM16 at a measured cadence; retain recording/WAV fallback | [S01 receipt](validation/s01-browser-streaming-2026-09-13.md): Chrome produced eight live updates while capture continued, LOW at 1.5s, WAV fallback passed; live API and repaired client passed |
 | S02 | Days 7-8 / backend | TODO | Bound capture/transport/inference backlog; use server-owned receipt/freshness information; stale/duplicate/out-of-order/gapped input cannot refresh old evidence as new speech | Test delayed frames, saturation, source replacement and genuine-to-synthetic-to-genuine transition; HIGH during a pending action must not be silently erased before completion |
 | S03 | Days 7-8 / browser | TODO | Display live risk, evidence age, reasons and action status; handle stop, permission denial, disconnect and reconnect; release devices on navigation | Reconnect starts new evidence; startup badge checks full readiness; expiry offers the correct new-action path |
 | M01 | Days 9-10 / evaluation | TODO | Extend existing evaluator for language, duration, channel, replay, held-out generator and partial-manipulation slices; log raw/scorable/rejected counts | Shared runtime preprocessing/policy; measured real replay subset; explicit no-alert outcomes |
@@ -232,6 +232,14 @@ Next exact action:
 - Checks: host pytest 23 passed/1 skipped plus 26 subtests; Python 3.11 focused unittest 11 passed; UI and microphone smoke passed; rebuilt live suite 15/15 passed; hard SIGKILL restart suite 5/5 passed; final readiness returned 200. Evidence: [B05 receipt](validation/b05-capacity-verifier-2026-09-13.md) and linked machine receipts.
 - Blockers/decisions: capacity is intentionally one active audio session in one Uvicorn worker; sessions 2/3 fail promptly and were measured only as admission checks, not long-run capacity. The first restart rerun exposed and fixed a harness-only variable shadow, then both full suites passed on the final source. Ruflo stored `patterns/vigilvoice-b05-handoff`; immediate semantic search returned no result, so this Git ledger remains authoritative. D02 still needs consent/access and a second permitted generator family.
 - Next exact action: S01, add native continuous browser PCM streaming using the existing WebSocket contract while retaining WAV upload as fallback; then S02 bounds stream freshness/backlog.
+
+### 2026-09-13 23:12 Asia/Calcutta | Codex integration + Ruflo/read-only swarm | S01
+
+- Status changes: S01 moved from TODO through IN_PROGRESS to DONE after contract, live backend and headless Chrome checks passed.
+- Changes and source state: added native 16 kHz AudioWorklet capture with 200 ms PCM16 frames; same-origin authenticated WebSocket client waits for `ready`; live results reuse the risk display; stop/failure cleanup preserves WAV fallback. Repaired binary-first backend handling and stale `test_client.py`. Baseline is `b84593e`; S01 is an uncommitted patch bound to image `sha256:f636ae6f920d3c8ac27cd26c1868d3c65fc6247298bff08390ce670c41207aef`.
+- Checks: pytest 23 passed/1 skipped plus 26 subtests; microphone and UI smoke passed; live backend suite 15/15 passed; repaired client streamed 24 real-WAV frames; Chrome fake device produced eight updates while capture stayed ready, reached LOW at 1.5s, then passed WAV fallback; final readiness returned 200. Evidence: [S01 receipt](validation/s01-browser-streaming-2026-09-13.md).
+- Blockers/decisions: S01 uses browser-native resampling and adds no dependency or reconnect queue. Fake-device browser proof is not physical microphone evidence. Backpressure, server-owned timing, delayed/replayed-frame handling and retained HIGH evidence remain S02; D02 access/consent remains open.
+- Next exact action: S02, add the minimum bounded-frame and server-owned freshness protocol to the existing stream, then test stale/gapped input and genuine-to-synthetic-to-genuine action blocking.
 
 ### PDF source fingerprints
 

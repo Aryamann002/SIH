@@ -15,16 +15,16 @@ class Element {
   set innerHTML(_) { throw new Error("HTML interpolation is not permitted for API data."); }
 }
 
-function load(page, fetch) {
+function load(page, fetch, globals = {}) {
   const root = path.resolve(__dirname, "../app/static");
   const html = fs.readFileSync(path.join(root, `${page === "app" ? "index" : "verify"}.html`), "utf8");
   const elements = Object.fromEntries([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => [match[1], new Element()]));
   const intervals = [];
-  const window = { setInterval: (callback) => intervals.push(callback), setTimeout: (callback) => callback(), addEventListener() {} };
+  const window = { setInterval: (callback) => intervals.push(callback), setTimeout: (callback, delay) => { if (delay !== 5000) callback(); return 1; }, clearTimeout() {}, addEventListener() {} };
   const context = vm.createContext({
     document: { getElementById: (id) => { assert.ok(elements[id], `Missing element: ${id}`); return elements[id]; }, createElement: () => new Element() },
     window, fetch, File: class File { constructor(_bits = [], name = "fixture.wav") { this.name = name; this.size = 32044; } }, URL: { createObjectURL: () => "blob:test", revokeObjectURL() {} },
-    navigator: { clipboard: { writeText: async () => {} } }, console,
+    navigator: { clipboard: { writeText: async () => {} } }, console, ...globals,
   });
   if (page === "app") vm.runInContext(fs.readFileSync(path.join(root, "microphone.js"), "utf8"), context);
   vm.runInContext(fs.readFileSync(path.join(root, `${page}.js`), "utf8"), context);
@@ -151,5 +151,49 @@ const actionId = "ec6f9fc0-bd58-4b61-86a3-a6f951691dc8";
   assert.match(lostVerifier.elements.notice.textContent, /backend restart/);
   assert.match(lostVerifier.elements.notice.textContent, /New transfer/);
   assert.equal(lostVerifier.elements["verifier-key"].value, "");
-  console.log("UI smoke passed: authenticated file flow, immutable action, independent verification, denied completion, audit rendering, and expiry.");
+
+  const sockets = [];
+  class TestSocket {
+    static OPEN = 1;
+    constructor(url) {
+      this.url = url; this.readyState = 0; this.sent = []; sockets.push(this);
+      queueMicrotask(() => { this.readyState = TestSocket.OPEN; this.onopen(); });
+    }
+    send(data) {
+      this.sent.push(data);
+      if (typeof data === "string") {
+        assert.equal(this.sent.length, 1, "No PCM may precede authentication and ready");
+        queueMicrotask(() => this.onmessage({ data: JSON.stringify({ type: "ready", session_id: "live-session" }) }));
+      }
+    }
+    close(code = 1000) { this.readyState = 3; queueMicrotask(() => this.onclose?.({ code })); }
+  }
+  const liveUi = load("app", async (url) => {
+    if (url.endsWith("/system")) return response({ ready: true, model_version: "test-model", demo_verification_enabled: true });
+    if (url.endsWith("/sessions")) return response({ session_id: "live-session", session_token: "live-secret" });
+    throw new Error(`Unexpected live URL: ${url}`);
+  }, { WebSocket: TestSocket, location: { protocol: "http:", host: "localhost:8000" } });
+  await settle();
+  vm.runInContext(`
+    globalThis.captureStops = 0;
+    MicrophoneAudio.liveSupported = () => true;
+    MicrophoneAudio.stream = async (onFrame) => ({
+      ready: false,
+      async start() { this.ready = true; onFrame(new ArrayBuffer(6400)); },
+      stop() { this.ready = false; captureStops += 1; },
+    });
+    renderControls();
+  `, liveUi.context);
+  await fire(liveUi, "live-start");
+  assert.equal(sockets[0].url, "ws://localhost:8000/api/v1/stream/ws/live-session");
+  assert.deepEqual(JSON.parse(sockets[0].sent[0]), { session_token: "live-secret" }, "Credentials must be first WebSocket frame");
+  assert.equal(sockets[0].sent[1].byteLength, 6400, "PCM must start only after ready");
+  sockets[0].onmessage({ data: JSON.stringify({ risk_state: "LOW", spoof_score: 0.2, snr_db: 20, speech_duration_ms: 1800, reason_codes: ["NO_STRONG_SYNTHETIC_EVIDENCE"], model_version: "test-model", threshold_profile: "test" }) });
+  assert.equal(liveUi.elements["risk-state"].textContent, "LOW");
+  assert.equal(vm.runInContext("state.live.capture.ready", liveUi.context), true, "Risk must update while capture continues");
+  await fire(liveUi, "live-stop");
+  assert.equal(vm.runInContext("state.live", liveUi.context), null);
+  assert.equal(vm.runInContext("captureStops", liveUi.context), 1);
+  assert.equal(liveUi.elements["audio-file"].disabled, false, "WAV fallback must return after live stop");
+  console.log("UI smoke passed: authenticated live/WAV flows, immutable action, independent verification, denied completion, audit rendering, and expiry.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

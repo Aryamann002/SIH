@@ -32,12 +32,17 @@
       <div class="workspace">
         <section class="card evidence-card" aria-labelledby="evidence-title">
           <div class="card-heading"><div><p class="eyebrow">01 / EVIDENCE</p><h2 id="evidence-title">What does the audio tell us?</h2></div><span class="tag">Record or upload</span></div>
-          <div class="row" role="group" aria-label="Microphone recording">
+          <div class="row" role="group" aria-label="Continuous microphone detection">
+            <button id="live-start" class="button primary" type="button" aria-describedby="live-status">Start live detection</button>
+            <button id="live-stop" class="text-button" type="button" disabled>Stop live detection</button>
+          </div>
+          <p id="live-status" class="small muted" role="status">Stream microphone audio continuously for live risk updates.</p>
+          <div class="row" role="group" aria-label="Recorded microphone fallback">
             <button id="record-start" class="button secondary" type="button" aria-describedby="record-status">Record voice</button>
             <button id="record-stop" class="text-button" type="button" disabled>Stop</button>
             <button id="record-cancel" class="text-button" type="button" disabled>Cancel</button>
           </div>
-          <p id="record-status" class="small muted" role="status">Record up to 10 seconds, then analyze. This is recorded audio analysis, not continuous live detection.</p>
+          <p id="record-status" class="small muted" role="status">Fallback: record up to 10 seconds, then analyze the WAV.</p>
           <form id="audio-form">
             <div class="file-zone">
               <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 31V9m-8 8 8-8 8 8M10 29v9h28v-9"/></svg>

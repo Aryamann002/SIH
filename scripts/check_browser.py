@@ -74,6 +74,15 @@ async def check(browser, output, presentation):
                 await command("Page.navigate", url="http://127.0.0.1:8000/")
                 await until("document.getElementById('service-status')?.dataset.ready === 'true'")
                 assert await js("MicrophoneAudio.supported()"), "Microphone browser APIs unavailable"
+                assert await js("MicrophoneAudio.liveSupported()"), "AudioWorklet streaming unavailable"
+                await js("document.getElementById('live-start').click()")
+                await until("state.live?.capture.ready === true")
+                await until("state.live?.results >= 2 && ['LOW','ELEVATED','HIGH'].includes(document.getElementById('risk-state').textContent) && parseFloat(document.getElementById('speech-duration').textContent) >= 1.5")
+                live = await js("({results: state.live.results, ready: state.live.capture.ready, risk: document.getElementById('risk-state').textContent, speech: document.getElementById('speech-duration').textContent})")
+                assert live["ready"] and live["results"] >= 2, live
+                assert live["risk"] in ("LOW", "ELEVATED", "HIGH") and float(live["speech"].split()[0]) >= 1.5, live
+                await js("document.getElementById('live-stop').click()")
+                await until("state.live === null && !document.getElementById('audio-file').disabled")
                 await js("document.getElementById('record-start').click()")
                 await until("state.microphone?.ready === true")
                 await asyncio.sleep(4)
@@ -96,10 +105,11 @@ async def check(browser, output, presentation):
                 await command("Emulation.setDeviceMetricsOverride", width=390, height=844, deviceScaleFactor=1, mobile=True)
                 assert await js("document.documentElement.scrollWidth <= 390"), "Mobile page overflows"
                 report = {"generated_at": datetime.now(timezone.utc).isoformat(), "passed": True,
-                          "checks": ["Native fake microphone recording", "16 kHz PCM WAV conversion",
+                          "checks": ["Authenticated AudioWorklet stream", "Repeated live inference while capture continued",
+                                     "Safe live stop and WAV fallback", "Native fake microphone recording", "16 kHz PCM WAV conversion",
                                      "Blob preview allowed by CSP", "Real authenticated backend upload",
                                      "No JavaScript exceptions", "390px mobile layout has no horizontal overflow"],
-                          "recording": info, "risk_state": risk,
+                          "live": live, "recording": info, "risk_state": risk,
                           "limitation": "Automated fake audio device; physical microphone and OS permission interaction need manual rehearsal."}
                 (output / "browser-checks.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
                 print(json.dumps(report, indent=2))

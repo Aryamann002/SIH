@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-09-13T17:41:20.632551+00:00",
+  "passed": true,
+  "elapsed_seconds": 21.666,
+  "checks": [
+    {
+      "name": "Database schema, local models and demo verifier ready",
+      "passed": true
+    },
+    {
+      "name": "Missing evidence blocks; session credentials isolate access",
+      "passed": true
+    },
+    {
+      "name": "OTP and approval are bound to exact action; verifier and payload boundaries enforced",
+      "passed": true
+    },
+    {
+      "name": "Concurrent completion succeeds exactly once with a persisted audit event",
+      "passed": true
+    },
+    {
+      "name": "Injected audit failure rolls back completion and approval consumption",
+      "passed": true
+    },
+    {
+      "name": "Three incorrect OTPs block action and cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "Expired OTP cannot approve (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Expired approval cannot complete (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Stale evidence blocks completion; stored action and audit show current unsafe risk",
+      "passed": true
+    },
+    {
+      "name": "Synthetic demo clip blocks new action and previously verified completion",
+      "passed": true
+    },
+    {
+      "name": "Malformed, truncated, wrong-rate and oversized audio fail closed",
+      "passed": true
+    },
+    {
+      "name": "Silence, clipping and too-short audio never fabricate a safe score",
+      "passed": true
+    },
+    {
+      "name": "One audio session admitted; sessions 2 and 3 rejected while action and verifier APIs stay responsive",
+      "passed": true
+    },
+    {
+      "name": "Authenticated PCM reaches live inference; binary-first and disconnect remain fail-closed",
+      "passed": true
+    },
+    {
+      "name": "Missing-model pipeline returns unavailable with no score (isolated process setting)",
+      "passed": true
+    }
+  ],
+  "error": null,
+  "scope": "Local simulated transactions; real pretrained inference. Not accuracy or production security certification.",
+  "script_sha256": "c23e8bda7b494a0c569a2247f625b371456b25b39c925d879e217a53bfc04f93"
+}

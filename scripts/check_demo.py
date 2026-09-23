@@ -282,12 +282,32 @@ async def main(output):
         assert upload(overflow, genuine)["risk_state"] in ("LOW", "ELEVATED")
         passed("One audio session admitted; sessions 2 and 3 rejected while action and verifier APIs stay responsive")
 
-        upload(owner, genuine)
-        interrupted = action(owner)
-        token = confirm(owner, interrupted, challenge(owner, interrupted))
+        unauthenticated = session()
+        async with connect(f"{WS_BASE}/stream/ws/{unauthenticated['session_id']}") as ws:
+            await ws.send(bytes(6400))
+            try:
+                await ws.recv()
+            except ConnectionClosed as exc:
+                assert exc.code == 1008
+            else:
+                raise AssertionError("Binary audio was accepted before authentication")
+
+        with wave.open(io.BytesIO(genuine), "rb") as audio:
+            pcm = audio.readframes(audio.getnframes())
         async with connect(f"{WS_BASE}/stream/ws/{owner['session_id']}") as ws:
             await ws.send(json.dumps({"session_token": owner["session_token"]}))
             assert json.loads(await ws.recv())["type"] == "ready"
+            live_results = []
+            for offset in range(0, len(pcm), 6400):
+                await ws.send(pcm[offset:offset + 6400])
+                live_results.append(json.loads(await ws.recv()))
+                if live_results[-1]["risk_state"] in ("LOW", "ELEVATED"):
+                    break
+            assert len(live_results) >= 2 and live_results[-1]["risk_state"] in ("LOW", "ELEVATED"), live_results
+            info = request(f"/sessions/{owner['session_id']}", owner)
+            assert info["status"] == "LIVE" and info["speech_duration_ms"] > 0
+            interrupted = action(owner)
+            token = confirm(owner, interrupted, challenge(owner, interrupted))
         for _ in range(40):
             info = request(f"/sessions/{owner['session_id']}", owner)
             if info["status"] == "DISCONNECTED":
@@ -295,7 +315,7 @@ async def main(output):
             await asyncio.sleep(0.05)
         assert info["risk_state"] == "SERVICE_UNAVAILABLE"
         complete(owner, interrupted, token, 409)
-        passed("WebSocket replacement and disconnect invalidate earlier file evidence")
+        passed("Authenticated PCM reaches live inference; binary-first and disconnect remain fail-closed")
 
         from app.services.audio_pipeline import AudioPipeline
         old = settings.SPOOF_MODEL_PATH

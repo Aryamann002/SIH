@@ -21,6 +21,23 @@ assert.throws(() => audio.encodeWav(new Float32Array()), /between/);
 assert.throws(() => audio.encodeWav(new Float32Array([NaN])), /invalid/);
 assert.throws(() => audio.encodeWav(new Float32Array(160001)), /between/);
 
+let Worklet, posted;
+const workletContext = vm.createContext({
+  AudioWorkletProcessor: class { constructor() { this.port = { postMessage: (data, transfer) => { posted = { data, transfer }; } }; } },
+  registerProcessor: (name, implementation) => { assert.equal(name, "pcm16-capture"); Worklet = implementation; },
+  Int16Array, Math,
+});
+vm.runInContext(fs.readFileSync(path.resolve(__dirname, "../app/static/pcm-worklet.js"), "utf8"), workletContext);
+const processor = new Worklet();
+const left = new Float32Array(3200).fill(1);
+const right = new Float32Array(3200).fill(1);
+left[1] = right[1] = -1;
+assert.equal(processor.process([[left, right]]), true);
+assert.equal(posted.data.byteLength, 6400, "Worklet must emit one 200 ms PCM16 frame");
+assert.equal(new DataView(posted.data).getInt16(0, true), 32767);
+assert.equal(new DataView(posted.data).getInt16(2, true), -32768);
+assert.equal(posted.transfer[0], posted.data, "PCM frame must transfer without copying");
+
 function environment() {
   let request, device, timer, stopped = 0, cleared = 0, closed = 0, outputOptions;
   const track = { stop() { stopped++; } };
@@ -54,6 +71,36 @@ function environment() {
     allow: () => request.resolve(stream), deny: () => request.reject(new Error("Permission denied")),
     timeout: () => timer(), error: () => device.onerror(), disconnect: () => track.onended(),
     stopped: () => stopped, cleared: () => cleared, closed: () => closed, outputOptions: () => outputOptions,
+  };
+}
+
+function liveEnvironment(delayedResume = false) {
+  let context, node, resume, connected = 0, stopped = 0, closed = 0;
+  const track = { onended: null, stop() { stopped++; } };
+  const stream = { getTracks: () => [track], getAudioTracks: () => [track] };
+  const source = { connect() { connected++; }, disconnect() {} };
+  class LiveContext {
+    constructor(options) { assert.equal(options.sampleRate, 16000); this.sampleRate = 16000; this.destination = {}; context = this; }
+    audioWorklet = { addModule: async (path) => assert.equal(path, "/static/pcm-worklet.js") };
+    createMediaStreamSource() { return source; }
+    async resume() { connected++; if (delayedResume) await new Promise((resolve) => { resume = resolve; }); }
+    async close() { closed++; }
+  }
+  class LiveNode {
+    constructor(_context, name) { assert.equal(name, "pcm16-capture"); this.port = {}; node = this; }
+    connect() { connected++; }
+    disconnect() {}
+  }
+  const contextVm = vm.createContext({
+    navigator: { mediaDevices: { getUserMedia: async () => stream } },
+    AudioContext: LiveContext, AudioWorkletNode: LiveNode, WebSocket: class {},
+    MediaRecorder: class {}, OfflineAudioContext: class {}, Blob, File,
+  });
+  vm.runInContext(fs.readFileSync(path.resolve(__dirname, "../app/static/microphone.js"), "utf8"), contextVm);
+  return {
+    audio: vm.runInContext("MicrophoneAudio", contextVm),
+    node: () => node, connected: () => connected, stopped: () => stopped,
+    closed: () => closed, resume: () => resume(), track, context: () => context,
   };
 }
 const settle = () => new Promise(setImmediate);
@@ -98,5 +145,28 @@ const settle = () => new Promise(setImmediate);
     assert.equal(boundary.stopped(), 1, `${operation} must release microphone`);
     assert.ok(boundary.cleared() > 0);
   }
-  console.log("Microphone smoke passed: PCM WAV, native resampling setup, stop, 10s limit, permission denial, late permission after cancel, errors, disconnect, cleanup.");
+
+  const live = liveEnvironment();
+  let frame;
+  const capture = await live.audio.stream((value) => { frame = value; }, assert.fail);
+  assert.equal(live.audio.liveSupported(), true);
+  assert.equal(live.connected(), 0, "Capture graph must wait for authenticated ready");
+  await capture.start();
+  assert.equal(capture.ready, true);
+  assert.equal(live.connected(), 3, "Ready capture connects source, worklet and native context");
+  live.node().port.onmessage({ data: posted.data });
+  assert.equal(frame, posted.data);
+  capture.stop(); capture.stop();
+  assert.equal(live.stopped(), 1, "Live stop must release microphone once");
+  assert.equal(live.closed(), 1, "Live stop must close AudioContext once");
+
+  const startRace = liveEnvironment(true);
+  const pendingLive = await startRace.audio.stream(() => {}, () => {});
+  const pendingStart = pendingLive.start();
+  await settle();
+  pendingLive.stop();
+  startRace.resume();
+  await assert.rejects(pendingStart, /disconnected/);
+  assert.equal(pendingLive.ready, false, "Stopped capture cannot become ready after resume resolves");
+  console.log("Microphone smoke passed: PCM WAV and 200 ms live PCM16, native 16 kHz resampling, ready gate, stop, permission/error boundaries, cleanup.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });
