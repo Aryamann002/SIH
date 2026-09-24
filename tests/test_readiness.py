@@ -123,11 +123,15 @@ class ReadinessTests(unittest.TestCase):
             AudioPipeline.status.cache_clear()
 
     def test_readiness_endpoint_fails_without_disabling_liveness(self):
-        from app.main import health_check, readiness_check
+        from app.main import database_unavailable, health_check, readiness_check
+        from sqlalchemy.exc import SQLAlchemyError
 
         with patch("app.main.readiness", AsyncMock(return_value={"ready": False})):
             self.assertEqual(asyncio.run(readiness_check()).status_code, 503)
         self.assertEqual(asyncio.run(health_check())["status"], "ok")
+        response = asyncio.run(database_unavailable(None, SQLAlchemyError("private database detail")))
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn(b"private database detail", response.body)
 
     def test_lifespan_runs_bounded_model_status(self):
         from app.main import lifespan

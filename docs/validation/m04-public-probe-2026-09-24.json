@@ -1,0 +1,226 @@
+{
+  "scope": "Two public demo clips with deterministic transformations; no population accuracy claim",
+  "rows": [
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "clean",
+      "duration_seconds": 4.642,
+      "risk_state": "ELEVATED",
+      "spoof_score": 0.412686,
+      "snr_db": 57.08,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "ELEVATED_SPOOF_RISK"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "quiet_30db",
+      "duration_seconds": 4.642,
+      "risk_state": "POOR_QUALITY",
+      "spoof_score": null,
+      "snr_db": 25.14,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "AUDIO_TOO_QUIET"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "clipped",
+      "duration_seconds": 4.642,
+      "risk_state": "POOR_QUALITY",
+      "spoof_score": null,
+      "snr_db": 67.11,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "AUDIO_CLIPPING_DETECTED"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "added_noise_nominal_10db",
+      "duration_seconds": 4.642,
+      "risk_state": "LOW",
+      "spoof_score": 0.16959,
+      "snr_db": 56.22,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "NO_STRONG_SYNTHETIC_EVIDENCE"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "simulated_telephone_band",
+      "duration_seconds": 4.642,
+      "risk_state": "LOW",
+      "spoof_score": 0.087089,
+      "snr_db": 20.51,
+      "speech_duration_ms": 1968,
+      "reason_codes": [
+        "NO_STRONG_SYNTHETIC_EVIDENCE"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "first_0.5s",
+      "duration_seconds": 0.5,
+      "risk_state": "INSUFFICIENT_EVIDENCE",
+      "spoof_score": null,
+      "snr_db": 11.65,
+      "speech_duration_ms": 352,
+      "reason_codes": [
+        "INSUFFICIENT_SPEECH_DURATION"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "first_1s",
+      "duration_seconds": 1.0,
+      "risk_state": "INSUFFICIENT_EVIDENCE",
+      "spoof_score": null,
+      "snr_db": 12.86,
+      "speech_duration_ms": 864,
+      "reason_codes": [
+        "INSUFFICIENT_SPEECH_DURATION"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "first_2s",
+      "duration_seconds": 2.0,
+      "risk_state": "ELEVATED",
+      "spoof_score": 0.527165,
+      "snr_db": 12.46,
+      "speech_duration_ms": 1664,
+      "reason_codes": [
+        "ELEVATED_SPOOF_RISK"
+      ]
+    },
+    {
+      "source": "genuine",
+      "source_sha256": "442cf79d7c596c7417db8ce25c4ad4c0b0f388c953f82f7b6d803d199bb5e611",
+      "condition": "first_4s",
+      "duration_seconds": 4.0,
+      "risk_state": "ELEVATED",
+      "spoof_score": 0.412686,
+      "snr_db": 57.08,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "ELEVATED_SPOOF_RISK"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "clean",
+      "duration_seconds": 3.934,
+      "risk_state": "HIGH",
+      "spoof_score": 0.756581,
+      "snr_db": 17.09,
+      "speech_duration_ms": 1936,
+      "reason_codes": [
+        "HIGH_SPOOF_SCORE"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "quiet_30db",
+      "duration_seconds": 3.934,
+      "risk_state": "POOR_QUALITY",
+      "spoof_score": null,
+      "snr_db": 26.94,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "AUDIO_TOO_QUIET"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "clipped",
+      "duration_seconds": 3.934,
+      "risk_state": "POOR_QUALITY",
+      "spoof_score": null,
+      "snr_db": 13.6,
+      "speech_duration_ms": 1904,
+      "reason_codes": [
+        "AUDIO_CLIPPING_DETECTED"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "added_noise_nominal_10db",
+      "duration_seconds": 3.934,
+      "risk_state": "LOW",
+      "spoof_score": 0.113638,
+      "snr_db": 57.5,
+      "speech_duration_ms": 2000,
+      "reason_codes": [
+        "NO_STRONG_SYNTHETIC_EVIDENCE"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "simulated_telephone_band",
+      "duration_seconds": 3.934,
+      "risk_state": "LOW",
+      "spoof_score": 0.13576,
+      "snr_db": 15.46,
+      "speech_duration_ms": 1968,
+      "reason_codes": [
+        "NO_STRONG_SYNTHETIC_EVIDENCE"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "first_0.5s",
+      "duration_seconds": 0.5,
+      "risk_state": "INSUFFICIENT_EVIDENCE",
+      "spoof_score": null,
+      "snr_db": 57.71,
+      "speech_duration_ms": 384,
+      "reason_codes": [
+        "INSUFFICIENT_SPEECH_DURATION"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "first_1s",
+      "duration_seconds": 1.0,
+      "risk_state": "INSUFFICIENT_EVIDENCE",
+      "spoof_score": null,
+      "snr_db": 56.83,
+      "speech_duration_ms": 896,
+      "reason_codes": [
+        "INSUFFICIENT_SPEECH_DURATION"
+      ]
+    },
+    {
+      "source": "synthetic",
+      "source_sha256": "08d5a81def7e7a7231bb6e42f5773acd013b074e718a3f6faadb9baa65723337",
+      "condition": "first_2s",
+      "duration_seconds": 2.0,
+      "risk_state": "ELEVATED",
+      "spoof_score": 0.704988,
+      "snr_db": 21.05,
+      "speech_duration_ms": 1632,
+      "reason_codes": [
+        "ELEVATED_SPOOF_RISK"
+      ]
+    }
+  ]
+}

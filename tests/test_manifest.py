@@ -7,7 +7,7 @@ import wave
 import pytest
 
 from scripts.validate_manifest import FIELDS, validate
-from scripts.evaluate_audio import read_manifest
+from scripts.evaluate_audio import read_manifest, select_phase
 
 
 def test_manifest_rejects_lineage_duplicates_and_heldout_leakage():
@@ -48,7 +48,18 @@ def test_manifest_rejects_lineage_duplicates_and_heldout_leakage():
 
         write()
         assert validate(manifest, "family-b")["heldout_test_clips"] == 1
-        assert len(read_manifest(manifest, "family-b")) == 4
+        evaluation_rows = read_manifest(manifest, "family-b")
+        assert len(evaluation_rows) == 4
+        with pytest.raises(ValueError, match="requires --phase"):
+            select_phase(evaluation_rows, None, None)
+        validation, rich = select_phase(evaluation_rows, "validation", None)
+        assert rich and {row["split"] for row in validation} == {"validation"} and len(validation) == 2
+        with pytest.raises(ValueError, match="omit --frozen-high-threshold"):
+            select_phase(evaluation_rows, "validation", 0.75)
+        with pytest.raises(ValueError, match="requires --frozen-high-threshold"):
+            select_phase(evaluation_rows, "final-test", None)
+        test, rich = select_phase(evaluation_rows, "final-test", 0.75)
+        assert rich and {row["split"] for row in test} == {"test"} and len(test) == 2
         rows[4]["source_recording_id"] = rows[0]["source_recording_id"]
         write()
         with pytest.raises(ValueError, match="source_recording_id leakage"):

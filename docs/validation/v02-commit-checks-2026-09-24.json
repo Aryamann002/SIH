@@ -1,0 +1,98 @@
+{
+  "generated_at": "2026-09-24T06:47:31.397804+00:00",
+  "passed": true,
+  "elapsed_seconds": 39.808,
+  "checks": [
+    {
+      "name": "Database schema, local models and demo verifier ready",
+      "passed": true
+    },
+    {
+      "name": "Missing evidence blocks; session credentials isolate access",
+      "passed": true
+    },
+    {
+      "name": "OTP and approval are bound to exact action; verifier and payload boundaries enforced",
+      "passed": true
+    },
+    {
+      "name": "Concurrent completion succeeds exactly once with a persisted audit event",
+      "passed": true
+    },
+    {
+      "name": "Injected audit failure rolls back completion and approval consumption",
+      "passed": true
+    },
+    {
+      "name": "Injected database commit failure leaves approval and action unconsumed",
+      "passed": true
+    },
+    {
+      "name": "Three incorrect OTPs block action and cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "Expired OTP cannot approve (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Expired approval cannot complete (test-owned expiry shifted in database)",
+      "passed": true
+    },
+    {
+      "name": "Stale evidence blocks completion; stored action and audit show current unsafe risk",
+      "passed": true
+    },
+    {
+      "name": "Model/policy provenance mismatch blocks protected action",
+      "passed": true
+    },
+    {
+      "name": "Source replacement permanently blocks pending and verified actions despite later LOW",
+      "passed": true
+    },
+    {
+      "name": "Pre-auth stream capacity rejects a ninth silent client",
+      "passed": true
+    },
+    {
+      "name": "Live genuine-synthetic-genuine HIGH stays on old actions; disconnect blocks new action",
+      "passed": true
+    },
+    {
+      "name": "Malformed, truncated, wrong-rate and oversized audio fail closed",
+      "passed": true
+    },
+    {
+      "name": "Silence, clipping and too-short audio never fabricate a safe score",
+      "passed": true
+    },
+    {
+      "name": "Same-session stream and WAV overload cannot replace the admitted stream",
+      "passed": true
+    },
+    {
+      "name": "One audio session admitted; sessions 2 and 3 rejected while action and verifier APIs stay responsive",
+      "passed": true
+    },
+    {
+      "name": "Sequenced stream rejects duplicate, gapped, burst and stale input",
+      "passed": true
+    },
+    {
+      "name": "Authenticated PCM reaches live inference; binary-first and disconnect remain fail-closed",
+      "passed": true
+    },
+    {
+      "name": "Missing-model pipeline returns unavailable with no score (isolated process setting)",
+      "passed": true
+    },
+    {
+      "name": "Advisory may escalate eligible action but cannot call through HIGH gate",
+      "passed": true
+    }
+  ],
+  "error": null,
+  "scope": "Local simulated transactions; real pretrained inference. Not accuracy or production security certification.",
+  "script_sha256": "4759041ee2c967e778c53db1e224523e1ba38487a048a3190a6350beaf92fd61"
+}

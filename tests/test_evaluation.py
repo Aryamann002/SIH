@@ -1,10 +1,15 @@
 import csv
 from hashlib import sha256
+import json
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 import wave
 
+import pytest
+
+from scripts import evaluate_audio
 from scripts.evaluate_audio import metrics, read_manifest, select_threshold
 from scripts.prepare_evaluation import source_group
 
@@ -71,6 +76,67 @@ class EvaluationTests(unittest.TestCase):
             write()
             with self.assertRaisesRegex(ValueError, "checksum mismatch"):
                 read_manifest(manifest)
+
+
+def test_rich_evaluator_scores_only_requested_phase(monkeypatch, tmp_path):
+    from app.services import audio_evidence
+    from app.services.audio_pipeline import AudioPipeline
+
+    manifest = tmp_path / "manifest.csv"
+    manifest.write_text("fixture", encoding="utf-8")
+    rows = []
+    for number, (split, label) in enumerate((("validation", "genuine"), ("validation", "spoof"),
+                                              ("test", "genuine"), ("test", "spoof")), 1):
+        audio = tmp_path / f"{number}.wav"
+        audio.write_bytes(bytes([number]))
+        rows.append({"file_path": audio.name, "path": audio.name, "absolute_path": str(audio),
+                     "split": split, "label": label, "language": "hi"})
+    seen = []
+
+    def fake_process(self, data):
+        spoof = data[0] % 2 == 0
+        return {"risk_state": "HIGH" if spoof else "LOW", "spoof_score": .9 if spoof else .1,
+                "reason_codes": [], "threshold_profile": "fixture"}
+
+    def fake_evaluate(data):
+        seen.append(data[0])
+        return AudioPipeline.process_chunk(None, data)
+
+    monkeypatch.setattr(evaluate_audio, "read_manifest", lambda *_: rows)
+    monkeypatch.setattr(AudioPipeline, "status", staticmethod(lambda: {"available": True}))
+    monkeypatch.setattr(AudioPipeline, "process_chunk", fake_process)
+    monkeypatch.setattr(audio_evidence, "evaluate_wav", fake_evaluate)
+    for phase, expected in (("validation", [1, 2]), ("final-test", [3, 4])):
+        seen.clear()
+        output = tmp_path / phase
+        command = ["evaluate_audio.py", str(manifest), "--phase", phase, "--output", str(output)]
+        if phase == "final-test":
+            command += ["--frozen-high-threshold", "0.75"]
+        monkeypatch.setattr(sys, "argv", command)
+        evaluate_audio.main()
+        report = json.loads((output / "report.json").read_text(encoding="utf-8"))
+        results = json.loads((output / "results.json").read_text(encoding="utf-8"))
+        assert seen == expected and {row["split"] for row in results} == {"test" if phase == "final-test" else "validation"}
+        assert report["phase"] == phase
+        assert report["default_test" if phase == "validation" else "default_validation"] is None
+        assert report["candidate"]["test" if phase == "validation" else "validation"] is None
+        assert report["validation_slices" if phase == "validation" else "test_slices"]["language"]["hi"]["total"] == 2
+        assert report["test_slices" if phase == "validation" else "validation_slices"] == {}
+    seen.clear()
+    monkeypatch.setattr(sys, "argv", ["evaluate_audio.py", str(manifest), "--phase", "final-test",
+                                    "--frozen-high-threshold", "nan"])
+    with pytest.raises(SystemExit):
+        evaluate_audio.main()
+    assert not seen
+
+    monkeypatch.setattr(evaluate_audio, "read_manifest", lambda *_: [
+        {key: value for key, value in row.items() if key != "file_path"} for row in rows])
+    output = tmp_path / "legacy"
+    monkeypatch.setattr(sys, "argv", ["evaluate_audio.py", str(manifest), "--output", str(output)])
+    evaluate_audio.main()
+    report = json.loads((output / "report.json").read_text(encoding="utf-8"))
+    assert seen == [1, 2, 3, 4] and report["phase"] == "legacy_exploratory"
+    assert report["default_validation"] is not None and report["default_test"] is not None
 
 
 if __name__ == "__main__":

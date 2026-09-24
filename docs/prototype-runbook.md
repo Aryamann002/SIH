@@ -2,7 +2,7 @@
 
 This is a local, simulated-transfer demo. It does not move money and its voice score does not establish identity.
 
-For a classroom presentation, start with [teacher-demo-guide.md](teacher-demo-guide.md), [the slides](teacher-presentation.pdf), and [the measured evaluation](evaluation-report.md).
+For rehearsal, use the [current presentation guide](teacher-demo-guide.md) and [saved development plan](final-development-plan.md). The older slides, silent video and exploratory evaluation predate the current streaming build; do not treat them as final evidence.
 
 ## Start
 
@@ -13,23 +13,25 @@ docker compose up -d --build
 
 Open `http://127.0.0.1:8000/`. The included audio samples are in `models/demo/`.
 
-Chrome/Edge can record up to 10 seconds from the microphone, preview the converted WAV, and submit it with **Analyze recording**. Use localhost or HTTPS; allow microphone access. This is record-then-analyze input. WAV upload remains available.
+Wait for `http://127.0.0.1:8000/readyz` to return 200. Chrome/Edge on localhost can **Start live detection**: the AudioWorklet sends authenticated, numbered 200 ms mono 16 kHz PCM16 frames over WebSocket and the risk display updates while capture continues. The **Record voice** fallback records up to 10 seconds and converts to WAV for **Analyze recording**. Upload requires [16 kHz mono signed-16-bit PCM WAV](../README.md#wav-upload-format).
 
-The operator creates a session, uploads a 16 kHz mono 16-bit WAV file, prepares a transfer, and requests independent verification. Open `/verify` in a separate tab, enter the local verifier key from `.env`, and use the displayed code in the operator tab. Completion requires the one-time approval token and the exact stored transfer details.
+The operator prepares a transfer only after fresh usable evidence. LOW or ELEVATED can request verification but never authorizes completion by itself. Open `/verify` in a separate tab, enter the local verifier key from `.env` privately, review the exact recipient and amount, and use the displayed code in the operator tab. Completion requires a fresh, single-use approval bound to the stored action. HIGH, stale/missing evidence, source change or service failure block it. The verifier is a local demo role, not a true out-of-band channel.
 
 ## Checks
 
 ```powershell
-python -m unittest discover -s tests -p test_audio.py -v
-python -m pytest -q
+python -m pytest -q -p no:cacheprovider
 node tests/ui_smoke.cjs
+node tests/microphone_smoke.cjs
 ```
 
-Set `RUN_MODEL_SMOKE=1` to run the bundled model inference checks. The detector and thresholds are uncalibrated; do not present the demo clips as accuracy evidence.
+Run API/browser scripts only against an isolated test stack; see the [presentation guide](teacher-demo-guide.md). Set `RUN_MODEL_SMOKE=1` for bundled model inference checks. The detector and thresholds are uncalibrated, and the [public-clip quality probe](validation/m04-public-probe-2026-09-24.md) found synthetic misses under noise and simulated band-limiting. Do not present demo clips as accuracy evidence.
 
 ## Models
 
 `python scripts/fetch_models.py` downloads and verifies the pinned local models when `models/` is empty. See [model-setup.md](model-setup.md) for licenses, hashes, and known limitations.
+
+For an offline machine, use the preloaded images/models and [offline package instructions](validation/offline-package-2026-09-24.md); normal `--build` may need a package index. The existing V03 archives predate later source changes, so rebuild and rehearse the final package after source freeze.
 
 ## Stop
 

@@ -1,6 +1,6 @@
 # Reproduce the exploratory audio evaluation
 
-This evaluates the existing pretrained detector; it does not train a model, calibrate a fraud probability, or change application thresholds. Present it as an engineering prototype with measured limitations.
+This evaluates the existing pretrained detector; it does not train a model, calibrate a fraud probability, or change application thresholds. The 40 historical English clips are regression material, not the four-language validation or untouched final test required by the [frozen protocol](evaluation-protocol.md). The latest measured run is [Stage 0](validation/stage0-2026-09-24.md); present it with its denominators and limitations.
 
 ## Prepare the pinned corpus
 
@@ -43,6 +43,19 @@ The evaluator calls the actual upload function `evaluate_wav`: identical WAV val
 
 The candidate HIGH threshold is chosen on validation only: minimum balanced error over a 0.01 grid at or above the existing elevated threshold; ties favor lower FAR, then lower threshold. It is frozen before reporting test metrics. Offline replay compares the maximum chunk score with this threshold while retaining the original quality/service disposition. The default application's exact returned risk is reported independently. The candidate is **not deployed**, and small validation results do not justify deployment.
 
-For another dataset, supply `path,label,split,group,sha256` CSV columns; paths must be relative to the CSV directory. Labels are `genuine` or `spoof`, splits `validation` or `test`; each split needs both classes. Group all recordings from the same source together and keep related augmentations in that group. The loader rejects path escapes, changed files, duplicate file/PCM contents and groups crossing splits. Perceptual near-duplicates still require dataset review.
+The five-column `path,label,split,group,sha256` CSV is the legacy format for reproducing this historical run. For a new approved corpus, use the [rich manifest contract](manifest-schema.md), not that five-column shortcut. Validate it first, then pass the held-out family explicitly:
+
+```powershell
+python scripts/validate_manifest.py <corpus>/manifest.csv --heldout-generator <family>
+python scripts/evaluate_audio.py <corpus>/manifest.csv --heldout-generator <family> --phase validation --output docs/evaluation-output/<validation-run>
+```
+
+The validator checks declared speaker, source-recording, transcript, derivative and generator isolation plus duplicate audio hashes/PCM. It cannot detect hidden cross-dataset ancestry. The validation command checks the full manifest's integrity but runs inference only on validation clips. Keep train/validation/test decisions fixed before scoring. After freezing model, preprocessing, threshold, quality and temporal policy, run the final test once with the value recorded from validation:
+
+```powershell
+python scripts/evaluate_audio.py <corpus>/manifest.csv --heldout-generator <family> --phase final-test --frozen-high-threshold <selected-value> --output docs/evaluation-output/<final-test-run>
+```
+
+The final-test command scores no validation clips and does not select a threshold. Record source/model/profile and manifest hashes for both runs; the CLI cannot itself prove the freeze or prevent a second test invocation. Do not copy a passing validation score into a final-test claim.
 
 Before making accuracy claims, expand the held-out corpus to consented Indian-language speakers, actual replay attacks, phone channels, background noise and generators absent from training. Predefine the acceptable missed-attack and false-block tradeoff; keep test data untouched during tuning. Current score values remain model outputs, not verified fraud probabilities.

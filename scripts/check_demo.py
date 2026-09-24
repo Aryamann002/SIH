@@ -104,14 +104,20 @@ async def send_stream_frame(ws, pcm, pacing):
     pacing["sequence"] += 1
 
 
-class AuditFailingSession:
-    def __init__(self, db):
+class FailingSession:
+    def __init__(self, db, failure="audit"):
         self.db = db
+        self.failure = failure
 
     async def execute(self, statement, params=None):
-        if "INSERT INTO audit_logs" in str(statement):
+        if self.failure == "audit" and "INSERT INTO audit_logs" in str(statement):
             raise SQLAlchemyError("injected audit failure")
         return await self.db.execute(statement, params or {})
+
+    async def commit(self):
+        if self.failure == "commit":
+            raise SQLAlchemyError("injected database commit failure")
+        return await self.db.commit()
 
     def __getattr__(self, name):
         return getattr(self.db, name)
@@ -192,7 +198,7 @@ async def main(output):
             async with AsyncSessionLocal() as db:
                 await complete_action(UUID(rollback["action_id"]), CompleteRequest(
                     approval_token=rollback_approval["approval_token"]), owner["session_token"],
-                    AuditFailingSession(db))
+                    FailingSession(db))
         except SQLAlchemyError as exc:
             assert "injected audit failure" in str(exc)
         else:
@@ -209,6 +215,30 @@ async def main(output):
         assert row["consumed_at"] is None and row["completed_events"] == 0
         assert complete(owner, rollback, rollback_approval)["status"] == "COMPLETED"
         passed("Injected audit failure rolls back completion and approval consumption")
+
+        commit_rollback = action(owner)
+        commit_approval = confirm(owner, commit_rollback, challenge(owner, commit_rollback))
+        try:
+            async with AsyncSessionLocal() as db:
+                await complete_action(UUID(commit_rollback["action_id"]), CompleteRequest(
+                    approval_token=commit_approval["approval_token"]), owner["session_token"],
+                    FailingSession(db, "commit"))
+        except SQLAlchemyError as exc:
+            assert "injected database commit failure" in str(exc)
+        else:
+            raise AssertionError("Injected database commit failure did not abort completion")
+        async with AsyncSessionLocal() as db:
+            row = (await db.execute(text("""
+                SELECT a.status,a.completed_at,p.consumed_at,
+                       COUNT(l.id) FILTER (WHERE l.event_type='ACTION_COMPLETED') AS completed_events
+                FROM protected_actions a JOIN approval_tokens p USING (action_id)
+                LEFT JOIN audit_logs l USING (action_id)
+                WHERE a.action_id=:id GROUP BY a.status,a.completed_at,p.consumed_at
+            """), {"id": UUID(commit_rollback["action_id"])})).mappings().one()
+        assert row["status"] == "VERIFIED" and row["completed_at"] is None
+        assert row["consumed_at"] is None and row["completed_events"] == 0
+        assert complete(owner, commit_rollback, commit_approval)["status"] == "COMPLETED"
+        passed("Injected database commit failure leaves approval and action unconsumed")
 
         locked = action(owner)
         correct = challenge(owner, locked)

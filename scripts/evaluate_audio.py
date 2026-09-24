@@ -1,4 +1,4 @@
-"""Evaluate the real upload pipeline; select an offline HIGH threshold on validation only."""
+"""Evaluate the upload pipeline; keep rich-manifest validation and final test separate."""
 import argparse
 from collections import Counter
 import csv
@@ -75,6 +75,22 @@ def read_manifest(path, heldout_generator=None):
     return rows
 
 
+def select_phase(rows, phase, frozen_threshold):
+    rich = bool(rows and "file_path" in rows[0])
+    if not rich:
+        if phase is not None or frozen_threshold is not None:
+            raise ValueError("Phase flags are for rich manifests only")
+        return rows, False
+    if phase not in {"validation", "final-test"}:
+        raise ValueError("Rich manifest evaluation requires --phase validation or final-test")
+    if phase == "final-test" and frozen_threshold is None:
+        raise ValueError("Final test requires --frozen-high-threshold")
+    if phase == "validation" and frozen_threshold is not None:
+        raise ValueError("Validation selects its own threshold; omit --frozen-high-threshold")
+    split = "test" if phase == "final-test" else "validation"
+    return [row for row in rows if row["split"] == split], True
+
+
 def metrics(rows, threshold=None):
     confusion = {label: {"eligible_for_otp": 0, "high_risk_blocked": 0} for label in ("genuine", "spoof")}
     quality = Counter()
@@ -114,6 +130,12 @@ def metrics(rows, threshold=None):
             "no_alert_synthetic_attacks": sum(row["label"] == "spoof" for row in rows) - true_positive,
             "HIGH_recall_scorable_spoof": recall, "HIGH_false_positive_rate_scorable_genuine": frr,
             "HIGH_precision": precision, "HIGH_F1": f1, "ROC_AUC": auc, "EER": eer}
+
+
+def slice_metrics(rows):
+    return {field: {value: metrics([row for row in rows if row.get(field) == value])
+                    for value in sorted({row[field] for row in rows if row.get(field)})}
+            for field in ("language", "generator_family", "channel", "replay_status", "attack_type")}
 
 
 def discrimination(genuine_scores, spoof_scores):
@@ -162,12 +184,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--heldout-generator", help="Required for the rich training/evaluation manifest")
+    parser.add_argument("--phase", choices=("validation", "final-test"),
+                        help="Required for rich manifests; never score validation and test together")
+    parser.add_argument("--frozen-high-threshold", type=float,
+                        help="Required for final-test; selected and frozen before this run")
     parser.add_argument("--output", type=Path, default=ROOT / "docs/evaluation-output")
     args = parser.parse_args()
-    rows = read_manifest(args.manifest, args.heldout_generator)
+    try:
+        rows, rich = select_phase(read_manifest(args.manifest, args.heldout_generator),
+                                  args.phase, args.frozen_high_threshold)
+    except ValueError as exc:
+        parser.error(str(exc))
     from app.core.config import settings
     from app.services.audio_evidence import evaluate_wav
     from app.services.audio_pipeline import AudioPipeline
+
+    if args.frozen_high_threshold is not None and not (math.isfinite(args.frozen_high_threshold)
+            and settings.ELEVATED_RISK_SPOOF_THRESHOLD <= args.frozen_high_threshold <= 1):
+        parser.error("Frozen HIGH threshold must be finite, at least ELEVATED and at most 1")
 
     start = time.perf_counter()
     status = AudioPipeline.status()
@@ -203,10 +237,16 @@ def main():
         print(f"{index}/{len(rows)} {row['split']} {row['label']} {result['risk_state']} {latency:.2f}s", flush=True)
     validation = [row for row in results if row["split"] == "validation"]
     test = [row for row in results if row["split"] == "test"]
-    threshold, validation_metrics = select_threshold(validation, settings.ELEVATED_RISK_SPOOF_THRESHOLD)
+    if validation:
+        threshold, validation_metrics = select_threshold(validation, settings.ELEVATED_RISK_SPOOF_THRESHOLD)
+    else:
+        threshold, validation_metrics = args.frozen_high_threshold, None
     latencies = [row["latency_seconds"] for row in results]
     report = {
-        "purpose": "Exploratory teacher demonstration; no model training or production threshold change",
+        "purpose": ("Rich-manifest validation only; final test not scored" if args.phase == "validation" else
+                    "Final-test phase with supplied frozen HIGH threshold; untouched status needs external verification" if args.phase == "final-test" else
+                    "Exploratory teacher demonstration; no model training or production threshold change"),
+        "phase": args.phase or "legacy_exploratory",
         "manifest_sha256": sha256(args.manifest.read_bytes()).hexdigest(),
         "models": status, "threshold_profiles": sorted({r["threshold_profile"] for r in results if "threshold_profile" in r}),
         "source_sha256": {str(path.relative_to(ROOT)): sha256(path.read_bytes()).hexdigest()
@@ -215,37 +255,46 @@ def main():
         "pipeline": "Exact evaluate_wav decoding, 6400-byte chunks, VAD, quality gates, EMA, and upload file aggregation",
         "definitions": "FAR = spoof files eligible for OTP / scorable spoof files; FRR = HIGH-blocked genuine files / scorable genuine files. Eligibility never means a completed transaction. Quality and service failures are reported separately, excluded from these denominators.",
         "default_high_threshold": settings.HIGH_RISK_SPOOF_THRESHOLD,
-        "default_validation": metrics(validation), "default_test": metrics(test),
-        "test_slices": {field: {value: metrics([row for row in test if row.get(field) == value])
-                                 for value in sorted({row[field] for row in test if row.get(field)})}
-                        for field in ("language", "generator_family", "channel", "replay_status", "attack_type")},
+        "default_validation": metrics(validation) if validation else None,
+        "default_test": metrics(test) if test else None,
+        "validation_slices": slice_metrics(validation) if validation else {},
+        "test_slices": slice_metrics(test) if test else {},
         "candidate": {"high_threshold": threshold, "promoted": False,
-                      "selection": "Validation only: minimum balanced error on 0.01 grid >= fixed elevated threshold; ties lower FAR, then lower threshold",
+                      "selection": ("Supplied frozen value; no threshold selection in final test" if args.phase == "final-test" else
+                                    "Validation only: minimum balanced error on 0.01 grid >= fixed elevated threshold; ties lower FAR, then lower threshold"),
                       "replay": "Offline max per-chunk score compared to frozen candidate HIGH threshold; original quality/service disposition retained; elevated threshold fixed",
-                      "validation": validation_metrics, "test": metrics(test, threshold)},
+                      "validation": validation_metrics,
+                      "test": metrics(test, threshold) if test else None},
         "latency_seconds": {"model_load": startup, "median_file": statistics.median(latencies),
                             "p95_file": percentile(latencies, 0.95), "total_files": sum(latencies)},
-        "limitations": ["40 selected English clips are exploratory, not an accuracy certification",
-                        "Source recording groups and synthetic provider prefixes are separated between these splits; speaker/text independence is unverified",
-                        "Overlap with pretrained detector training data is unverified",
-                        "No Indian-language, replay, phone-channel or added-noise coverage in this corpus",
-                        "Scores are not calibrated fraud probabilities; candidate is not deployed",
-                        "Offline file latency excludes HTTP/database overhead and does not establish streaming latency"],
+        "limitations": (["Declared manifest lineage is checked, but hidden cross-dataset/pretraining overlap remains unverified",
+                         "Scores are not calibrated fraud probabilities; this command does not deploy a threshold",
+                         "Offline file latency excludes HTTP/database overhead and does not establish streaming latency"] if rich else
+                        ["40 selected English clips are exploratory, not an accuracy certification",
+                         "Source recording groups and synthetic provider prefixes are separated between these splits; speaker/text independence is unverified",
+                         "Overlap with pretrained detector training data is unverified",
+                         "No Indian-language, replay, phone-channel or added-noise coverage in this corpus",
+                         "Scores are not calibrated fraud probabilities; candidate is not deployed",
+                         "Offline file latency excludes HTTP/database overhead and does not establish streaming latency"]),
     }
     (output / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    lines = ["# Exploratory audio evaluation", "", report["purpose"], "", report["definitions"], "",
+    lines = ["# Audio evaluation" if rich else "# Exploratory audio evaluation", "", report["purpose"], "", report["definitions"], "",
              "| Run | Scorable/total | Spoof eligible / scorable spoof (FAR) | Genuine blocked / scorable genuine (FRR) | Quality rejected | Unavailable |",
              "|---|---:|---:|---:|---:|---:|"]
     for name, result in (("Default validation", report["default_validation"]), ("Default test", report["default_test"]),
                          (f"Candidate {threshold:.2f} validation", validation_metrics), (f"Frozen candidate {threshold:.2f} test", report["candidate"]["test"])):
+        if result is None:
+            continue
         counts = result["confusion"]
         def rate(label, key, rate_key):
             value = result[rate_key]
             return f"{counts[label][key]}/{sum(counts[label].values())} ({value:.1%})" if value is not None else "n/a"
         lines.append(f"| {name} | {result['scorable']}/{result['total']} | {rate('spoof', 'eligible_for_otp', 'FAR_spoof_eligible_for_otp')} | {rate('genuine', 'high_risk_blocked', 'FRR_genuine_high_risk_blocked')} | {sum(result['quality_rejections'].values())} | {sum(result['service_unavailable'].values())} |")
     lines.extend(["", f"Median file inference: {statistics.median(latencies):.2f}s; p95: {percentile(latencies, .95):.2f}s. Model loading: {startup:.2f}s.",
-                  "", "Candidate selection uses validation only. Test results never influence selection. The candidate remains offline.", "",
+                  "", ("Final test used the supplied frozen threshold; no validation audio was scored in this run." if args.phase == "final-test" else
+                       "Validation only; no test audio was scored." if args.phase == "validation" else
+                       "Candidate selection uses validation only. Test results never influence selection. The candidate remains offline."), "",
                   *[f"- {item}" for item in report["limitations"]], "", "See report.json for confusion counts, model/config/source hashes and results.json for every clip."])
     (output / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"Report written: {output / 'report.md'}", flush=True)
