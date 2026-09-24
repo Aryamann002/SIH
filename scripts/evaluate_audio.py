@@ -19,13 +19,23 @@ sys.path.insert(0, str(ROOT))
 QUALITY = {"POOR_QUALITY", "INSUFFICIENT_EVIDENCE", "INVALID_AUDIO"}
 
 
-def read_manifest(path):
+def read_manifest(path, heldout_generator=None):
     path = path.resolve(strict=True)
     with path.open(newline="", encoding="utf-8-sig") as source:
         reader = csv.DictReader(source)
-        if not {"path", "label", "split", "group", "sha256"} <= set(reader.fieldnames or []):
+        fields = set(reader.fieldnames or [])
+        rich = "file_path" in fields
+        if rich:
+            if not heldout_generator:
+                raise ValueError("Rich manifest evaluation requires --heldout-generator")
+            from scripts.validate_manifest import validate
+            validate(path, heldout_generator)
+        elif not {"path", "label", "split", "group", "sha256"} <= fields:
             raise ValueError("Manifest requires path,label,split,group,sha256")
         rows = list(reader)
+    if rich:
+        rows = [{**row, "path": row["file_path"], "group": row["source_recording_id"]}
+                for row in rows if row["split"] in {"validation", "test"}]
     if not 1 <= len(rows) <= 10000:
         raise ValueError("Manifest must have 1..10000 rows")
     groups, digests, pcm_digests = {}, set(), set()
@@ -69,6 +79,7 @@ def metrics(rows, threshold=None):
     confusion = {label: {"eligible_for_otp": 0, "high_risk_blocked": 0} for label in ("genuine", "spoof")}
     quality = Counter()
     unavailable = Counter()
+    scores = {"genuine": [], "spoof": []}
     for row in rows:
         state = row["risk_state"]
         if state in QUALITY:
@@ -79,6 +90,7 @@ def metrics(rows, threshold=None):
             score = row["maximum_chunk_score"]
             if score is None or not math.isfinite(score) or not 0 <= score <= 1:
                 raise ValueError("Scorable results require a finite score in [0,1]")
+            scores[row["label"]].append(score)
             blocked = state == "HIGH" if threshold is None else score >= threshold
             confusion[row["label"]]["high_risk_blocked" if blocked else "eligible_for_otp"] += 1
         else:
@@ -86,10 +98,48 @@ def metrics(rows, threshold=None):
     genuine, spoof = (sum(confusion[label].values()) for label in ("genuine", "spoof"))
     far = confusion["spoof"]["eligible_for_otp"] / spoof if spoof else None
     frr = confusion["genuine"]["high_risk_blocked"] / genuine if genuine else None
+    true_positive = confusion["spoof"]["high_risk_blocked"]
+    false_positive = confusion["genuine"]["high_risk_blocked"]
+    precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else None
+    recall = true_positive / spoof if spoof else None
+    f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else None
+    auc, eer = discrimination(scores["genuine"], scores["spoof"])
     return {"total": len(rows), "scorable": genuine + spoof, "confusion": confusion,
             "quality_rejections": dict(quality), "service_unavailable": dict(unavailable),
             "FAR_spoof_eligible_for_otp": far, "FRR_genuine_high_risk_blocked": frr,
-            "balanced_error": (far + frr) / 2 if far is not None and frr is not None else None}
+            "balanced_error": (far + frr) / 2 if far is not None and frr is not None else None,
+            "scorable_coverage": (genuine + spoof) / len(rows) if rows else None,
+            "insufficient_evidence_count": sum(row["risk_state"] == "INSUFFICIENT_EVIDENCE" for row in rows),
+            "quality_rejection_count": sum(row["risk_state"] in {"POOR_QUALITY", "INVALID_AUDIO"} for row in rows),
+            "no_alert_synthetic_attacks": sum(row["label"] == "spoof" for row in rows) - true_positive,
+            "HIGH_recall_scorable_spoof": recall, "HIGH_false_positive_rate_scorable_genuine": frr,
+            "HIGH_precision": precision, "HIGH_F1": f1, "ROC_AUC": auc, "EER": eer}
+
+
+def discrimination(genuine_scores, spoof_scores):
+    if not genuine_scores or not spoof_scores:
+        return None, None
+    ranked = sorted((score, label) for label, values in ((0, genuine_scores), (1, spoof_scores)) for score in values)
+    positive_ranks = 0.0
+    index = 0
+    while index < len(ranked):
+        end = index + 1
+        while end < len(ranked) and ranked[end][0] == ranked[index][0]:
+            end += 1
+        positive_ranks += sum(label for _, label in ranked[index:end]) * ((index + 1 + end) / 2)
+        index = end
+    positives, negatives = len(spoof_scores), len(genuine_scores)
+    auc = (positive_ranks - positives * (positives + 1) / 2) / (positives * negatives)
+    previous_fpr, previous_fnr, previous_difference = 0.0, 1.0, -1.0
+    for cutoff in sorted({*genuine_scores, *spoof_scores}, reverse=True):
+        fpr = sum(value >= cutoff for value in genuine_scores) / negatives
+        fnr = sum(value < cutoff for value in spoof_scores) / positives
+        difference = fpr - fnr
+        if difference >= 0:
+            fraction = -previous_difference / (difference - previous_difference) if difference != previous_difference else 0
+            return auc, previous_fpr + fraction * (fpr - previous_fpr)
+        previous_fpr, previous_fnr, previous_difference = fpr, fnr, difference
+    return auc, previous_fpr
 
 
 def select_threshold(validation, elevated):
@@ -111,9 +161,10 @@ def percentile(values, fraction):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
+    parser.add_argument("--heldout-generator", help="Required for the rich training/evaluation manifest")
     parser.add_argument("--output", type=Path, default=ROOT / "docs/evaluation-output")
     args = parser.parse_args()
-    rows = read_manifest(args.manifest)
+    rows = read_manifest(args.manifest, args.heldout_generator)
     from app.core.config import settings
     from app.services.audio_evidence import evaluate_wav
     from app.services.audio_pipeline import AudioPipeline
@@ -143,9 +194,12 @@ def main():
             result = {"risk_state": "INVALID_AUDIO", "spoof_score": None, "reason_codes": [str(exc)]}
         latency = time.perf_counter() - started
         scores = [chunk["spoof_score"] for chunk in chunks if chunk["spoof_score"] is not None]
+        first_alert = next((index * .2 for index, chunk in enumerate(chunks, 1)
+                            if chunk["risk_state"] == "HIGH"), None)
         results.append({**{key: value for key, value in row.items() if key != "absolute_path"}, **result,
                         "maximum_chunk_score": max(scores) if scores else None,
-                        "chunk_count": len(chunks), "latency_seconds": latency})
+                        "chunk_count": len(chunks), "latency_seconds": latency,
+                        "first_alert_audio_seconds": first_alert})
         print(f"{index}/{len(rows)} {row['split']} {row['label']} {result['risk_state']} {latency:.2f}s", flush=True)
     validation = [row for row in results if row["split"] == "validation"]
     test = [row for row in results if row["split"] == "test"]
@@ -162,6 +216,9 @@ def main():
         "definitions": "FAR = spoof files eligible for OTP / scorable spoof files; FRR = HIGH-blocked genuine files / scorable genuine files. Eligibility never means a completed transaction. Quality and service failures are reported separately, excluded from these denominators.",
         "default_high_threshold": settings.HIGH_RISK_SPOOF_THRESHOLD,
         "default_validation": metrics(validation), "default_test": metrics(test),
+        "test_slices": {field: {value: metrics([row for row in test if row.get(field) == value])
+                                 for value in sorted({row[field] for row in test if row.get(field)})}
+                        for field in ("language", "generator_family", "channel", "replay_status", "attack_type")},
         "candidate": {"high_threshold": threshold, "promoted": False,
                       "selection": "Validation only: minimum balanced error on 0.01 grid >= fixed elevated threshold; ties lower FAR, then lower threshold",
                       "replay": "Offline max per-chunk score compared to frozen candidate HIGH threshold; original quality/service disposition retained; elevated threshold fixed",

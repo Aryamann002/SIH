@@ -1,6 +1,8 @@
 import asyncio
+from collections import deque
 import hmac
 import secrets
+import time
 from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import text
@@ -13,6 +15,17 @@ from app.services.audio_evidence import audio_capacity, begin_audio, end_audio, 
 from app.services.audit import AuditService
 
 router = APIRouter()
+_session_creations = deque()
+
+
+def admit_session(now=None):
+    # ponytail: one-process demo cap; use a shared limiter if deployment adds workers.
+    now = time.monotonic() if now is None else now
+    while _session_creations and _session_creations[0] <= now - 60:
+        _session_creations.popleft()
+    if len(_session_creations) >= 60:
+        raise HTTPException(429, "Session creation is temporarily busy; retry shortly.", headers={"Retry-After": "60"})
+    _session_creations.append(now)
 
 
 async def read_audio(request: Request) -> bytes:
@@ -32,6 +45,7 @@ async def read_audio(request: Request) -> bytes:
 
 @router.post("/sessions", status_code=201)
 async def create_session(db: AsyncSession = Depends(get_db)):
+    admit_session()
     session_id, token = uuid4(), secrets.token_urlsafe(32)
     await db.execute(text("INSERT INTO sessions (session_id,status,token_hash) VALUES (:id,'CREATED',:hash)"),
                      {"id": session_id, "hash": digest(token)})
@@ -44,20 +58,24 @@ async def create_session(db: AsyncSession = Depends(get_db)):
 async def get_session(session_id: UUID, token: str = Depends(bearer), db: AsyncSession = Depends(get_db)):
     session = await owned_session(db, session_id, token)
     risk, info = await evidence(db, session)
+    age = info.get("age")
     return {**unavailable(), "session_id": session_id, "status": session["status"], "risk_state": risk.value,
             "spoof_score": info.get("score"), "snr_db": info.get("snr_db", 0),
             "speech_duration_ms": info.get("speech_duration_ms", 0), "reason_codes": info.get("reason_codes", []),
+            "evidence_age_ms": round(float(age) * 1000) if age is not None and float(age) >= 0 else None,
             "model_version": info.get("model_version", "unavailable"),
             "threshold_profile": info.get("threshold_profile", settings.THRESHOLD_PROFILE)}
 
 
 @router.post("/sessions/{session_id}/audio")
 async def upload_audio(session_id: UUID, request: Request, token: str = Depends(bearer), db: AsyncSession = Depends(get_db)):
-    await owned_session(db, session_id, token, lock=True)
+    await owned_session(db, session_id, token)
+    await db.rollback()
     generation = None
     try:
-        generation = await begin_audio(db, session_id, "PROCESSING_FILE")
         async with audio_capacity():
+            await owned_session(db, session_id, token, lock=True)
+            generation = await begin_audio(db, session_id, "PROCESSING_FILE")
             data = await read_audio(request)
             result = await infer(lambda: evaluate_wav(data))
             await record_evidence(db, session_id, generation, result, "FILE_READY")

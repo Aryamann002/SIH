@@ -1,0 +1,13 @@
+*
+!app/
+!app/**
+!scripts/
+!scripts/**
+!config/
+!config/**
+!requirements.txt
+!init.sql
+!Dockerfile
+**/__pycache__/
+**/*.pyc
+**/.env*

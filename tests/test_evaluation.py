@@ -22,6 +22,12 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(result["FRR_genuine_high_risk_blocked"], .5)
         self.assertEqual(result["quality_rejections"], {"genuine": 1})
         self.assertEqual(result["service_unavailable"], {"spoof": 1})
+        self.assertEqual(result["ROC_AUC"], .75)
+        self.assertEqual(result["EER"], .5)
+        self.assertEqual(result["HIGH_recall_scorable_spoof"], .5)
+        self.assertEqual(result["HIGH_precision"], .5)
+        self.assertEqual(result["HIGH_F1"], .5)
+        self.assertEqual(result["no_alert_synthetic_attacks"], 2)
         threshold, _ = select_threshold(rows, .4)
         self.assertEqual(threshold, .81)
         with self.assertRaisesRegex(ValueError, "validation rows only"):

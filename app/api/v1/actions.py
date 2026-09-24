@@ -14,6 +14,7 @@ from app.services import demo_verifier
 from app.services.action_gate import (bearer, db_now, digest, eligible, evidence,
                                      otp_digest, owned_action, owned_session)
 from app.services.audit import AuditService
+from app.services import jev
 
 router = APIRouter()
 
@@ -41,10 +42,26 @@ async def reject(db, action, reason, status="BLOCKED", risk=None):
 @router.post("", response_model=ActionResponse, status_code=201)
 @router.post("/execute", response_model=ActionResponse, status_code=201, deprecated=True)
 async def create_action(req: ActionRequest, token: str = Depends(bearer), db: AsyncSession = Depends(get_db)):
+    session = await owned_session(db, req.session_id, token)
+    risk, info = await evidence(db, session)
+    advice = {"mode": settings.JEV_MODE, "state_hash": None, "question_version": jev.QUESTION,
+              "jev_model_version": settings.JEV_MODEL, "choice": None, "probabilities": None,
+              "confidence": None, "latency_ms": None, "fallback_reason": "deterministic_hard_gate"}
+    observed_id = info.get("id")
+    if eligible(risk):
+        state = jev.build_state(info, session)
+        await db.rollback()  # Never hold a database lock/transaction across the external call.
+        advice = await jev.advise(state)
     session = await owned_session(db, req.session_id, token, lock=True)
     risk, info = await evidence(db, session)
+    if observed_id != info.get("id") or (eligible(risk) and advice["state_hash"] !=
+                                         jev.state_digest(jev.build_state(info, session))):
+        advice.update(choice=None, probabilities=None, confidence=None, fallback_reason="evidence_changed")
+    deterministic = "PENDING" if eligible(risk) else "BLOCKED"
+    final_status = jev.final_action_status(deterministic, advice)
+    escalated = final_status == "BLOCKED" and deterministic == "PENDING"
     action = {"action_id": uuid4(), "session_id": req.session_id, "action_type": req.action_type,
-              "payload": req.payload.model_dump(), "status": "PENDING" if eligible(risk) else "BLOCKED",
+              "payload": req.payload.model_dump(), "status": final_status,
               "risk_state": risk.value}
     await db.execute(text("""
         INSERT INTO protected_actions (action_id,session_id,action_type,payload,status,risk_state)
@@ -54,6 +71,10 @@ async def create_action(req: ActionRequest, token: str = Depends(bearer), db: As
                 "model_version": info.get("model_version", "unavailable"),
                 "threshold_profile": info.get("threshold_profile", settings.THRESHOLD_PROFILE),
                 "reason_codes": info.get("reason_codes", [])})
+    await event(db, action, "JEV_DECISION", "JEV_ESCALATION" if escalated else advice["fallback_reason"],
+                {**advice, "deterministic_policy_result": deterministic,
+                 "agreed": advice["choice"] == "STANDARD_VERIFICATION" if advice["choice"] else None,
+                 "final_backend_decision": action["status"]})
     await db.commit()
     return response(action)
 

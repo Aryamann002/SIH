@@ -16,6 +16,9 @@ class AudioPipeline:
         self.vad = SileroVADWorker(max_window_sec=getattr(settings, "AUDIO_WINDOW_SECONDS", 2.0))
         self.detector = SpoofDetector()
         self.smoothed_score = None
+        self.sample_count = 0
+        self.last_inference_sample = None
+        self.last_scored_result = None
         self.alpha = getattr(settings, "EMA_ALPHA", 0.3)
         if not 0 < self.alpha <= 1:
             raise ValueError("EMA_ALPHA must be in (0, 1]")
@@ -24,6 +27,7 @@ class AudioPipeline:
             "HIGH_RISK_SPOOF_THRESHOLD": 0.75, "ELEVATED_RISK_SPOOF_THRESHOLD": 0.4,
             "EMA_ALPHA": 0.3, "VAD_THRESHOLD": 0.5, "MIN_RMS": 0.003,
             "AUDIO_WINDOW_SECONDS": 2.0,
+            "DETECTOR_INFERENCE_INTERVAL_MS": 600,
         }.items()}
         digest = sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()[:12]
         self.threshold_profile = f"{getattr(settings, 'THRESHOLD_PROFILE', 'prototype-uncalibrated-v1')}:{digest}"
@@ -63,15 +67,26 @@ class AudioPipeline:
             return result
         try:
             snr, speech_ms, pcm, clipped = self.vad.process_chunk(chunk_bytes)
+            self.sample_count += len(chunk_bytes) // 2
             result.update(snr_db=snr, speech_duration_ms=speech_ms)
             if self.vad.rms < getattr(settings, "MIN_RMS", 0.003):
                 self.smoothed_score = None
+                self.last_scored_result = None
                 result.update(risk_state="POOR_QUALITY", reason_codes=["AUDIO_TOO_QUIET"])
                 return result
             state, reasons = DeterministicPolicyEngine.evaluate(snr, speech_ms, 0.0, clipped)
             if state.value in {"POOR_QUALITY", "INSUFFICIENT_EVIDENCE", "SERVICE_UNAVAILABLE"}:
                 self.smoothed_score = None
+                self.last_scored_result = None
                 result.update(risk_state=state.value, reason_codes=reasons)
+                return result
+            if (self.last_scored_result is not None and self.last_inference_sample is not None
+                    and self.sample_count - self.last_inference_sample <
+                    settings.DETECTOR_INFERENCE_INTERVAL_MS * 16):
+                result.update(risk_state=self.last_scored_result["risk_state"],
+                              spoof_score=self.last_scored_result["spoof_score"],
+                              reason_codes=[*self.last_scored_result["reason_codes"], "RECENT_SCORE_REUSED"],
+                              inference_performed=False)
                 return result
             score = self.detector.predict(pcm)
             self.smoothed_score = score if self.smoothed_score is None else (
@@ -81,12 +96,16 @@ class AudioPipeline:
             policy_score = max(score, self.smoothed_score)
             state, reasons = DeterministicPolicyEngine.evaluate(snr, speech_ms, policy_score, clipped)
             result.update(risk_state=state.value, spoof_score=round(policy_score, 6), reason_codes=reasons)
+            self.last_inference_sample = self.sample_count
+            self.last_scored_result = dict(result)
         except ValueError:
             self.vad.reset()
             self.smoothed_score = None
+            self.last_scored_result = None
             result.update(risk_state="POOR_QUALITY", reason_codes=["INVALID_PCM_ENCODING"])
         except Exception:
             self.vad.reset()
             self.smoothed_score = None
+            self.last_scored_result = None
             result.update(risk_state="SERVICE_UNAVAILABLE", reason_codes=["MODEL_INFERENCE_FAILED"])
         return result

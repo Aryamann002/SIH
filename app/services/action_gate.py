@@ -47,6 +47,10 @@ async def owned_action(db: AsyncSession, action_id: UUID, token: str, lock: bool
 async def evidence(db: AsyncSession, session) -> tuple[RiskState, dict]:
     if session["status"] not in ("LIVE", "FILE_READY"):
         return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["STREAM_OR_FILE_UNAVAILABLE"]}
+    if session["status"] == "LIVE":
+        from app.services.audio_evidence import stream_connected
+        if not stream_connected(session["session_id"], session["generation"]):
+            return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["STREAM_NOT_CONNECTED"]}
     row = (await db.execute(text("""
         SELECT *, EXTRACT(EPOCH FROM (clock_timestamp() - timestamp)) AS age
         FROM risk_evaluations WHERE id = :id AND session_id = :session_id
@@ -55,7 +59,15 @@ async def evidence(db: AsyncSession, session) -> tuple[RiskState, dict]:
         return RiskState.INSUFFICIENT_EVIDENCE, {"reason_codes": ["NO_CURRENT_EVIDENCE"]}
     ttl = settings.STREAM_EVIDENCE_TTL_SECONDS if session["status"] == "LIVE" else settings.FILE_EVIDENCE_TTL_SECONDS
     if not 0 <= float(row["age"]) < ttl:
-        return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["STALE_EVIDENCE"]}
+        return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["STALE_EVIDENCE"], "age": row["age"]}
+    if not row["model_version"] or row["model_version"] == "unavailable" or not row["threshold_profile"]:
+        return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["EVIDENCE_VERSION_UNAVAILABLE"]}
+    from app.services.audio_pipeline import AudioPipeline
+    current = AudioPipeline()
+    if not current.vad.available or not current.detector.available:
+        return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["MODEL_UNAVAILABLE"]}
+    if row["model_version"] != current.detector.model_version or row["threshold_profile"] != current.threshold_profile:
+        return RiskState.SERVICE_UNAVAILABLE, {"reason_codes": ["EVIDENCE_VERSION_MISMATCH"]}
     try:
         risk = RiskState(row["risk_state"])
         score = row["score"]

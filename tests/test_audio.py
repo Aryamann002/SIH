@@ -1,15 +1,18 @@
 """Offline regression checks; optional real-model smoke uses downloaded local files."""
 
+import io
 import os
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import wave
 
 import numpy as np
 
+from app.core.config import settings
 from app.services.audio_pipeline import AudioPipeline
+from app.services.audio_evidence import evaluate_wav
 from app.services.spoof_detector import ModelUnavailable, SpoofDetector
 from app.services.vad_worker import SileroVADWorker
 
@@ -75,17 +78,51 @@ class AudioTests(unittest.TestCase):
             "app.services.audio_pipeline.SpoofDetector", return_value=detector
         ):
             pipeline = AudioPipeline()
-        self.assertEqual(pipeline.process_chunk(b"00")["risk_state"], "LOW")
-        detector.predict = lambda _: 0.95
-        self.assertEqual(pipeline.process_chunk(b"00")["risk_state"], "HIGH")
-        detector.predict = lambda _: 0.1
-        result = pipeline.process_chunk(b"00")
-        self.assertGreater(result["spoof_score"], 0.1)
-        with patch.object(detector, "predict", side_effect=ModelUnavailable):
-            result = pipeline.process_chunk(b"00")
+        frame = bytes(6400)
+        with patch.object(settings, "DETECTOR_INFERENCE_INTERVAL_MS", 200):
+            self.assertEqual(pipeline.process_chunk(frame)["risk_state"], "LOW")
+            detector.predict = lambda _: 0.95
+            self.assertEqual(pipeline.process_chunk(frame)["risk_state"], "HIGH")
+            detector.predict = lambda _: 0.1
+            result = pipeline.process_chunk(frame)
+            self.assertGreater(result["spoof_score"], 0.1)
+            with patch.object(detector, "predict", side_effect=ModelUnavailable):
+                result = pipeline.process_chunk(frame)
         self.assertEqual(result["risk_state"], "SERVICE_UNAVAILABLE")
         self.assertIsNone(result["spoof_score"])
         self.assertIsNone(pipeline.smoothed_score)
+
+    def test_detector_cadence_does_not_claim_reused_score_as_new_evidence(self):
+        vad = SimpleNamespace(available=True, rms=0.1, reset=lambda: None,
+                              process_chunk=lambda _: (30.0, 2000, np.zeros(32000), False))
+        predict = Mock(side_effect=[0.1, 0.95])
+        detector = SimpleNamespace(available=True, model_version="test", predict=predict)
+        with patch("app.services.audio_pipeline.SileroVADWorker", return_value=vad), patch(
+            "app.services.audio_pipeline.SpoofDetector", return_value=detector
+        ):
+            pipeline = AudioPipeline()
+        frame = bytes(6400)
+        with patch.object(settings, "DETECTOR_INFERENCE_INTERVAL_MS", 600):
+            assert pipeline.process_chunk(frame)["risk_state"] == "LOW"
+            for _ in range(2):
+                reused = pipeline.process_chunk(frame)
+                assert reused["risk_state"] == "LOW"
+                assert reused["inference_performed"] is False
+            assert predict.call_count == 1
+            fresh = pipeline.process_chunk(frame)
+        assert fresh["risk_state"] == "HIGH"
+        assert fresh.get("inference_performed") is not False
+        assert predict.call_count == 2
+
+    def test_wav_result_selects_a_real_inference_not_reused_display_state(self):
+        output = io.BytesIO()
+        with wave.open(output, "wb") as audio:
+            audio.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+            audio.writeframes(bytes(12800))
+        fresh = {"risk_state": "LOW", "spoof_score": .2}
+        reused = {**fresh, "inference_performed": False}
+        with patch.object(AudioPipeline, "process_chunk", side_effect=[fresh, reused]):
+            self.assertIs(evaluate_wav(output.getvalue()), fresh)
 
     @unittest.skipUnless(os.getenv("RUN_MODEL_SMOKE") == "1", "Set RUN_MODEL_SMOKE=1 after fetching models")
     def test_downloaded_models_infer_real_speech_files(self):

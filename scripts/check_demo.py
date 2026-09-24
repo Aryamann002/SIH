@@ -5,6 +5,7 @@ Expiry checks age only rows created by this run; existing records are preserved.
 """
 import argparse
 import asyncio
+from contextlib import AsyncExitStack
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -12,8 +13,11 @@ import io
 import json
 import os
 from pathlib import Path
+import struct
 import sys
 import time
+import traceback
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from uuid import UUID
@@ -24,10 +28,11 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosed
-from app.api.v1.actions import complete as complete_action
+from app.api.v1.actions import complete as complete_action, create_action
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, engine
-from app.models.schemas import CompleteRequest
+from app.models.schemas import ActionRequest, CompleteRequest
+from app.services import jev
 
 BASE = os.getenv("VIGILVOICE_BASE_URL", "http://127.0.0.1:8000/api/v1").rstrip("/")
 WS_BASE = os.getenv("VIGILVOICE_WS_URL", "ws://127.0.0.1:8000/api/v1").rstrip("/")
@@ -91,6 +96,14 @@ def wav(pcm, rate=16000):
     return output.getvalue()
 
 
+async def send_stream_frame(ws, pcm, pacing):
+    sequence = pacing["sequence"]
+    due = pacing["started"] + (sequence + 1) * 0.2
+    await asyncio.sleep(max(0, due - time.perf_counter()))
+    await ws.send(struct.pack("<I", sequence) + pcm)
+    pacing["sequence"] += 1
+
+
 class AuditFailingSession:
     def __init__(self, db):
         self.db = db
@@ -133,12 +146,23 @@ async def main(output):
         request(f"/sessions/{owner['session_id']}", stranger, expected=404)
         empty = action(owner)
         assert empty["status"] == "BLOCKED" and not empty["allowed"]
+        hard_jev = next(row for row in request(f"/actions/{empty['action_id']}/audit", owner)["events"]
+                        if row["event_type"] == "JEV_DECISION")
+        assert hard_jev["details"]["fallback_reason"] == "deterministic_hard_gate"
+        assert hard_jev["details"]["final_backend_decision"] == "BLOCKED"
         passed("Missing evidence blocks; session credentials isolate access")
 
         result = upload(owner, genuine)
         assert result["risk_state"] in ("LOW", "ELEVATED"), result
         first, second = action(owner), action(owner)
         assert first["status"] == "PENDING" and first["otp_required"] and not first["allowed"]
+        shadow_jev = next(row for row in request(f"/actions/{first['action_id']}/audit", owner)["events"]
+                          if row["event_type"] == "JEV_DECISION")
+        assert shadow_jev["details"]["mode"] == "shadow"
+        assert shadow_jev["details"]["fallback_reason"] == "missing_key"
+        assert shadow_jev["details"]["deterministic_policy_result"] == "PENDING"
+        assert shadow_jev["details"]["final_backend_decision"] == "PENDING"
+        assert len(shadow_jev["details"]["state_hash"]) == 64
         request(f"/actions/{first['action_id']}", stranger, expected=404)
         request(f"/actions/{first['action_id']}/audit", stranger, expected=404)
         request(f"/demo/inbox/{first['action_id']}", owner, expected=403)
@@ -227,15 +251,95 @@ async def main(output):
         assert audit[-1]["risk_state"] == "SERVICE_UNAVAILABLE"
         passed("Stale evidence blocks completion; stored action and audit show current unsafe risk")
 
+        version_owner = session()
+        assert upload(version_owner, genuine)["risk_state"] in ("LOW", "ELEVATED")
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("""
+                UPDATE risk_evaluations SET threshold_profile='obsolete-policy'
+                WHERE id=(SELECT latest_evaluation_id FROM sessions WHERE session_id=:id)
+            """), {"id": UUID(version_owner["session_id"])})
+            await db.commit()
+        version_action = action(version_owner)
+        assert version_action["status"] == "BLOCKED" and version_action["risk_state"] == "SERVICE_UNAVAILABLE"
+        version_audit = request(f"/actions/{version_action['action_id']}/audit", version_owner)["events"]
+        assert next(row for row in version_audit if row["event_type"] == "ACTION_CREATED")["details"]["reason_codes"] == ["EVIDENCE_VERSION_MISMATCH"]
+        passed("Model/policy provenance mismatch blocks protected action")
+
         upload(owner, genuine)
+        pending_high = action(owner)
         raised = action(owner)
         token = confirm(owner, raised, challenge(owner, raised))
         result = upload(owner, synthetic)
         assert result["risk_state"] == "HIGH", result
         complete(owner, raised, token, 409)
-        assert request(f"/actions/{raised['action_id']}", owner)["risk_state"] == "HIGH"
+        for item in (pending_high, raised):
+            stored = request(f"/actions/{item['action_id']}", owner)
+            assert stored["status"] == "BLOCKED" and stored["risk_state"] == "SERVICE_UNAVAILABLE"
+            events = request(f"/actions/{item['action_id']}/audit", owner)["events"]
+            assert sum(row["reason_code"] == "AUDIO_SOURCE_REPLACED" for row in events) == 1
         assert action(owner)["status"] == "BLOCKED"
-        passed("Synthetic demo clip blocks new action and previously verified completion")
+        assert upload(owner, genuine)["risk_state"] in ("LOW", "ELEVATED")
+        assert all(request(f"/actions/{item['action_id']}", owner)["status"] == "BLOCKED"
+                   for item in (pending_high, raised))
+        complete(owner, raised, token, 409)
+        passed("Source replacement permanently blocks pending and verified actions despite later LOW")
+
+        transition = session()
+        silent_owner = session()
+        async with AsyncExitStack() as sockets:
+            for _ in range(8):
+                await sockets.enter_async_context(connect(f"{WS_BASE}/stream/ws/{silent_owner['session_id']}"))
+            await asyncio.sleep(.1)
+            async with connect(f"{WS_BASE}/stream/ws/{silent_owner['session_id']}") as rejected:
+                try:
+                    await rejected.recv()
+                except ConnectionClosed as exc:
+                    assert exc.code == 1013
+                else:
+                    raise AssertionError("Ninth pre-auth stream must be rejected")
+        passed("Pre-auth stream capacity rejects a ninth silent client")
+
+        with wave.open(io.BytesIO(genuine), "rb") as audio:
+            genuine_pcm = audio.readframes(audio.getnframes())
+        with wave.open(io.BytesIO(synthetic), "rb") as audio:
+            synthetic_pcm = audio.readframes(audio.getnframes())
+        async with connect(f"{WS_BASE}/stream/ws/{transition['session_id']}") as ws:
+            await ws.send(json.dumps({"session_token": transition["session_token"], "audio_protocol": "pcm16-seq-v1"}))
+            assert json.loads(await ws.recv())["type"] == "ready"
+            pacing = {"sequence": 0, "started": time.perf_counter()}
+
+            async def feed(pcm, rounds=1, wanted=None):
+                latest = None
+                for _ in range(rounds):
+                    for offset in range(0, len(pcm) - 6399, 6400):
+                        await send_stream_frame(ws, pcm[offset:offset + 6400], pacing)
+                        latest = json.loads(await ws.recv())
+                        if latest["risk_state"] == wanted:
+                            return latest
+                return latest
+
+            assert (await feed(genuine_pcm, 2, "LOW"))["risk_state"] in ("LOW", "ELEVATED")
+            pending_live = action(transition)
+            verified_live = action(transition)
+            live_approval = confirm(transition, verified_live, challenge(transition, verified_live))
+            assert (await feed(synthetic_pcm, 3, "HIGH"))["risk_state"] == "HIGH"
+            for item in (pending_live, verified_live):
+                stored = request(f"/actions/{item['action_id']}", transition)
+                assert stored["status"] == "BLOCKED" and stored["risk_state"] == "HIGH"
+                events = request(f"/actions/{item['action_id']}/audit", transition)["events"]
+                assert sum(row["reason_code"] == "HIGH_EVIDENCE_DURING_ACTION" for row in events) == 1
+            complete(transition, verified_live, live_approval, 409)
+            assert (await feed(genuine_pcm, 4, "LOW"))["risk_state"] in ("LOW", "ELEVATED")
+            assert all(request(f"/actions/{item['action_id']}", transition)["status"] == "BLOCKED"
+                       for item in (pending_live, verified_live))
+            fresh_live = action(transition)
+            assert fresh_live["status"] == "PENDING"
+        for _ in range(40):
+            if request(f"/actions/{fresh_live['action_id']}", transition)["status"] == "BLOCKED":
+                break
+            await asyncio.sleep(0.05)
+        assert request(f"/actions/{fresh_live['action_id']}", transition)["status"] == "BLOCKED"
+        passed("Live genuine-synthetic-genuine HIGH stays on old actions; disconnect blocks new action")
 
         for name, data, status in (
             ("invalid", b"not a wav", 422), ("truncated", genuine[:-100], 422),
@@ -261,13 +365,34 @@ async def main(output):
         challenge(capacity_owner, capacity_action)
         holder = session()
         async with connect(f"{WS_BASE}/stream/ws/{holder['session_id']}") as ws:
-            await ws.send(json.dumps({"session_token": holder["session_token"]}))
+            await ws.send(json.dumps({"session_token": holder["session_token"], "audio_protocol": "pcm16-seq-v1"}))
             assert json.loads(await ws.recv())["type"] == "ready"
+            async with AsyncSessionLocal() as db:
+                before = (await db.execute(text("SELECT generation FROM sessions WHERE session_id=:id"),
+                                           {"id": UUID(holder["session_id"])})).scalar_one()
+            async with connect(f"{WS_BASE}/stream/ws/{holder['session_id']}") as rejected:
+                await rejected.send(json.dumps({"session_token": holder["session_token"],
+                                                "audio_protocol": "pcm16-seq-v1"}))
+                try:
+                    await rejected.recv()
+                except ConnectionClosed as exc:
+                    assert exc.code == 1013
+                else:
+                    raise AssertionError("Overlapping stream replaced the active source")
+            upload(holder, genuine, 503)
+            async with AsyncSessionLocal() as db:
+                after = (await db.execute(text("SELECT generation FROM sessions WHERE session_id=:id"),
+                                          {"id": UUID(holder["session_id"])})).scalar_one()
+            assert after == before
+            pacing = {"sequence": 0, "started": time.perf_counter()}
+            await send_stream_frame(ws, bytes(6400), pacing)
+            assert json.loads(await ws.recv())["risk_state"] != "SERVICE_UNAVAILABLE"
+            passed("Same-session stream and WAV overload cannot replace the admitted stream")
             started_capacity_checks = time.perf_counter()
             for _ in range(2):
                 overflow = session()
                 async with connect(f"{WS_BASE}/stream/ws/{overflow['session_id']}") as rejected:
-                    await rejected.send(json.dumps({"session_token": overflow["session_token"]}))
+                    await rejected.send(json.dumps({"session_token": overflow["session_token"], "audio_protocol": "pcm16-seq-v1"}))
                     try:
                         await rejected.recv()
                     except ConnectionClosed as exc:
@@ -292,18 +417,67 @@ async def main(output):
             else:
                 raise AssertionError("Binary audio was accepted before authentication")
 
+        old_protocol = session()
+        async with connect(f"{WS_BASE}/stream/ws/{old_protocol['session_id']}") as ws:
+            await ws.send(json.dumps({"session_token": old_protocol["session_token"]}))
+            try:
+                await ws.recv()
+            except ConnectionClosed as exc:
+                assert exc.code == 1008
+            else:
+                raise AssertionError("Unsequenced audio protocol was admitted")
+
+        for name, packets, delay in (
+            ("duplicate", [0, 0], 0),
+            ("gap", [1], 0),
+            ("burst", [0, 1, 2, 3], 0),
+            ("stale", [0], settings.STREAM_MAX_LAG_SECONDS + .4),
+        ):
+            invalid_stream = session()
+            async with connect(f"{WS_BASE}/stream/ws/{invalid_stream['session_id']}") as ws:
+                await ws.send(json.dumps({"session_token": invalid_stream["session_token"],
+                                          "audio_protocol": "pcm16-seq-v1"}))
+                assert json.loads(await ws.recv())["type"] == "ready"
+                if delay:
+                    await asyncio.sleep(delay)
+                for sequence in packets:
+                    await ws.send(struct.pack("<I", sequence) + bytes(6400))
+                try:
+                    while True:
+                        await ws.recv()
+                except ConnectionClosed as exc:
+                    assert exc.code == 1008, name
+            for _ in range(40):
+                invalid_info = request(f"/sessions/{invalid_stream['session_id']}", invalid_stream)
+                if invalid_info["status"] == "DISCONNECTED":
+                    break
+                await asyncio.sleep(.05)
+            assert invalid_info["risk_state"] == "SERVICE_UNAVAILABLE", name
+        passed("Sequenced stream rejects duplicate, gapped, burst and stale input")
+
         with wave.open(io.BytesIO(genuine), "rb") as audio:
             pcm = audio.readframes(audio.getnframes())
         async with connect(f"{WS_BASE}/stream/ws/{owner['session_id']}") as ws:
-            await ws.send(json.dumps({"session_token": owner["session_token"]}))
+            await ws.send(json.dumps({"session_token": owner["session_token"], "audio_protocol": "pcm16-seq-v1"}))
             assert json.loads(await ws.recv())["type"] == "ready"
+            pacing = {"sequence": 0, "started": time.perf_counter()}
             live_results = []
-            for offset in range(0, len(pcm), 6400):
-                await ws.send(pcm[offset:offset + 6400])
+            for offset in range(0, len(pcm) - 6399, 6400):
+                await send_stream_frame(ws, pcm[offset:offset + 6400], pacing)
                 live_results.append(json.loads(await ws.recv()))
                 if live_results[-1]["risk_state"] in ("LOW", "ELEVATED"):
                     break
             assert len(live_results) >= 2 and live_results[-1]["risk_state"] in ("LOW", "ELEVATED"), live_results
+            async with AsyncSessionLocal() as db:
+                before = (await db.execute(text("SELECT latest_evaluation_id FROM sessions WHERE session_id=:id"),
+                                           {"id": UUID(owner["session_id"])})).scalar_one()
+            await send_stream_frame(ws, pcm[offset + 6400:offset + 12800], pacing)
+            reused = json.loads(await ws.recv())
+            assert reused["inference_performed"] is False
+            async with AsyncSessionLocal() as db:
+                after = (await db.execute(text("SELECT latest_evaluation_id FROM sessions WHERE session_id=:id"),
+                                          {"id": UUID(owner["session_id"])})).scalar_one()
+            assert after == before, "Reused score must not refresh stored evidence"
             info = request(f"/sessions/{owner['session_id']}", owner)
             assert info["status"] == "LIVE" and info["speech_duration_ms"] > 0
             interrupted = action(owner)
@@ -326,11 +500,46 @@ async def main(output):
         finally:
             settings.SPOOF_MODEL_PATH = old
         passed("Missing-model pipeline returns unavailable with no score (isolated process setting)")
+
+        advisory_owner = session()
+        assert upload(advisory_owner, genuine)["risk_state"] in ("LOW", "ELEVATED")
+        observed_states = []
+
+        async def recommend_block(state):
+            observed_states.append(state)
+            return {"mode": "advisory", "state_hash": sha256(json.dumps(state, sort_keys=True).encode()).hexdigest(),
+                    "question_version": jev.QUESTION, "jev_model_version": settings.JEV_MODEL,
+                    "choice": "BLOCK_RECOMMENDED", "probabilities": None, "confidence": None,
+                    "latency_ms": 1, "fallback_reason": None}
+
+        advisory_request = ActionRequest(session_id=UUID(advisory_owner["session_id"]),
+                                         action_type="fund_transfer",
+                                         payload={"amount": 100, "recipient": "Advisory fixture"})
+        with patch.object(settings, "JEV_MODE", "advisory"), patch.object(settings, "JEV_ADVISORY_ENABLED", True), patch.object(jev, "advise", recommend_block):
+            async with AsyncSessionLocal() as db:
+                escalated = await create_action(advisory_request, advisory_owner["session_token"], db)
+        assert escalated.status == "BLOCKED" and not escalated.allowed and len(observed_states) == 1
+        assert "recipient" not in observed_states[0] and "otp" not in str(observed_states[0]).lower()
+        advisory_audit = request(f"/actions/{escalated.action_id}/audit", advisory_owner)["events"]
+        decision = next(row for row in advisory_audit if row["event_type"] == "JEV_DECISION")
+        assert decision["details"]["deterministic_policy_result"] == "PENDING"
+        assert decision["details"]["final_backend_decision"] == "BLOCKED"
+        assert upload(advisory_owner, synthetic)["risk_state"] == "HIGH"
+
+        async def should_not_call(_state):
+            raise AssertionError("Jev was called after a deterministic HIGH gate")
+
+        with patch.object(settings, "JEV_MODE", "advisory"), patch.object(settings, "JEV_ADVISORY_ENABLED", True), patch.object(jev, "advise", should_not_call):
+            async with AsyncSessionLocal() as db:
+                hard_block = await create_action(advisory_request, advisory_owner["session_token"], db)
+        assert hard_block.status == "BLOCKED" and hard_block.risk_state.value == "HIGH"
+        passed("Advisory may escalate eligible action but cannot call through HIGH gate")
         success = True
         error = None
     except Exception as exc:
         success, error = False, str(exc)
-        print(f"FAIL: {error}", flush=True)
+        print(f"FAIL: {type(exc).__name__}: {error}", flush=True)
+        traceback.print_tb(exc.__traceback__, limit=5)
     finally:
         await engine.dispose()
     report = {"generated_at": datetime.now(timezone.utc).isoformat(), "passed": success,
@@ -353,8 +562,10 @@ async def prepare_restart(state_path):
     events = request(f"/actions/{completed['action_id']}/audit", owner)["events"]
     assert sum(event["event_type"] == "ACTION_COMPLETED" for event in events) == 1
 
-    expired = action(owner)
-    expired_approval = confirm(owner, expired, challenge(owner, expired))
+    expired_owner = session()
+    assert upload(expired_owner, genuine)["risk_state"] in ("LOW", "ELEVATED")
+    expired = action(expired_owner)
+    expired_approval = confirm(expired_owner, expired, challenge(expired_owner, expired))
     async with AsyncSessionLocal() as db:
         await db.execute(text("""
             UPDATE approval_tokens SET expires_at=clock_timestamp()-interval '1 second'
@@ -362,21 +573,31 @@ async def prepare_restart(state_path):
         """), {"id": UUID(expired["action_id"])})
         await db.commit()
 
-    orphaned = action(owner)
-    issued = request(f"/actions/{orphaned['action_id']}/verification", owner, method="POST")
+    orphan_owner = session()
+    assert upload(orphan_owner, genuine)["risk_state"] in ("LOW", "ELEVATED")
+    orphaned = action(orphan_owner)
+    issued = request(f"/actions/{orphaned['action_id']}/verification", orphan_owner, method="POST")
     delivered = request(f"/demo/inbox/{orphaned['action_id']}",
                         headers={"X-Demo-Verifier-Key": settings.DEMO_VERIFIER_KEY})
     assert delivered["action_id"] == orphaned["action_id"]
     del delivered
+    # Keep this test-owned challenge unexpired while the restart harness runs.
+    async with AsyncSessionLocal() as db:
+        await db.execute(text("""
+            UPDATE verification_challenges SET expires_at=clock_timestamp()+interval '5 minutes'
+            WHERE challenge_id=:id
+        """), {"id": UUID(issued["challenge_id"])})
+        await db.commit()
 
     with wave.open(io.BytesIO(genuine), "rb") as audio:
         pcm = audio.readframes(audio.getnframes())
     async with connect(f"{WS_BASE}/stream/ws/{owner['session_id']}") as ws:
-        await ws.send(json.dumps({"session_token": owner["session_token"]}))
+        await ws.send(json.dumps({"session_token": owner["session_token"], "audio_protocol": "pcm16-seq-v1"}))
         assert json.loads(await ws.recv())["type"] == "ready"
+        pacing = {"sequence": 0, "started": time.perf_counter()}
         live_result = None
-        for offset in range(0, len(pcm), 6400):
-            await ws.send(pcm[offset:offset + 6400])
+        for offset in range(0, len(pcm) - 6399, 6400):
+            await send_stream_frame(ws, pcm[offset:offset + 6400], pacing)
             live_result = json.loads(await ws.recv())
             if live_result["risk_state"] in ("LOW", "ELEVATED"):
                 break
@@ -385,6 +606,8 @@ async def prepare_restart(state_path):
         live_approval = confirm(owner, live, challenge(owner, live))
         write_private_json(state_path, {
             "owner": owner,
+            "expired_owner": expired_owner,
+            "orphan_owner": orphan_owner,
             "completed": completed["action_id"],
             "completed_approval": completed_approval["approval_token"],
             "expired": expired["action_id"],
@@ -395,11 +618,13 @@ async def prepare_restart(state_path):
             "live_approval": live_approval["approval_token"],
         })
         print(f"READY_FOR_RESTART: {state_path}", flush=True)
+        frames = [pcm[offset:offset + 6400] for offset in range(0, len(pcm) - 6399, 6400)]
+        frame_index = 0
         try:
             while True:
-                await ws.send(pcm[:6400])
+                await send_stream_frame(ws, frames[frame_index % len(frames)], pacing)
+                frame_index += 1
                 await ws.recv()
-                await asyncio.sleep(1)
         except Exception:
             while True:
                 await asyncio.sleep(60)
@@ -410,6 +635,8 @@ async def verify_restart(state_path, output):
     checks = []
     state = json.loads(state_path.read_text(encoding="utf-8"))
     owner = state["owner"]
+    expired_owner = state["expired_owner"]
+    orphan_owner = state["orphan_owner"]
     try:
         assert request("/system")["ready"]
         completed = request(f"/actions/{state['completed']}", owner)
@@ -420,10 +647,11 @@ async def verify_restart(state_path, output):
         assert sum(event["event_type"] == "ACTION_COMPLETED" for event in events) == 1
         checks.append({"name": "Completed action and exactly-once audit survive restart", "passed": True})
 
-        complete(owner, {"action_id": state["live"]},
-                 {"approval_token": state["live_approval"]}, 409)
         session_info = request(f"/sessions/{owner['session_id']}", owner)
         live = request(f"/actions/{state['live']}", owner)
+        assert live["status"] == "BLOCKED" and live["risk_state"] in ("SERVICE_UNAVAILABLE", "HIGH")
+        complete(owner, {"action_id": state["live"]},
+                 {"approval_token": state["live_approval"]}, 409)
         async with AsyncSessionLocal() as db:
             restart_events = (await db.execute(text("""
                 SELECT COUNT(*) FROM audit_logs
@@ -431,23 +659,22 @@ async def verify_restart(state_path, output):
                   AND risk_state='SERVICE_UNAVAILABLE' AND reason_code='BACKEND_RESTART'
             """), {"id": UUID(owner["session_id"])})).scalar_one()
         assert session_info["status"] == "DISCONNECTED"
-        assert live["status"] == "BLOCKED" and live["risk_state"] == "SERVICE_UNAVAILABLE"
         assert restart_events == 1
         checks.append({"name": "Restart invalidates live evidence and denies prior approval", "passed": True})
 
         assert upload(owner, Path("models/demo/genuine.wav").read_bytes())["risk_state"] in ("LOW", "ELEVATED")
-        complete(owner, {"action_id": state["expired"]},
+        complete(expired_owner, {"action_id": state["expired"]},
                  {"approval_token": state["expired_approval"]}, 409)
-        assert request(f"/actions/{state['expired']}", owner)["status"] == "EXPIRED"
+        assert request(f"/actions/{state['expired']}", expired_owner)["status"] == "EXPIRED"
         checks.append({"name": "Expired approval is not revived by restart", "passed": True})
 
-        status, lost = request(f"/actions/{state['orphaned']}/verification", owner,
+        status, lost = request(f"/actions/{state['orphaned']}/verification", orphan_owner,
                                method="POST", expected=None)
         assert status == 409 and lost["detail"] == "Verification delivery was lost; create a new action."
         request(f"/demo/inbox/{state['orphaned']}", expected=404,
                 headers={"X-Demo-Verifier-Key": settings.DEMO_VERIFIER_KEY})
-        assert request(f"/actions/{state['orphaned']}", owner)["status"] == "EXPIRED"
-        complete(owner, {"action_id": state["orphaned"]},
+        assert request(f"/actions/{state['orphaned']}", orphan_owner)["status"] == "EXPIRED"
+        complete(orphan_owner, {"action_id": state["orphaned"]},
                  {"approval_token": state["expired_approval"]}, 409)
         async with AsyncSessionLocal() as db:
             challenge_row = (await db.execute(text("""
@@ -470,7 +697,8 @@ async def verify_restart(state_path, output):
         success, error = True, None
     except Exception as exc:
         success, error = False, str(exc)
-        print(f"FAIL: {error}", flush=True)
+        print(f"FAIL: {type(exc).__name__}: {error}", flush=True)
+        traceback.print_tb(exc.__traceback__, limit=5)
     finally:
         state_path.unlink(missing_ok=True)
         await engine.dispose()

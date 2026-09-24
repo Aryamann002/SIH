@@ -168,5 +168,11 @@ const settle = () => new Promise(setImmediate);
   startRace.resume();
   await assert.rejects(pendingStart, /disconnected/);
   assert.equal(pendingLive.ready, false, "Stopped capture cannot become ready after resume resolves");
+  const deniedLive = vm.createContext({
+    navigator: { mediaDevices: { getUserMedia: async () => { throw new Error("Permission denied"); } } },
+    AudioContext: class {}, AudioWorkletNode: class {}, WebSocket: class {},
+  });
+  vm.runInContext(fs.readFileSync(path.resolve(__dirname, "../app/static/microphone.js"), "utf8"), deniedLive);
+  await assert.rejects(vm.runInContext("MicrophoneAudio.stream(() => {}, () => {})", deniedLive), /Permission denied/);
   console.log("Microphone smoke passed: PCM WAV and 200 ms live PCM16, native 16 kHz resampling, ready gate, stop, permission/error boundaries, cleanup.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

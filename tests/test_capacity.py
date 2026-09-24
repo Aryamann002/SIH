@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from fastapi import HTTPException
 
-from app.api.v1.sessions import read_audio
+from app.api.v1.sessions import _session_creations, admit_session, read_audio
 from app.core.config import settings
 from app.services.audio_evidence import audio_capacity, infer
 
@@ -17,6 +17,18 @@ class _SlowRequest:
 
 
 class CapacityTests(unittest.TestCase):
+    def test_session_creation_is_rate_limited_and_recovers(self):
+        _session_creations.clear()
+        try:
+            for _ in range(60):
+                admit_session(now=0)
+            with self.assertRaises(HTTPException) as raised:
+                admit_session(now=0)
+            self.assertEqual(raised.exception.status_code, 429)
+            admit_session(now=61)
+        finally:
+            _session_creations.clear()
+
     def test_upload_read_has_deadline(self):
         with patch.object(settings, "AUDIO_UPLOAD_TIMEOUT_SECONDS", 0.01):
             with self.assertRaises(HTTPException) as raised:

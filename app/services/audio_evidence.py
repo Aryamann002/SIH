@@ -8,12 +8,18 @@ from uuid import uuid4
 from fastapi import HTTPException
 from sqlalchemy import text
 from app.core.config import settings
+from app.services import demo_verifier
 from app.services.audit import AuditService
 
 # ponytail: one CPU inference slot for this local demo; add measured worker capacity after load testing.
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="audio-inference")
 _slot = asyncio.Lock()
 _audio_session = asyncio.Lock()
+_active_streams = {}
+
+
+def stream_connected(session_id, generation):
+    return _active_streams.get(str(session_id)) == generation
 
 
 @asynccontextmanager
@@ -63,20 +69,39 @@ def evaluate_wav(data: bytes):
     results = [pipeline.process_chunk(pcm[i:i + 6400]) for i in range(0, len(pcm), 6400)]
     # Keep an alert anywhere in the file; trailing genuine speech cannot erase an earlier attack.
     for state in ("SERVICE_UNAVAILABLE", "HIGH", "ELEVATED"):
-        candidates = [item for item in results if item["risk_state"] == state]
+        candidates = [item for item in results if item["risk_state"] == state
+                      and item.get("inference_performed") is not False]
         if candidates:
             return candidates[-1]
-    return results[-1]
+    return next((item for item in reversed(results) if item.get("inference_performed") is not False), results[-1])
+
+
+async def block_unfinished(db, session_id, risk, reason):
+    blocked = (await db.execute(text("""
+        UPDATE protected_actions SET status='BLOCKED',risk_state=:risk
+        WHERE session_id=:session AND status IN ('PENDING','VERIFIED')
+        RETURNING action_id
+    """), {"session": session_id, "risk": risk})).scalars().all()
+    for action_id in blocked:
+        await AuditService.log_event(db, session_id, "ACTION_BLOCKED", risk, reason,
+                                     action_id=action_id)
+    return blocked
 
 
 async def begin_audio(db, session_id, mode):
     generation = uuid4()
+    blocked = await block_unfinished(db, session_id, "SERVICE_UNAVAILABLE", "AUDIO_SOURCE_REPLACED")
     await db.execute(text("""
         UPDATE sessions SET generation=:generation,status=:status,latest_evaluation_id=NULL
         WHERE session_id=:id
     """), {"generation": generation, "status": mode, "id": session_id})
     await AuditService.log_event(db, session_id, "AUDIO_START", details={"source": mode})
     await db.commit()
+    _active_streams.pop(str(session_id), None)
+    if mode == "LIVE":
+        _active_streams[str(session_id)] = generation
+    for action_id in blocked:
+        demo_verifier.inbox.pop(action_id, None)
     return generation
 
 
@@ -84,6 +109,9 @@ async def record_evidence(db, session_id, generation, result, mode):
     session = (await db.execute(text("SELECT * FROM sessions WHERE session_id=:id FOR UPDATE"), {"id": session_id})).mappings().one()
     if session["generation"] != generation:
         raise HTTPException(409, "A newer audio input replaced this one.")
+    if result.get("inference_performed") is False:
+        await db.commit()  # Reused display state cannot refresh stored detector evidence.
+        return
     evaluation_id = uuid4()
     await db.execute(text("""
         INSERT INTO risk_evaluations (id,session_id,timestamp,score,snr_db,speech_duration_ms,
@@ -95,16 +123,29 @@ async def record_evidence(db, session_id, generation, result, mode):
             "profile": result["threshold_profile"]})
     await db.execute(text("UPDATE sessions SET latest_evaluation_id=:evaluation,status=:mode WHERE session_id=:id"),
                      {"evaluation": evaluation_id, "mode": mode, "id": session_id})
+    blocked = (await block_unfinished(db, session_id, "HIGH", "HIGH_EVIDENCE_DURING_ACTION")
+               if result["risk_state"] == "HIGH" else [])
     await AuditService.log_event(db, session_id, "SPOOF_EVAL", result["risk_state"],
                                 details={**result, "source": mode})
     await db.commit()
+    for action_id in blocked:
+        demo_verifier.inbox.pop(action_id, None)
 
 
 async def end_audio(db, session_id, generation, reason):
-    result = await db.execute(text("""
-        UPDATE sessions SET status='DISCONNECTED',latest_evaluation_id=NULL
-        WHERE session_id=:id AND generation=:generation RETURNING session_id
-    """), {"id": session_id, "generation": generation})
-    if result.first():
-        await AuditService.log_event(db, session_id, "AUDIO_UNAVAILABLE", "SERVICE_UNAVAILABLE", reason)
-    await db.commit()
+    try:
+        result = await db.execute(text("""
+            UPDATE sessions SET status='DISCONNECTED',latest_evaluation_id=NULL
+            WHERE session_id=:id AND generation=:generation RETURNING session_id
+        """), {"id": session_id, "generation": generation})
+        if result.first():
+            blocked = await block_unfinished(db, session_id, "SERVICE_UNAVAILABLE", reason)
+            await AuditService.log_event(db, session_id, "AUDIO_UNAVAILABLE", "SERVICE_UNAVAILABLE", reason)
+        else:
+            blocked = []
+        await db.commit()
+        for action_id in blocked:
+            demo_verifier.inbox.pop(action_id, None)
+    finally:
+        if stream_connected(session_id, generation):
+            _active_streams.pop(str(session_id), None)

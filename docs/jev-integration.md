@@ -1,0 +1,20 @@
+# Jev decision support
+
+This integration is optional and does not change the protected-action executor. The local Silero and ONNX pipeline supplies acoustic evidence. The backend validates evidence freshness, quality, model/profile provenance and action ownership before sending any metadata to Jev. The action is then re-read under a database lock before insertion. OTP issuance, attempts, expiry, payload/action ownership, one-time approval, completion and audit remain deterministic. An earlier HIGH result blocks an unfinished action permanently, even if later audio scores LOW.
+
+`JEV_MODE` is `disabled`, `shadow` (default), or `advisory`. `JEV_API_KEY` is read from the environment and is absent by default. Shadow records a recommendation but leaves the deterministic action status untouched. Advisory can change PENDING to BLOCKED for `ENHANCED_REVIEW` or `BLOCK_RECOMMENDED`; there is no separate review executor, so the operator must start a new action. `CONTINUE_MONITORING` and `STANDARD_VERIFICATION` cannot waive verification. Advisory startup requires `JEV_ADVISORY_ENABLED=true`, which is an explicit release gate; the current evidence does **not** justify enabling it. Leave shadow or disabled for the presentation.
+
+The request uses the pinned `jev-1.13.0` [System One API](https://docs.typesafe.ai/api) and a [choice question](https://docs.typesafe.ai/primitives/choice) named `vigilvoice_route_v1`. It contains named score, quality, freshness, speech-duration and channel buckets; unknown replay/trend are marked `UNKNOWN`; it names action sensitivity, policy profile and model version. No raw audio, transcript, recipient, amount, session token, OTP, approval, private identifier or precise timestamp is sent. Jev is not asked to compute thresholds, verify codes, compare timestamps, infer an acoustic cause or authorize a transfer. The four choices have no approval option.
+
+The client uses a fixed HTTPS host and endpoint, a 750 ms request timeout, no retry on the action path, a single in-flight worker, an 8 KiB response cap, typed choice/probability/confidence validation and a 60-second circuit opening after three failures. A missing key, timeout, invalid response, authentication error, busy worker or circuit opening produces a deterministic fallback. The API key and raw response/error body are absent from audit and application logs. The audit records mode, state hash, question/model version, choice, optional probabilities/confidence, latency or sanitized fallback reason, deterministic result, agreement and final backend decision. See [API reference](https://docs.typesafe.ai/api), [choice response](https://docs.typesafe.ai/primitives/choice), and [model versions](https://docs.typesafe.ai/models).
+
+`python -m scripts.evaluate_jev` runs 20 labeled policy fixtures covering clear and ambiguous speech, poor quality, missing/stale evidence, stream failure/replacement, replay unknown, HIGH transitions, detector failure, verification errors, high-value action, Jev errors and offline operation. On September 24 the fixture run had 20/20 expected outcomes, zero unsafe downgrades, two fixture escalations and three injected Jev failures (one timeout). These are scripted choices, not live Jev agreement or reliability measurements. The current live agreement rate, manual-review rate, p50/p95 latency, failure/timeout rate and calibration are **not measured** because no Jev key is configured. Replay remains unknown to the local detector; a fixture cannot establish replay detection. Existing isolated API tests exercise OTP, ownership, audit and HIGH retention independently of these fixtures.
+
+Reproduce local checks from the repository root:
+
+```powershell
+python -m pytest -q tests/test_jev.py
+python -m scripts.evaluate_jev
+```
+
+Do not set `JEV_API_KEY` merely to fill metrics; use a test account and a labeled, permitted shadow corpus when authorization and access are available. Set the zero-unsafe-downgrade target before any advisory promotion and retain the offline demo path.

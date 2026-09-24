@@ -1,0 +1,22 @@
+[
+  {"name":"clear_genuine","label":"genuine","deterministic":"PENDING","mode":"shadow","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"PENDING"},
+  {"name":"clear_synthetic_high","label":"synthetic","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"elevated_ambiguous","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":"ENHANCED_REVIEW","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"poor_quality_genuine","label":"genuine","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"poor_quality_synthetic","label":"synthetic","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"stale_evidence","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"missing_evidence","label":"unknown","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"stream_disconnection","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"source_replacement","label":"unknown","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"replay_unknown","label":"unknown","deterministic":"PENDING","mode":"shadow","choice":"ENHANCED_REVIEW","fallback_reason":null,"expected":"PENDING"},
+  {"name":"genuine_synthetic_genuine_high_retained","label":"synthetic","deterministic":"BLOCKED","mode":"advisory","choice":"CONTINUE_MONITORING","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"detector_unavailable","label":"unknown","deterministic":"BLOCKED","mode":"shadow","choice":null,"fallback_reason":"deterministic_hard_gate","expected":"BLOCKED"},
+  {"name":"quality_spoof_conflict","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"expired_verification","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"CONTINUE_MONITORING","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"wrong_action_approval","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"high_value_elevated_action","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":"BLOCK_RECOMMENDED","fallback_reason":null,"expected":"BLOCKED"},
+  {"name":"jev_timeout","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"timeout","expected":"PENDING"},
+  {"name":"jev_malformed_response","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"malformed_response","expected":"PENDING"},
+  {"name":"jev_authentication_error","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"authentication","expected":"PENDING"},
+  {"name":"offline_operation","label":"unknown","deterministic":"PENDING","mode":"shadow","choice":null,"fallback_reason":"missing_key","expected":"PENDING"}
+]

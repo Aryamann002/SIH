@@ -65,10 +65,19 @@ async def invalidate_interrupted_audio():
                 SET status='DISCONNECTED', generation=NULL, latest_evaluation_id=NULL
                 WHERE status IN ('LIVE', 'PROCESSING_FILE')
                 RETURNING session_id
+            ), blocked AS (
+                UPDATE protected_actions
+                SET status='BLOCKED',risk_state='SERVICE_UNAVAILABLE'
+                WHERE session_id IN (SELECT session_id FROM interrupted)
+                  AND status IN ('PENDING','VERIFIED')
+                RETURNING session_id,action_id
             )
-            INSERT INTO audit_logs (session_id,event_type,risk_state,reason_code,details)
-            SELECT session_id,'AUDIO_UNAVAILABLE','SERVICE_UNAVAILABLE','BACKEND_RESTART','{}'::jsonb
+            INSERT INTO audit_logs (session_id,action_id,event_type,risk_state,reason_code,details)
+            SELECT session_id,NULL,'AUDIO_UNAVAILABLE','SERVICE_UNAVAILABLE','BACKEND_RESTART','{}'::jsonb
             FROM interrupted
+            UNION ALL
+            SELECT session_id,action_id,'ACTION_BLOCKED','SERVICE_UNAVAILABLE','BACKEND_RESTART','{}'::jsonb
+            FROM blocked
         """))
         await session.commit()
 

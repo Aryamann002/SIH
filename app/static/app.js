@@ -1,7 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null, live: null, systemReady: false, verifierAvailable: false };
+const state = { session: null, action: null, challenge: null, approval: null, busy: false, audioUrl: null, audioFile: null, microphone: null, live: null, systemReady: false, verifierAvailable: false, safeEvidence: false };
 const explanations = {
   LOW: ["good", "Low voice risk. Independent verification is still required before this simulated transfer can complete."],
   ELEVATED: ["warning", "The audio contains elevated spoof signals. Review the exact transfer independently before proceeding."],
@@ -49,12 +49,12 @@ function renderControls() {
   $("create-action").hidden = Boolean(action);
   $("new-action").disabled = busy;
   $("refresh-audit").disabled = busy || !action;
-  $("request-verification").disabled = busy || action?.status !== "PENDING" || Boolean(challenge) || Boolean(approval) || !state.verifierAvailable;
+  $("request-verification").disabled = busy || action?.status !== "PENDING" || Boolean(challenge) || Boolean(approval) || !state.verifierAvailable || !state.safeEvidence;
   $("verification-form").hidden = !active(challenge) || Boolean(approval) || ended();
   $("confirm-code").disabled = busy || !active(challenge) || ended();
   $("otp-code").disabled = busy || !active(challenge) || ended();
   $("complete-action").hidden = !approval || ended();
-  $("complete-action").disabled = busy || !active(approval);
+  $("complete-action").disabled = busy || !active(approval) || !state.safeEvidence;
 }
 
 async function run(task) {
@@ -74,8 +74,11 @@ async function run(task) {
 
 async function refreshAction() {
   if (!state.action) return;
+  const previous = state.action.status;
   state.action = { ...state.action, ...await api(`/actions/${state.action.action_id}`) };
   renderAction();
+  renderControls();
+  if (previous !== state.action.status) await refreshAudit();
 }
 
 async function ensureSession() {
@@ -102,13 +105,13 @@ function openStream(session) {
       reject(error);
     };
     timer = window.setTimeout(() => fail(new Error("Live stream handshake timed out. Use a WAV upload.")), 5000);
-    socket.onopen = () => socket.send(JSON.stringify({ session_token: session.session_token }));
+    socket.onopen = () => socket.send(JSON.stringify({ session_token: session.session_token, audio_protocol: "pcm16-seq-v1" }));
     socket.onerror = () => fail(new Error("Live stream connection failed. Use a WAV upload."));
     socket.onclose = (event) => fail(new Error(`Live stream closed before ready (${event.code}). Use a WAV upload.`));
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        if (message.type !== "ready" || message.session_id !== session.session_id) throw new Error("Unexpected stream handshake.");
+        if (message.type !== "ready" || message.session_id !== session.session_id || message.audio_protocol !== "pcm16-seq-v1") throw new Error("Unexpected stream handshake.");
         settled = true;
         window.clearTimeout(timer);
         resolve(socket);
@@ -123,6 +126,11 @@ function stopLive(message = "Live detection stopped. WAV recording and upload re
   live?.capture?.stop();
   if (live?.socket?.readyState < 2) live.socket.close(1000, "Stopped by operator");
   $("live-status").textContent = message;
+  if (live) {
+    renderRisk({ risk_state: "SERVICE_UNAVAILABLE", reason_codes: ["STREAM_STOPPED_OR_DISCONNECTED"] });
+    $("evidence-age").textContent = "Unavailable";
+    if (state.action) refreshAction().catch(() => {});
+  }
   if (failed) notice(`${message} Current evidence is unavailable.`);
   renderControls();
 }
@@ -137,12 +145,17 @@ function renderRisk(data) {
   $("snr").textContent = Number.isFinite(data.snr_db) ? `${number(data.snr_db)} dB` : "—";
   $("model-version").textContent = data.model_version || "Unavailable";
   $("threshold-profile").textContent = data.threshold_profile || "—";
+  if (!['LOW', 'ELEVATED'].includes(data.risk_state)) state.safeEvidence = false;
+  else if (Number.isFinite(data.evidence_age_ms)) state.safeEvidence = true;
+  if (Object.hasOwn(data, "evidence_age_ms")) $("evidence-age").textContent = Number.isFinite(data.evidence_age_ms)
+    ? `${number(data.evidence_age_ms / 1000)} s old` : "Unavailable";
   $("reason-codes").replaceChildren();
   for (const reason of data.reason_codes || []) {
     const item = document.createElement("li");
     item.textContent = String(reason);
     $("reason-codes").append(item);
   }
+  renderControls();
 }
 
 function renderAction() {
@@ -220,7 +233,16 @@ $("live-start").addEventListener("click", () => run(async () => {
   $("live-status").textContent = "Waiting for microphone permission…";
   const capture = await MicrophoneAudio.stream(
     (frame) => {
-      if (state.live?.socket.readyState === WebSocket.OPEN) state.live.socket.send(frame);
+      const live = state.live;
+      if (live?.socket.readyState !== WebSocket.OPEN) return;
+      if (frame.byteLength !== 6400 || live.socket.bufferedAmount > 12808 || live.sequence > 0xffffffff) {
+        stopLive("Live audio fell behind. Restart capture or use a WAV upload.", true);
+        return;
+      }
+      const packet = new ArrayBuffer(4 + frame.byteLength);
+      new DataView(packet).setUint32(0, live.sequence++, true);
+      new Uint8Array(packet, 4).set(new Uint8Array(frame));
+      live.socket.send(packet);
     },
     (error) => stopLive(error.message, true),
   );
@@ -228,7 +250,7 @@ $("live-start").addEventListener("click", () => run(async () => {
   let socket;
   try { await ensureSession(); socket = await openStream(state.session); }
   catch (error) { capture.stop(); throw error; }
-  const live = { capture, socket, results: 0 };
+  const live = { capture, socket, results: 0, sequence: 0 };
   state.live = live;
   socket.onmessage = (event) => {
     try {
@@ -295,6 +317,7 @@ $("audio-form").addEventListener("submit", (event) => {
     $("analyze-button").textContent = "Analyzing recording…";
     try {
       renderRisk(await api(`/sessions/${id}/audio`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: file }));
+      await refreshRisk();
       $("file-info").textContent = `${file.name} · assessment received at ${new Date().toLocaleTimeString()}`;
     } finally { $("analyze-button").textContent = "Analyze recording ↗"; }
   });
@@ -381,6 +404,8 @@ $("copy-action").addEventListener("click", () => run(async () => {
   notice("Action ID copied. Share it with the independent verifier.", "good");
 }));
 
+let refreshing = false;
+let lastRefresh = 0;
 window.setInterval(() => {
   if (state.challenge) {
     const remaining = Math.max(0, Math.ceil((Date.parse(state.challenge.expires_at) - Date.now()) / 1000));
@@ -392,6 +417,16 @@ window.setInterval(() => {
     $("verification-message").textContent = "Approval expired. Select New transfer; this action cannot receive another code.";
   }
   renderControls();
+  if (state.busy || refreshing || !state.session || !(state.live || state.action) || Date.now() - lastRefresh < 2000) return;
+  lastRefresh = Date.now();
+  refreshing = true;
+  (async () => { await refreshRisk(); if (state.action && !ended()) await refreshAction(); })()
+    .catch(() => {
+      renderRisk({ risk_state: "SERVICE_UNAVAILABLE", reason_codes: ["STATUS_REFRESH_FAILED"] });
+      $("evidence-age").textContent = "Unavailable";
+      notice("Could not refresh evidence or action status. Completion remains unavailable.");
+    })
+    .finally(() => { refreshing = false; renderControls(); });
 }, 1000);
 
 api("/system").then((system) => {
