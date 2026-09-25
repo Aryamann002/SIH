@@ -71,6 +71,20 @@ class _BrokenEngine:
 
 
 class ReadinessTests(unittest.TestCase):
+    def test_database_timeout_terminates_only_failed_connection(self):
+        from app.core.database import terminate_timed_out_connection
+
+        timeout = Mock(original_exception=TimeoutError("private detail"))
+        timeout.connection.invalidated = False
+        terminate_timed_out_connection(timeout)
+        timeout.connection.connection.driver_connection.terminate.assert_called_once_with()
+        self.assertTrue(timeout.is_disconnect)
+        self.assertFalse(timeout.invalidate_pool_on_disconnect)
+
+        ordinary = Mock(original_exception=ValueError("invalid query"))
+        terminate_timed_out_connection(ordinary)
+        ordinary.connection.connection.driver_connection.terminate.assert_not_called()
+
     def test_database_probe_requires_migrated_schema(self):
         rows = list(REQUIRED_COLUMNS)
         with patch("app.core.database.engine", _Engine(rows)):
@@ -123,7 +137,7 @@ class ReadinessTests(unittest.TestCase):
             AudioPipeline.status.cache_clear()
 
     def test_readiness_endpoint_fails_without_disabling_liveness(self):
-        from app.main import database_unavailable, health_check, readiness_check
+        from app.main import app, database_unavailable, health_check, operation_timed_out, readiness_check
         from sqlalchemy.exc import SQLAlchemyError
 
         with patch("app.main.readiness", AsyncMock(return_value={"ready": False})):
@@ -132,6 +146,12 @@ class ReadinessTests(unittest.TestCase):
         response = asyncio.run(database_unavailable(None, SQLAlchemyError("private database detail")))
         self.assertEqual(response.status_code, 503)
         self.assertNotIn(b"private database detail", response.body)
+        self.assertIn(b"Check this action", response.body)
+        self.assertIs(app.exception_handlers[TimeoutError], operation_timed_out)
+        timed_out = asyncio.run(operation_timed_out(None, TimeoutError("private timeout detail")))
+        self.assertEqual(timed_out.status_code, 503)
+        self.assertNotIn(b"private timeout detail", timed_out.body)
+        self.assertIn(b"Check this action", timed_out.body)
 
     def test_lifespan_runs_bounded_model_status(self):
         from app.main import lifespan

@@ -132,8 +132,8 @@ def metrics(rows, threshold=None):
             "HIGH_precision": precision, "HIGH_F1": f1, "ROC_AUC": auc, "EER": eer}
 
 
-def slice_metrics(rows):
-    return {field: {value: metrics([row for row in rows if row.get(field) == value])
+def slice_metrics(rows, threshold=None):
+    return {field: {value: metrics([row for row in rows if row.get(field) == value], threshold)
                     for value in sorted({row[field] for row in rows if row.get(field)})}
             for field in ("language", "generator_family", "channel", "replay_status", "attack_type")}
 
@@ -164,15 +164,30 @@ def discrimination(genuine_scores, spoof_scores):
     return auc, previous_fpr
 
 
-def select_threshold(validation, elevated):
+def select_threshold(validation, elevated, max_fpr=None):
     if not validation or any(row["split"] != "validation" for row in validation):
         raise ValueError("Threshold selection accepts validation rows only")
-    # ponytail: fixed 0.01 grid for exploratory evidence; use a prespecified cost objective on representative data before promotion.
-    candidates = [n / 100 for n in range(math.ceil(elevated * 100), 101)]
+    if max_fpr is not None and not 0 <= max_fpr <= 1:
+        raise ValueError("Invalid false-block limit")
+    if max_fpr is None:
+        # Preserve the historical exploratory selector for reproducibility.
+        candidates = [n / 100 for n in range(math.ceil(elevated * 100), 101)]
+    else:
+        scores = [row["maximum_chunk_score"] for row in validation
+                  if row["risk_state"] in {"LOW", "ELEVATED", "HIGH"}]
+        candidates = sorted({elevated, 1.0, *(score for score in scores if elevated <= score <= 1),
+                             *(math.nextafter(score, 1.0) for score in scores if elevated <= score < 1)})
     evaluated = [(threshold, metrics(validation, threshold)) for threshold in candidates]
     viable = [(threshold, result) for threshold, result in evaluated if result["balanced_error"] is not None]
     if not viable:
         raise ValueError("Both validation classes need scorable audio; cannot select a threshold")
+    if max_fpr is not None:
+        viable = [(threshold, result) for threshold, result in viable
+                  if result["HIGH_false_positive_rate_scorable_genuine"] <= max_fpr]
+        if not viable:
+            raise ValueError("No threshold satisfies the false-block limit")
+        return max(viable, key=lambda pair: (pair[1]["HIGH_recall_scorable_spoof"],
+                                             -pair[1]["HIGH_false_positive_rate_scorable_genuine"], pair[0]))
     return min(viable, key=lambda pair: (pair[1]["balanced_error"], pair[1]["FAR_spoof_eligible_for_otp"], pair[0]))
 
 
@@ -238,7 +253,8 @@ def main():
     validation = [row for row in results if row["split"] == "validation"]
     test = [row for row in results if row["split"] == "test"]
     if validation:
-        threshold, validation_metrics = select_threshold(validation, settings.ELEVATED_RISK_SPOOF_THRESHOLD)
+        threshold, validation_metrics = select_threshold(
+            validation, settings.ELEVATED_RISK_SPOOF_THRESHOLD, max_fpr=.10 if rich else None)
     else:
         threshold, validation_metrics = args.frozen_high_threshold, None
     latencies = [row["latency_seconds"] for row in results]
@@ -259,8 +275,11 @@ def main():
         "default_test": metrics(test) if test else None,
         "validation_slices": slice_metrics(validation) if validation else {},
         "test_slices": slice_metrics(test) if test else {},
+        "candidate_validation_slices": slice_metrics(validation, threshold) if rich and validation else {},
+        "candidate_test_slices": slice_metrics(test, threshold) if rich and test else {},
         "candidate": {"high_threshold": threshold, "promoted": False,
                       "selection": ("Supplied frozen value; no threshold selection in final test" if args.phase == "final-test" else
+                                    "Validation only: highest spoof recall at <=10% HIGH false blocks on scorable genuine clips; ties lower false-block rate, then higher threshold" if rich else
                                     "Validation only: minimum balanced error on 0.01 grid >= fixed elevated threshold; ties lower FAR, then lower threshold"),
                       "replay": "Offline max per-chunk score compared to frozen candidate HIGH threshold; original quality/service disposition retained; elevated threshold fixed",
                       "validation": validation_metrics,

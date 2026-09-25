@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-09-25T11:15:49.089052+00:00",
+  "passed": true,
+  "checks": [
+    "Authenticated AudioWorklet stream",
+    "Repeated live inference while capture continued",
+    "Live stop clears risk and evidence age",
+    "Reconnect starts a new stream",
+    "Safe live stop and WAV fallback",
+    "Native fake microphone recording",
+    "16 kHz PCM WAV conversion",
+    "Blob preview allowed by CSP",
+    "Real authenticated backend upload",
+    "No JavaScript exceptions",
+    "390px mobile layout has no horizontal overflow",
+    "Action-bound genuine completion",
+    "Verified action blocked by live HIGH despite later LOW",
+    "Pending action blocked on source replacement",
+    "Synthetic WAV HIGH blocks new action"
+  ],
+  "live": {
+    "results": 13,
+    "ready": true,
+    "risk": "LOW",
+    "speech": "2.0 s"
+  },
+  "recording": {
+    "name": "microphone.wav",
+    "type": "audio/wav",
+    "size": 134444
+  },
+  "risk_state": "LOW",
+  "action_flow": {
+    "genuine": "COMPLETED after action-bound verification",
+    "live_transition": "verified action BLOCKED by HIGH on same stream; completion denied after later LOW",
+    "source_replacement": "pending action BLOCKED and visible in browser",
+    "synthetic": "HIGH and BLOCKED",
+    "unauthorized_completions": 0
+  },
+  "limitation": "Automated fake audio device; physical microphone and OS permission interaction need manual rehearsal."
+}

@@ -218,10 +218,16 @@ async def check(browser, output, presentation, base_url="http://127.0.0.1:8000/"
                 (output / "browser-checks.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
                 print(json.dumps(report, indent=2))
                 if presentation:
+                    await command("Emulation.setDeviceMetricsOverride", width=1280, height=900,
+                                  deviceScaleFactor=1, mobile=False)
                     await command("Page.navigate", url=presentation.resolve().as_uri())
-                    await until("document.readyState === 'complete' && document.title.includes('Presentation')")
+                    await until("document.readyState === 'complete'")
                     pdf = await command("Page.printToPDF", printBackground=True, preferCSSPageSize=True)
                     presentation.with_suffix(".pdf").write_bytes(base64.b64decode(pdf["data"]))
+                    pages = await js("[...document.querySelectorAll('.slide,.page')].map(el => {const r=el.getBoundingClientRect(); return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height}})")
+                    for number, clip in enumerate(pages, 1):
+                        preview = await command("Page.captureScreenshot", captureBeyondViewport=True, clip={**clip, "scale": 1})
+                        (output / f"page-{number:02}.png").write_bytes(base64.b64decode(preview["data"]))
         finally:
             process.terminate()
             try:

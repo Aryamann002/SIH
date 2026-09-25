@@ -41,7 +41,12 @@ async def response_security(request: Request, call_next):
 
 @app.exception_handler(SQLAlchemyError)
 async def database_unavailable(request: Request, exc: SQLAlchemyError):
-    return JSONResponse(status_code=503, content={"detail": "Database or audit unavailable; action remains unapproved."})
+    return JSONResponse(status_code=503, content={"detail": "Database or audit unavailable. Check this action's status before retrying."})
+
+
+@app.exception_handler(TimeoutError)
+async def operation_timed_out(request: Request, exc: TimeoutError):
+    return JSONResponse(status_code=503, content={"detail": "Operation timed out. Check this action's status before retrying."})
 
 
 @app.get("/", include_in_schema=False)

@@ -48,6 +48,17 @@ def test_manifest_rejects_lineage_duplicates_and_heldout_leakage():
 
         write()
         assert validate(manifest, "family-b")["heldout_test_clips"] == 1
+        full_rows, rows = rows, rows[2:]
+        write()
+        assert validate(manifest, "family-b")["rows"] == 4  # Stage 0 needs no training split.
+        rows = full_rows
+        write()
+        rows[4]["target_speaker_id"] = rows[0]["speaker_id"]
+        write()
+        with pytest.raises(ValueError, match="speaker leakage"):
+            validate(manifest, "family-b")
+        rows[4]["target_speaker_id"] = "target-4"
+        write()
         evaluation_rows = read_manifest(manifest, "family-b")
         assert len(evaluation_rows) == 4
         with pytest.raises(ValueError, match="requires --phase"):

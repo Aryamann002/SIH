@@ -1,6 +1,6 @@
 import asyncio
 
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -13,6 +13,21 @@ engine = create_async_engine(
     connect_args={"timeout": settings.DATABASE_TIMEOUT_SECONDS,
                   "command_timeout": settings.DATABASE_TIMEOUT_SECONDS},
 )
+
+
+@event.listens_for(engine.sync_engine, "handle_error")
+def terminate_timed_out_connection(context):
+    if not isinstance(context.original_exception, (TimeoutError, asyncio.CancelledError)):
+        return
+    connection = context.connection
+    if connection is None or connection.invalidated:
+        return
+    # Graceful asyncpg close waits for a stalled server's cancellation reply.
+    connection.connection.driver_connection.terminate()
+    context.is_disconnect = True
+    context.invalidate_pool_on_disconnect = False
+
+
 AsyncSessionLocal = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )

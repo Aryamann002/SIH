@@ -41,6 +41,19 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(source_group("real/yt_0000_p2_part_167.flac"), "yt_0000")
         self.assertEqual(source_group("fake/el_0001_c_part_002.flac"), "el_0001")
 
+    def test_rich_threshold_respects_frozen_false_block_limit(self):
+        rows = [dict(label="genuine", split="validation", risk_state="LOW", maximum_chunk_score=score)
+                for score in (.1, .2, .3, .79)]
+        rows += [dict(label="spoof", split="validation", risk_state="LOW", maximum_chunk_score=score)
+                 for score in (.5, .6, .7, .9)]
+        threshold, result = select_threshold(rows, .4, max_fpr=.10)
+        self.assertGreater(threshold, .79)
+        self.assertEqual(result["HIGH_false_positive_rate_scorable_genuine"], 0)
+        self.assertEqual(result["HIGH_recall_scorable_spoof"], .25)
+        rows[3]["maximum_chunk_score"] = 1.0
+        with self.assertRaisesRegex(ValueError, "false-block limit"):
+            select_threshold(rows, .4, max_fpr=.10)
+
     def test_manifest_detects_source_and_content_leakage(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -122,6 +135,8 @@ def test_rich_evaluator_scores_only_requested_phase(monkeypatch, tmp_path):
         assert report["candidate"]["test" if phase == "validation" else "validation"] is None
         assert report["validation_slices" if phase == "validation" else "test_slices"]["language"]["hi"]["total"] == 2
         assert report["test_slices" if phase == "validation" else "validation_slices"] == {}
+        assert report["candidate_validation_slices" if phase == "validation" else "candidate_test_slices"]["language"]["hi"]["total"] == 2
+        assert report["candidate_test_slices" if phase == "validation" else "candidate_validation_slices"] == {}
     seen.clear()
     monkeypatch.setattr(sys, "argv", ["evaluate_audio.py", str(manifest), "--phase", "final-test",
                                     "--frozen-high-threshold", "nan"])

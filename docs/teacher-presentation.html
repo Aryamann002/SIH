@@ -6,7 +6,7 @@
 .evidence .grid{margin:16px 0;gap:20px}.evidence .card{padding:16px}.evidence .card p{font-size:16px;margin:8px 0}.evidence .stat{font-size:34px}.evidence th,.evidence td{padding:8px 12px}.evidence .small{font-size:14px}
 </style></head><body>
 <section class="slide dark">
-<p class="eyebrow">SIH · Working local prototype · 12 September 2026</p>
+<p class="eyebrow">SIH · Working local prototype · 25 September 2026</p>
 <h1>VigilVoice<br>Voice evidence.<br>Verified actions.</h1>
 <p class="lead">A voice-risk detector connected to a guarded approval workflow.</p>
 <p class="muted">Real pretrained audio inference · Separate verification · Simulated transfers · Auditable decisions</p>
@@ -19,42 +19,42 @@
 <footer><span>Problem → protected action</span><span>02 / 07</span></footer></section>
 <section class="slide">
 <p class="eyebrow">What is implemented</p><h2>One traceable path from speech to decision.</h2>
-<div class="flow"><div class="node">WAV upload<br>or mic recording</div><span class="arrow">→</span><div class="node">Silero VAD<br>+ quality gate</div><span class="arrow">→</span><div class="node">Wav2Vec2<br>spoof signal</div><span class="arrow">→</span><div class="node">Threshold<br>policy</div></div>
+<div class="flow"><div class="node">Live mic PCM<br>or WAV upload</div><span class="arrow">→</span><div class="node">Silero VAD<br>+ quality gate</div><span class="arrow">→</span><div class="node">INT8 Wav2Vec2/XLS-R<br>spoof signal</div><span class="arrow">→</span><div class="node">Freshness +<br>hard-safety gate</div></div>
 <div class="flow"><div class="node">Exact action<br>recipient + amount</div><span class="arrow">→</span><div class="node">Separate verifier<br>one-time code</div><span class="arrow">→</span><div class="node">Fresh evidence<br>+ single-use approval</div><span class="arrow">→</span><div class="node">Simulated result<br>+ audit trail</div></div>
 <p class="muted">FastAPI · PostgreSQL · ONNX Runtime on CPU · Native browser UI · Docker</p>
-<p class="small">Model weights are from third parties. Our implementation integrates inference with verification, failure handling, and action control. Browser microphone input is record-then-analyze.</p>
+<p class="small">Pretrained third-party models run locally. The browser streams sequenced 200 ms PCM16 frames; record-then-analyze WAV remains a fallback. Optional Jev shadow sees metadata only and cannot authorize an action.</p>
 <footer><span>Implemented system</span><span>03 / 07</span></footer></section>
 <section class="slide">
 <p class="eyebrow">Live demonstration · localhost:8000</p><h2>Three cases the audience can follow.</h2>
 <table><thead><tr><th>Input</th><th>What to demonstrate</th><th>Expected workflow</th></tr></thead><tbody>
-<tr><td>Bundled genuine speech</td><td>Analyze → prepare transfer → verifier reviews details → code → complete</td><td>LOW/ELEVATED still requires verification</td></tr>
-<tr><td>Bundled synthetic speech</td><td>Analyze → prepare another transfer</td><td>HIGH blocks completion</td></tr>
-<tr><td>Your microphone</td><td>Record 3–10 seconds → stop → preview → analyze</td><td>Show the actual output, including false alarms or quality rejection</td></tr>
+<tr><td>Live microphone</td><td>Start detection; speak clearly; watch risk update</td><td>Show the actual result, including HIGH or quality rejection</td></tr>
+<tr><td>Bundled genuine WAV</td><td>Analyze → prepare transfer → verifier reviews details → code → complete</td><td>LOW/ELEVATED still requires action-bound verification</td></tr>
+<tr><td>Bundled synthetic WAV</td><td>New transfer → analyze → prepare action</td><td>If HIGH, action blocks; report any miss honestly</td></tr>
 </tbody></table>
 <p class="note">A second tab simulates delivery; it is not an independent authentication factor. Every transfer is simulated. Keep the verifier key private.</p>
 <p class="small muted">Rehearsal: file evidence 120s · code 60s · approval 60s · maximum 3 incorrect code attempts. Expired/blocked action? Start a new transfer.</p>
 <footer><span>See teacher-demo-guide.md for the speaking script</span><span>04 / 07</span></footer></section>
 <section class="slide evidence">
 <p class="eyebrow">Measured evidence</p><h2>Working controls, exploratory ML results.</h2>
-<div class="grid"><div class="card"><div class="stat">13</div><h3>Backend check groups passed</h3><p>Action binding, session isolation, concurrent completion, code limits/expiry, stale evidence, unsafe audio, and disconnect handling.</p><p class="small">Real running API and models; expiry tests age only their own test records.</p></div><div class="card"><div class="stat">40</div><h3>Public labeled audio clips</h3><p>20 validation + 20 test clips. Source-recording groups separated; bundled demo sources excluded.</p><p class="small">Exploratory experiment. Training-data overlap, speaker overlap, and target-language coverage are unverified.</p></div></div>
-<table><thead><tr><th>20-clip test partition</th><th>Default HIGH 0.75</th><th>Offline candidate 0.58</th></tr></thead><tbody><tr><td>Synthetic clips eligible for verification</td><td>1 / 9 scorable</td><td>0 / 9 scorable</td></tr><tr><td>Genuine clips falsely blocked as HIGH</td><td>1 / 9 scorable</td><td>3 / 9 scorable</td></tr><tr><td>Quality rejections (excluded above)</td><td>2 / 20 total</td><td>2 / 20 total</td></tr></tbody></table>
-<p class="small">Candidate chosen on validation only; remains offline. Lowering the threshold caught more synthetic clips but blocked more genuine speech. Median offline file inference: 3.06s; p95: 7.79s.</p>
-<p class="small muted">Full results and exact denominators: evaluation-report.md. Software checks demonstrate those scenarios, not production security certification.</p>
+<div class="grid"><div class="card"><div class="stat">22 / 22</div><h3>Isolated API check groups passed</h3><p>Action binding, OTP limits, one-time completion, HIGH retention, stream failure and audit rollback.</p><p class="small">Real local models; not production security certification.</p></div><div class="card"><div class="stat">40</div><h3>Historical English clips</h3><p>20 validation + 20 previously viewed “test” clips; this is regression evidence, not an untouched final test.</p><p class="small">Speaker and model-training overlap remain unverified.</p></div></div>
+<table><thead><tr><th>Historical 20-clip partition</th><th>Deployed HIGH 0.75</th><th>Offline candidate 0.61</th></tr></thead><tbody><tr><td>HIGH synthetic recall</td><td>7 / 9 scorable</td><td>9 / 9 scorable</td></tr><tr><td>Genuine falsely blocked as HIGH</td><td>1 / 9 scorable</td><td>2 / 9 scorable</td></tr><tr><td>Quality rejections (excluded above)</td><td>2 / 20 total</td><td>2 / 20 total</td></tr></tbody></table>
+<p class="small">The candidate is not deployed. On this small English corpus, catching more synthetic clips also blocked more genuine speech. Warm 10-second WAV p95 was 5.26s in an isolated repeated-clip runtime check.</p>
+<p class="small muted">Sources: Stage 0, V02 and V03 receipts in docs/validation. No four-language or production accuracy claim.</p>
 <footer><span>Evidence with limits</span><span>05 / 07</span></footer></section>
 <section class="slide">
 <p class="eyebrow">Honest prototype boundaries</p><h2>What we can—and cannot—claim today.</h2>
 <table><thead><tr><th>Implemented and demonstrated</th><th>Still pending</th></tr></thead><tbody>
-<tr><td>Real pretrained VAD and spoof inference</td><td>Our own model training or fine-tuning</td></tr>
-<tr><td>Public-corpus experiment with held-out test partition</td><td>Representative Indian-language, replay and phone-channel validation</td></tr>
-<tr><td>Offline threshold candidate evaluation</td><td>Production threshold/probability calibration</td></tr>
-<tr><td>Local verifier and transaction simulation</td><td>Trusted delivery and real payment integration</td></tr>
-<tr><td>Microphone recording and WAV input</td><td>Continuous browser streaming and field/load trials</td></tr>
+<tr><td>Continuous local microphone stream and WAV fallback</td><td>Representative Hindi, Hinglish, Marathi and channel validation</td></tr>
+<tr><td>Real pretrained VAD and spoof inference</td><td>Defensible model/threshold freeze and untouched final test</td></tr>
+<tr><td>Hard safety gate, local verifier and simulated action audit</td><td>Trusted delivery and real payment integration</td></tr>
+<tr><td>Bounded single-stream test and isolated failure checks</td><td>Final-build offline and separate-verifier rehearsal</td></tr>
+<tr><td>Optional metadata-only Jev shadow fallback</td><td>Live-key shadow evaluation; advisory is not approved</td></tr>
 </tbody></table>
 <p class="note">Present this as an engineering prototype. Do not claim an accuracy percentage for real-world use or that all SIH PDF promises are complete.</p>
 <footer><span>Known limitations are part of the result</span><span>06 / 07</span></footer></section>
 <section class="slide dark">
 <p class="eyebrow">Next development steps</p><h2>Make the evidence stronger,<br>then expand deployment.</h2>
-<ol class="lead"><li>Collect consented Indian-language, noisy phone, replay, and diverse synthetic speech.</li><li>Use separated source/speaker splits to evaluate and calibrate; fine-tune only if the results justify it.</li><li>Add trusted verification delivery, accounts, HTTPS, and explicit audio retention.</li><li>Measure concurrency and stream latency before a wider pilot.</li></ol>
-<p class="muted">Today’s deliverable: a reproducible local demonstration, test receipts, and an honest evaluation report.</p>
+<ol class="lead"><li>Acquire consented, source-linked Indian-language, replay, phone and diverse synthetic speech.</li><li>Evaluate source/speaker-disjoint validation, freeze model and policy, then run one untouched final test; defer replacement if data is unavailable.</li><li>Complete the independent-verifier and offline presentation rehearsals.</li><li>Before any real deployment, add trusted delivery, accounts, HTTPS and an audio-retention policy.</li></ol>
+<p class="muted">Current deliverable: a local prevention-first demonstration with test receipts and explicit detector limits.</p>
 <footer><span>Demo guide · Evaluation report · Source code</span><span>07 / 07</span></footer></section>
 </body></html>

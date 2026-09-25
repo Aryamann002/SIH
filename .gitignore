@@ -12,6 +12,7 @@ __pycache__/
 .coverage
 /models/
 docs/evaluation-output/
+docs/validation/*-preview-*/
 .claude/
 .swarm/
 ruvector.db
@@ -19,6 +20,8 @@ ruvector.db
 .claude-flow/daemon.pid
 .claude-flow/harness-active-policy.json
 .claude-flow/metrics/
+.claude-flow/memory/
+.claude-flow/routing-outcomes.json
 
 # Ruflo local secrets and runtime data
 .claude-flow/sessions/

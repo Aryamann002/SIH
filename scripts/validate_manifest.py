@@ -108,15 +108,15 @@ def validate(path, heldout_generator):
                 raise ValueError(f"WAV metadata mismatch for {clip}")
         # IDs are global lineage identifiers. Same speaker, source, transcript, or
         # voice used in conversion must never straddle splits.
-        for field in ("speaker_id", "source_recording_id", "transcript_id",
-                      "source_speaker_id", "target_speaker_id"):
-            value = row[field].strip()
-            if value.lower() in UNKNOWN:
-                continue
-            key = (field, value)
-            previous = group_splits.setdefault(key, split)
-            if previous != split:
-                raise ValueError(f"{field} leakage between {previous} and {split}: {value}")
+            for field in ("speaker_id", "source_recording_id", "transcript_id",
+                          "source_speaker_id", "target_speaker_id"):
+                value = row[field].strip()
+                if value.lower() in UNKNOWN:
+                    continue
+                key = ("speaker", value) if field in {"speaker_id", "source_speaker_id", "target_speaker_id"} else (field, value)
+                previous = group_splits.setdefault(key, split)
+                if previous != split:
+                    raise ValueError(f"{key[0]} leakage between {previous} and {split}: {value}")
         counts[(split, label)] += 1
     by_id = {row["clip_id"].strip(): row for row in rows}
     for row in rows:
@@ -128,7 +128,7 @@ def validate(path, heldout_generator):
                 raise ValueError("Augmentations are permitted only in train")
     if heldout_count == 0:
         raise ValueError("Held-out generator absent from test")
-    for split in SPLITS:
+    for split in ({"validation", "test"} | ({"train"} if any(s == "train" for s, _ in counts) else set())):
         if not counts[(split, "genuine")] or not counts[(split, "spoof")]:
             raise ValueError(f"Both classes required in {split}")
     return {"rows": len(rows), "split_class_counts": {f"{s}:{l}": n for (s, l), n in sorted(counts.items())},

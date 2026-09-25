@@ -14,14 +14,14 @@
   <h1>What was built<br>and how to launch it</h1>
   <p class="lead">A practical guide to the voice-risk detector, protected-action workflow, local setup, classroom demonstration, tests, and current limitations.</p>
   <div><span class="badge">Real pretrained audio inference</span><span class="badge">Simulated transfer</span><span class="badge">Local Docker deployment</span></div>
-  <p class="muted" style="margin-top:28px">Prepared for understanding and presenting the SIH prototype · 12 September 2026</p>
+  <p class="muted" style="margin-top:28px">Current-build guide for the SIH prototype · 25 September 2026</p>
   <div class="footer"><span>VigilVoice</span><span>1 / 10</span></div>
 </section>
 
 <section class="page">
   <p class="eyebrow">Quick orientation</p><h2>What VigilVoice does</h2>
-  <p>VigilVoice checks a voice recording for usable speech and synthetic-speech signals before a sensitive action is allowed to continue. The voice result never approves a transfer by itself. A separate verifier must review the exact recipient and amount and provide a one-time code.</p>
-  <div class="flow"><div class="node">Record or upload speech</div><span class="arrow">→</span><div class="node">Quality + spoof assessment</div><span class="arrow">→</span><div class="node">Risk policy</div><span class="arrow">→</span><div class="node">Independent verification</div><span class="arrow">→</span><div class="node">Simulated completion</div></div>
+  <p>VigilVoice checks live or recorded speech for usable evidence and synthetic-speech signals before a sensitive action is allowed to continue. The voice result never approves a transfer by itself. A separate verifier must review the exact recipient and amount and provide a one-time code.</p>
+  <div class="flow"><div class="node">Live mic or WAV</div><span class="arrow">→</span><div class="node">Local VAD + spoof model</div><span class="arrow">→</span><div class="node">Freshness + safety gate</div><span class="arrow">→</span><div class="node">Action-bound verification</div><span class="arrow">→</span><div class="node">Simulated completion</div></div>
   <div class="grid">
     <div class="card"><h3>What is real</h3><ul><li>Silero voice activity detection</li><li>Wav2Vec2 XLSR spoof-classifier inference</li><li>ONNX Runtime CPU execution</li><li>Quality gates and risk policy</li><li>Authenticated sessions and database records</li><li>OTP/action binding, expiry and audit trail</li></ul></div>
     <div class="card"><h3>What is simulated</h3><ul><li>The bank/payment transfer</li><li>OTP delivery through the local verifier inbox</li><li>The verifier role on one local machine</li></ul><h3>What was not done</h3><ul><li>No model was trained by our team</li><li>No production accuracy claim</li><li>No real SMS, bank or identity integration</li></ul></div>
@@ -33,10 +33,10 @@
 <section class="page">
   <p class="eyebrow">Architecture</p><h2>How the parts work together</h2>
   <div class="grid">
-    <div class="card"><h3>1. Browser interface</h3><p>Native HTML, CSS and JavaScript. It accepts an existing WAV or records up to 10 seconds from the microphone, converts it to 16 kHz mono PCM WAV, previews it, and submits it only after the user clicks Analyze.</p></div>
+    <div class="card"><h3>1. Browser interface</h3><p>Native HTML, CSS and JavaScript. Live mode streams authenticated, sequenced 200 ms mono PCM16 frames. WAV upload or a microphone recording up to 10 seconds remains the record-then-analyze fallback.</p></div>
     <div class="card"><h3>2. FastAPI backend</h3><p>Creates private sessions, validates input, runs audio inference away from the event loop, applies the policy, owns actions and exposes the verifier/audit endpoints.</p></div>
     <div class="card"><h3>3. Audio pipeline</h3><p>Silero finds speech and supports duration/quality evidence. Wav2Vec2 outputs a synthetic-speech score. Smoothing slows recovery while a high raw score escalates immediately.</p></div>
-    <div class="card"><h3>4. Policy and action gate</h3><p>LOW or ELEVATED evidence may request verification. HIGH, poor, insufficient, stale, invalid or unavailable evidence prevents completion.</p></div>
+    <div class="card"><h3>4. Policy and action gate</h3><p>LOW or ELEVATED evidence may request verification. HIGH, poor, insufficient, stale, invalid or unavailable evidence prevents completion. An optional metadata-only Jev shadow result cannot approve an action.</p></div>
     <div class="card"><h3>5. PostgreSQL</h3><p>Stores sessions, risk evaluations, immutable action details, verification challenges, hashed approval tokens and chronological audit events.</p></div>
     <div class="card"><h3>6. Local verifier</h3><p>A separate page requires a verifier key and shows the exact recipient, amount and single-use code. It demonstrates the intended boundary but is not real independent delivery.</p></div>
   </div>
@@ -67,20 +67,20 @@
   <p class="eyebrow">Launch guide</p><h2>Start the prototype on Windows</h2>
   <h3>Prerequisites</h3>
   <ul><li>Docker Desktop is installed and running.</li><li>Python is available for the setup helper.</li><li>Chrome or Edge is recommended for microphone recording.</li><li>The first model download needs internet. Normal inference is local afterward.</li></ul>
-  <div class="step"><span class="num">1</span><div><strong>Open PowerShell in the project folder.</strong><div class="code"><span class="cmd">cd</span> "C:\Users\Aryamann Sharma\Documents\Claude Code Workspace\SIH"</div></div></div>
+  <div class="step"><span class="num">1</span><div><strong>Open PowerShell in the project folder.</strong><div class="code"><span class="cmd">cd</span> "C:\path\to\SIH"</div></div></div>
   <div class="step"><span class="num">2</span><div><strong>Download the pinned models and demo WAVs if the <span class="path">models</span> folder is empty.</strong><div class="code"><span class="cmd">python</span> scripts/fetch_models.py --samples</div><p class="small muted">Approximately 358 MB. Existing correct files are checksum-verified and reused.</p></div></div>
   <div class="step"><span class="num">3</span><div><strong>Create local demo secrets and database settings.</strong><div class="code"><span class="cmd">python</span> scripts/configure_demo.py</div><p class="small muted">This creates the ignored <span class="path">.env</span> file without printing secrets.</p></div></div>
   <div class="step"><span class="num">4</span><div><strong>Build and start the backend and database.</strong><div class="code"><span class="cmd">docker compose</span> up -d --build</div></div></div>
-  <div class="step"><span class="num">5</span><div><strong>Confirm both containers are running.</strong><div class="code"><span class="cmd">docker compose</span> ps
-<span class="cmd">Invoke-RestMethod</span> http://127.0.0.1:8000/healthz</div><p>You should see <span class="path">vigilvoice_backend</span>, a healthy <span class="path">vigilvoice_db</span>, and a health response with <span class="path">"status":"ok"</span>.</p></div></div>
+  <div class="step"><span class="num">5</span><div><strong>Confirm both containers and dependencies are ready.</strong><div class="code"><span class="cmd">docker compose</span> ps
+<span class="cmd">Invoke-RestMethod</span> http://127.0.0.1:8000/readyz</div><p>You should see <span class="path">vigilvoice_backend</span>, a healthy <span class="path">vigilvoice_db</span>, and <span class="path">"ready":true</span> with database, VAD, detector and local verifier available. <span class="path">/healthz</span> checks liveness only.</p></div></div>
   <div class="footer"><span>Launch: setup and start</span><span>5 / 10</span></div>
 </section>
 
 <section class="page">
   <p class="eyebrow">Using the app</p><h2>Open the two local screens</h2>
-  <div class="grid"><div class="card"><h3>Operator dashboard</h3><p class="path">http://127.0.0.1:8000/</p><p>Record/upload audio, inspect the risk, prepare the simulated transfer, enter a code and review the audit.</p></div><div class="card"><h3>Verifier inbox</h3><p class="path">http://127.0.0.1:8000/verify</p><p>Enter the private verifier key and action ID, review the exact details, then share the one-time code.</p></div></div>
-  <img class="screen" src="teacher-demo.png" alt="VigilVoice operator dashboard showing microphone, upload, risk, transfer and verification panels">
-  <p class="small muted">Actual browser screenshot from the verified local build. The dashboard intentionally shows the model and policy profile and states that the score is not proof of identity.</p>
+  <div class="grid"><div class="card"><h3>Operator dashboard</h3><p class="path">http://127.0.0.1:8000/</p><p>Start live detection or analyze a WAV, inspect risk, prepare the simulated transfer, enter a code and review the audit.</p></div><div class="card"><h3>Verifier inbox</h3><p class="path">http://127.0.0.1:8000/verify</p><p>Enter the private verifier key and action ID, review the exact details, then share the one-time code.</p></div></div>
+  <img class="screen" src="validation/r02-browser-2026-09-25/teacher-demo.png" alt="Current VigilVoice operator dashboard showing live-stream controls, WAV analysis, risk, transfer and verification panels">
+  <p class="small muted">Automated fake-device screenshot of the current build. It shows live-stream controls and WAV fallback, but does not prove physical microphone permissions or real-device timing.</p>
   <div class="callout warning"><strong>Keep the verifier key private.</strong> It is stored as <span class="path">DEMO_VERIFIER_KEY</span> in the local <span class="path">.env</span>. Do not project or commit that file.</div>
   <div class="footer"><span>Launch: browser screens</span><span>6 / 10</span></div>
 </section>
@@ -88,27 +88,28 @@
 <section class="page">
   <p class="eyebrow">Demonstration</p><h2>Run the complete workflow</h2>
   <ol>
-    <li>At the dashboard, choose <span class="path">models/demo/genuine.wav</span> and click <strong>Analyze recording</strong>. You may also record 3–10 seconds with the microphone.</li>
+    <li>At the dashboard, click <strong>Start live detection</strong> and speak clearly for several seconds. Show the actual updating risk, including any HIGH or quality rejection. Click <strong>Stop live detection</strong>; old live evidence then becomes unavailable.</li>
+    <li>For the stable action-flow fallback, choose <span class="path">models/demo/genuine.wav</span> and click <strong>Analyze recording</strong>. You may also record 3–10 seconds with the microphone, then analyze its WAV.</li>
     <li>Read the risk, spoof score, speech duration, signal/noise estimate and reason codes. LOW and ELEVATED still require verification.</li>
     <li>Enter a recipient and whole-INR amount. Click <strong>Prepare protected transfer</strong>. The details become fixed to the generated Action ID.</li>
     <li>Click <strong>Request verification code</strong>. Open the verifier page in another tab.</li>
     <li>Enter the verifier key from <span class="path">.env</span> and paste the Action ID. Check the recipient and amount before sharing the six-digit code.</li>
     <li>Enter the code on the dashboard and click <strong>Complete simulated transfer</strong>. The backend rechecks that audio evidence is still safe and fresh, then consumes the approval once.</li>
     <li>Review the audit events: action created, challenge issued, OTP verified and action completed.</li>
-    <li>Choose <strong>New transfer</strong>, analyze <span class="path">models/demo/synthetic.wav</span>, and show that HIGH evidence blocks the action.</li>
+    <li>Choose <strong>New transfer</strong>, analyze <span class="path">models/demo/synthetic.wav</span>, and show a block <em>if</em> the current result is HIGH. Report a miss honestly if it is not.</li>
   </ol>
   <div class="grid"><div class="card"><h3>Time limits</h3><ul><li>File evidence: 120 seconds</li><li>Live stream evidence: 5 seconds</li><li>OTP: 60 seconds</li><li>Approval: 60 seconds</li><li>Wrong OTP attempts: maximum 3</li></ul></div><div class="card"><h3>Presenting alone</h3><p>After requesting a code, run:</p><div class="code"><span class="cmd">python</span> scripts/demo_inbox.py &lt;action-id&gt;</div><p class="small">This avoids displaying the long verifier key. It still represents simulated local delivery.</p></div></div>
-  <div class="callout">A silent 30-second fallback is available at <span class="path">docs/vigilvoice-teacher-walkthrough.mp4</span>. The seven-slide deck is <span class="path">docs/teacher-presentation.pdf</span>.</div>
+  <div class="callout warning">The existing 30-second video at <span class="path">docs/vigilvoice-teacher-walkthrough.mp4</span> is silent and predates live streaming; label it historical, not current-build proof. The seven-slide PDF has been refreshed, but it is not a narrated backup video.</div>
   <div class="footer"><span>Demo sequence</span><span>7 / 10</span></div>
 </section>
 
 <section class="page">
   <p class="eyebrow">Evidence</p><h2>What was tested</h2>
-  <div class="grid"><div class="card"><div class="metric">13</div><h3>Backend check groups passed</h3><p>Session isolation, missing/stale evidence, action-bound OTP and approvals, expiry, three-attempt lockout, concurrent single-use completion, malformed/oversized/silent/clipped audio, synthetic replacement, disconnect invalidation and unavailable models.</p></div><div class="card"><div class="metric">6</div><h3>Browser checks passed</h3><p>Native fake-microphone recording, WAV conversion, CSP-safe preview, authenticated upload to the real backend, no JavaScript exception, and no horizontal overflow at 390 px.</p></div></div>
-  <p><span class="check">✓</span> Python: 12 passed, 1 optional model smoke skipped in the normal suite.<br><span class="check">✓</span> UI and microphone Node smoke checks passed.<br><span class="check">✓</span> Ruflo deep security scan: no findings.<br><span class="check">✓</span> Models available with verified SHA256 digests.</p>
+  <div class="grid"><div class="card"><div class="metric">22 / 22</div><h3>Isolated API check groups passed</h3><p>Session isolation, stale/HIGH evidence, action-bound OTP, one-time completion, audit rollback, stream loss, capacity and unavailable models. A paused database returned a bounded 503 in the exercised verification path.</p></div><div class="card"><div class="metric">10 min</div><h3>Single-stream stability checkpoint</h3><p>2,999 sequenced public-audio frames over 600.2 seconds with no growing response backlog. This was not a physical-microphone or multi-user trial.</p></div></div>
+  <p><span class="check">✓</span> Python: 34 passed, 1 skipped, plus 26 subtests on September 25.<br><span class="check">✓</span> UI and microphone Node smoke checks passed.<br><span class="check">✓</span> Local VAD/detector available with recorded model hashes.</p>
   <h3>Exploratory 20-clip test partition</h3>
-  <table><tr><th>Running default HIGH 0.75</th><th>Result</th></tr><tr><td>Synthetic clips eligible for OTP</td><td>1 / 9 scorable (11.1%)</td></tr><tr><td>Genuine clips falsely blocked as HIGH</td><td>1 / 9 scorable (11.1%)</td></tr><tr><td>Quality rejections</td><td>2 / 20 total</td></tr><tr><td>Service unavailable</td><td>0 / 20</td></tr></table>
-  <p>An offline candidate threshold of 0.58 blocked all 9 scorable synthetic test clips but falsely blocked 3 of 9 scorable genuine clips. It was <strong>not deployed</strong>. This demonstrates the security/usability tradeoff.</p>
+  <table><tr><th>Running default HIGH 0.75</th><th>Result</th></tr><tr><td>HIGH synthetic recall</td><td>7 / 9 scorable (77.8%)</td></tr><tr><td>Genuine clips falsely blocked as HIGH</td><td>1 / 9 scorable (11.1%)</td></tr><tr><td>Quality rejections</td><td>2 / 20 total</td></tr><tr><td>Service unavailable</td><td>0 / 20</td></tr></table>
+  <p>An offline exploratory threshold of 0.61 blocked all 9 scorable synthetic historical test clips but falsely blocked 2 of 9 scorable genuine clips. It was <strong>not deployed</strong>. That test partition has already been viewed and is not an untouched final test.</p>
   <div class="callout warning"><strong>Interpretation:</strong> 40 public English clips are useful prototype evidence, not proof of real-world accuracy. Indian-language, replay, phone-channel and unseen-generator validation remains pending.</div>
   <div class="footer"><span>Checks and evaluation</span><span>8 / 10</span></div>
 </section>
@@ -123,6 +124,7 @@
     <tr><td>Database is unhealthy</td><td>Read <span class="path">docker compose logs --tail 100 db</span>. Do not delete its volume while preserving data matters.</td></tr>
     <tr><td>Microphone button disabled</td><td>Use Chrome/Edge on <span class="path">localhost</span>, allow microphone permission, or use a bundled WAV.</td></tr>
     <tr><td>Audio rejected</td><td>Use 16 kHz mono 16-bit PCM WAV. Record clear uninterrupted speech or use the known demo files.</td></tr>
+    <tr><td>Database timeout / 503</td><td>After readiness recovers, refresh the known action ID and audit before retrying. A timeout does not prove rollback; if no action ID was returned, pause rather than claiming it was not created.</td></tr>
     <tr><td>Evidence/code expired</td><td>Analyze again and create a new transfer. Expired or locked challenges cannot be reset.</td></tr>
   </table>
   <h3>Useful commands</h3>
@@ -140,12 +142,12 @@
 
 <section class="page">
   <p class="eyebrow">Current status</p><h2>Is this an MVP?</h2>
-  <p><strong>Yes, for a supervised classroom or judging demonstration.</strong> It has a complete input-to-decision flow, real inference, failure handling, verification, audit evidence, reproducible launch instructions and measured limitations.</p>
-  <div class="grid"><div class="card"><h3 class="check">Ready now</h3><ul><li>Local Docker launch</li><li>WAV and microphone input</li><li>Real pretrained model execution</li><li>Quality and spoof policy</li><li>Protected simulated action</li><li>Verification and audit trail</li><li>Slides, guide and fallback video</li></ul></div><div class="card"><h3 class="pending">Needed before real users</h3><ul><li>Consented Indian-language/phone/replay data</li><li>Representative threshold calibration</li><li>Fine-tuning if evaluation justifies it</li><li>Real trusted OTP delivery</li><li>User accounts and HTTPS deployment</li><li>Audio retention policy</li><li>Load and field testing</li></ul></div></div>
+  <p><strong>Working local prototype, not final presentation acceptance.</strong> Real inference, continuous streaming, WAV fallback, deterministic blocking, action-bound verification and audit have been exercised. The detector has not passed representative four-language validation, and the final source/offline rehearsal is not frozen.</p>
+  <div class="grid"><div class="card"><h3 class="check">Working in the local demo</h3><ul><li>Docker launch and readiness</li><li>Live and WAV microphone paths</li><li>Pretrained model inference</li><li>Fail-closed action gate</li><li>Simulated protected transfer</li><li>Local verification and audit</li><li>Optional Jev shadow fallback</li></ul></div><div class="card"><h3 class="pending">Still required</h3><ul><li>Consented four-language/channel corpus</li><li>Validated threshold or explicit deferral</li><li>Untouched final test</li><li>Separate-verifier and offline rehearsal</li><li>Current narrated backup video</li><li>Final source/package freeze</li><li>Trusted delivery before real use</li></ul></div></div>
   <h3>Recommended next order</h3>
-  <ol><li>Rehearse the current demonstration with the real laptop microphone.</li><li>Collect and label target-domain audio with consent.</li><li>Evaluate with speaker/source-separated validation and untouched test sets.</li><li>Choose an acceptable missed-attack versus false-block tradeoff.</li><li>Only then consider fine-tuning, real verification delivery and a wider pilot.</li></ol>
+  <ol><li>Obtain consented, source-linked target-domain audio or defer detector replacement.</li><li>Evaluate with speaker/source-separated validation, freeze the policy and run one untouched test.</li><li>Rehearse the current microphone/WAV path with a separate verifier and no internet.</li><li>Only then consider fine-tuning, real verification delivery and a wider pilot.</li></ol>
   <div class="callout danger"><strong>Presentation wording:</strong> “We built a working guarded prototype using pretrained models and measured it on a small public set.” Do not say the team trained the detector or that its real-world accuracy is established.</div>
-  <p class="small muted">Detailed local references: <span class="path">docs/teacher-demo-guide.md</span>, <span class="path">docs/evaluation-report.md</span>, <span class="path">docs/model-setup.md</span>, and <span class="path">docs/teacher-build-receipt.json</span>.</p>
+  <p class="small muted">Current local references: <span class="path">docs/teacher-demo-guide.md</span>, <span class="path">docs/final-development-plan.md</span>, <span class="path">docs/validation/stage0-2026-09-24.md</span> and the V02/V03 receipts.</p>
   <div class="footer"><span>Readiness and next work</span><span>10 / 10</span></div>
 </section>
 
