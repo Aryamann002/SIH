@@ -13,7 +13,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = {".dockerignore", "Dockerfile", "README.md", "docker-compose.yml", "init.sql", "requirements.txt"}
+ROOT_FILES = {".dockerignore", "Dockerfile", "README.md", "docker-compose.yml", "init.sql", "pytest.ini", "requirements.txt"}
 CODE_SUFFIXES = {".css", ".html", ".js", ".py", ".sql", ".txt"}
 DOC_SUFFIXES = {".html", ".json", ".md", ".mp4", ".pdf", ".png"}
 
@@ -24,6 +24,8 @@ def source_files(root: Path = ROOT) -> list[Path]:
     for folder in ("app", "config", "scripts"):
         paths.extend(path for path in (root / folder).rglob("*")
                      if path.is_file() and path.suffix in CODE_SUFFIXES)
+    paths.extend(path for path in (root / "tests").rglob("*")
+                 if path.is_file() and path.suffix in {".py", ".cjs", ".json"})
     paths.extend(path for path in (root / "docs").rglob("*")
                  if path.is_file() and path.suffix in DOC_SUFFIXES
                  and "artifacts" not in path.relative_to(root / "docs").parts

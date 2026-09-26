@@ -13,7 +13,10 @@ def test_offline_package_is_reproducible_and_keeps_readme_docs(tmp_path):
     with ZipFile(first) as archive:
         names = set(archive.namelist())
         assert count == len(names) == len(source_files())
-        assert {"README.md", "docker-compose.yml", "docs/model-setup.md",
+        assert {"README.md", "docker-compose.yml", "pytest.ini",
+                "tests/test_package_offline.py", "tests/ui_smoke.cjs",
+                "tests/microphone_smoke.cjs", "tests/jev_scenarios.json",
+                "docs/model-setup.md",
                 "docs/prototype-runbook.md", "docs/teacher-presentation.pdf",
                 "docs/VigilVoice-Build-and-Launch-Guide.pdf"} <= names
         assert all(not name.startswith(("models/", "docs/validation/artifacts/")) for name in names)

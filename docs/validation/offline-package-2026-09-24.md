@@ -4,6 +4,13 @@ This local package is a tested checkpoint, **not** the final September 30 releas
 
 **September 25 update:** the `v03` backend tar below is stale and must not be mixed with the newer [source-and-docs ZIP checkpoint](r01-packaging-2026-09-24.md). The newer ZIP fixes broken README documentation links and its extracted image passed an isolated no-egress run, but there is no matching final image/model release bundle or pristine-host Compose rehearsal yet. Use the commands below only to reproduce the historical `v03` checkpoint; do not treat them as final presentation setup.
 
+**September 26 update:** a separate candidate checkpoint now pairs `offline-source-checkpoint-2026-09-26-1035.zip` (SHA256 `6dc321fe14a3f34efd4c53c9f1fd46a41ee4e1df04df82347c8d2831e7331908`) with `vigilvoice-backend-sep26-checkpoint.tar` (SHA256 `6dbf897e74130e1ae0c9d6c37d15907913e2b8730d8b94bdca498e937c0d4a0c`) and the unchanged model/PostgreSQL archives in the table below. The [R01 receipt](r01-packaging-2026-09-24.md) records extracted tests, same-host fresh/preserved-volume Compose and no-egress limitations. The backend tar was saved from the image built from that exact source ZIP. Its runtime code matches the current local demo, but the ZIP predates later receipt/test-harness edits; this remains a **checkpoint**, not final presentation release media. Do not mix its source ZIP with the old `v03` backend tar or apply the `v03` commands below unchanged: load the September 26 tar and tag its image `vigilvoice:local` before running Compose.
+
+```powershell
+docker load -i .\vigilvoice-backend-sep26-checkpoint.tar
+docker tag vigilvoice-validation:sep26-checkpoint vigilvoice:local
+```
+
 | Local artifact | Purpose | SHA256 |
 |---|---|---|
 | `offline-source-v03-2026-09-24.zip` | App, scripts, config, Compose, Dockerfile and README; 44 files, 82,405 bytes | `0e07a0cc96536161b3594c861bae9776cebaf33ed7fde7e46541f1ab39eb722e` |
