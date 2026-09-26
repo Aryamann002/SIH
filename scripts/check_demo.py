@@ -162,13 +162,15 @@ async def main(output):
         assert result["risk_state"] in ("LOW", "ELEVATED"), result
         first, second = action(owner), action(owner)
         assert first["status"] == "PENDING" and first["otp_required"] and not first["allowed"]
-        shadow_jev = next(row for row in request(f"/actions/{first['action_id']}/audit", owner)["events"]
-                          if row["event_type"] == "JEV_DECISION")
-        assert shadow_jev["details"]["mode"] == "shadow"
-        assert shadow_jev["details"]["fallback_reason"] == "missing_key"
-        assert shadow_jev["details"]["deterministic_policy_result"] == "PENDING"
-        assert shadow_jev["details"]["final_backend_decision"] == "PENDING"
-        assert len(shadow_jev["details"]["state_hash"]) == 64
+        jev_event = next(row for row in request(f"/actions/{first['action_id']}/audit", owner)["events"]
+                         if row["event_type"] == "JEV_DECISION")
+        assert settings.JEV_MODE in {"shadow", "disabled"}
+        assert jev_event["details"]["mode"] == settings.JEV_MODE
+        assert jev_event["details"]["fallback_reason"] == (
+            "missing_key" if settings.JEV_MODE == "shadow" else "disabled")
+        assert jev_event["details"]["deterministic_policy_result"] == "PENDING"
+        assert jev_event["details"]["final_backend_decision"] == "PENDING"
+        assert len(jev_event["details"]["state_hash"]) == 64
         request(f"/actions/{first['action_id']}", stranger, expected=404)
         request(f"/actions/{first['action_id']}/audit", stranger, expected=404)
         request(f"/demo/inbox/{first['action_id']}", owner, expected=403)

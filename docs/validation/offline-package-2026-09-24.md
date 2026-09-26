@@ -2,6 +2,8 @@
 
 This local package is a tested checkpoint, **not** the final September 30 release. The `v03` source ZIP and backend tar below include the S03 browser and V02 upload-admission fixes; the unsuffixed source ZIP/backend tar in the same folder are superseded and must not be used as the current build. Regenerate and retest after final source freeze. The large image/model archives under `docs/validation/artifacts/` are intentionally ignored by Git; they must be copied separately. No API key, `.env`, private audio or OTP is included. The bundled demo WAVs are the two public CC-BY-4.0 examples named and attributed in `models/manifest.json`.
 
+**September 25 update:** the `v03` backend tar below is stale and must not be mixed with the newer [source-and-docs ZIP checkpoint](r01-packaging-2026-09-24.md). The newer ZIP fixes broken README documentation links and its extracted image passed an isolated no-egress run, but there is no matching final image/model release bundle or pristine-host Compose rehearsal yet. Use the commands below only to reproduce the historical `v03` checkpoint; do not treat them as final presentation setup.
+
 | Local artifact | Purpose | SHA256 |
 |---|---|---|
 | `offline-source-v03-2026-09-24.zip` | App, scripts, config, Compose, Dockerfile and README; 44 files, 82,405 bytes | `0e07a0cc96536161b3594c861bae9776cebaf33ed7fde7e46541f1ab39eb722e` |

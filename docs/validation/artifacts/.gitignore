@@ -1,2 +1,4 @@
 *.tar
-runtime-models-*.zip
+*.zip
+*.wav
+extracted-*/
