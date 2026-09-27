@@ -2,3 +2,4 @@
 *.zip
 *.wav
 extracted-*/
+datasets/

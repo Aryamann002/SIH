@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta name="hf-scene-parts" content="{&quot;shared&quot;:&quot;c84e010ec1ebe19d&quot;,&quot;scenes&quot;:{&quot;01-voice-not-approval&quot;:&quot;3bfe5406e71533d8&quot;,&quot;02-local-evidence&quot;:&quot;d75b5e163c5345ee&quot;,&quot;03-independent-verification&quot;:&quot;47050697f38c2bd6&quot;,&quot;04-high-blocked&quot;:&quot;2a2a735b304d2104&quot;,&quot;05-honest-boundary&quot;:&quot;030ebc520a25d2d1&quot;}}"><script data-hf-gsap-fallback>
+(function(){
+  var cdnBase="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/";
+  var loaded={};
+  function loadFallback(file){
+    if(loaded[file])return loaded[file];
+    return loaded[file]=new Promise(function(ok,fail){
+      var s=document.createElement("script");
+      s.src=cdnBase+file;s.onload=ok;s.onerror=fail;
+      document.head.appendChild(s);
+    });
+  }
+  document.addEventListener("error",function(e){
+    var t=e.target;
+    if(!t||t.tagName!=="SCRIPT"||!t.src)return;
+    var m=t.src.match(/gsap[^/]*\/dist\/(.+\.js)/);
+    if(m)loadFallback(m[1]);
+  },true);
+})();
+</script><base href="/api/projects/vigilvoice-demo/preview/"><style data-hyperframes-text-rendering="true">html,body,*{text-rendering:geometricPrecision}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>* {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #edf4f7;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }</style><style data-hf-scene="01-voice-not-approval">@font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      color: #edf4f7;
+      font-family: "Inter";
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="ground"] {
+      position: absolute;
+      inset: 0;
+      background: #081219;
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="stage"] {
+      position: absolute;
+      inset: 0;
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="state"] {
+      position: absolute;
+      top: 22cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      height: 43cqh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      text-transform: lowercase;
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role-variant="opening"] { font-size: 13cqw; }
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role-variant="middle"] { font-size: 7.5cqw; visibility: hidden; }
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role-variant="resolve"] { font-size: 9cqw; visibility: hidden; }
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="mint"] { color: #73e4cb; }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="brand"] {
+      position: absolute;
+      top: 64cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      display: flex;
+      justify-content: center;
+      color: #9cadb9;
+      font-size: 1.6cqw;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    [data-composition-id="01-voice-not-approval"] [data-hf-authored-id="root"] [data-role="brand"] span { display: inline-block; }</style><style data-hf-scene="02-local-evidence">@font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("assets/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+    }
+    [data-composition-id="02-local-evidence"] [data-hf-authored-id="root"] {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      color: #edf4f7;
+      font-family: "Inter";
+    }
+    [data-composition-id="02-local-evidence"] .clip { position: absolute; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-ground {
+      inset: 0;
+      background: #081219;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-kicker {
+      left: 106px;
+      top: 69px;
+      font: 500 18px/1.3 "IBM Plex Mono";
+      letter-spacing: 0.14em;
+      color: #73e4cb;
+      text-transform: uppercase;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-provenance {
+      right: 106px;
+      top: 69px;
+      font: 500 16px/1.3 "IBM Plex Mono";
+      letter-spacing: 0.14em;
+      color: #9cadb9;
+      text-transform: uppercase;
+      text-align: right;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-wide,
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-split {
+      inset: 0;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-surface {
+      position: absolute;
+      left: 125px;
+      top: 145px;
+      width: 1670px;
+      height: 624px;
+      overflow: hidden;
+      border: 1px solid #253641;
+      background: #101e28;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-world {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-wide-image {
+      display: block;
+      position: absolute;
+      left: -130px;
+      top: -660px;
+      width: 2304px;
+      height: 2688px;
+      max-width: none;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-hairline {
+      left: 125px;
+      top: 801px;
+      width: 1670px;
+      height: 1px;
+      background: #253641;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-stage-label {
+      position: absolute;
+      top: 824px;
+      left: 125px;
+      font: 500 18px/1.3 "IBM Plex Mono";
+      letter-spacing: 0.14em;
+      color: #73e4cb;
+      text-transform: uppercase;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-pane {
+      position: absolute;
+      top: 145px;
+      width: 810px;
+      height: 624px;
+      overflow: hidden;
+      border: 1px solid #253641;
+      background: #101e28;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-pane img {
+      position: absolute;
+      display: block;
+      width: 1872px;
+      height: 2184px;
+      max-width: none;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-low-pane { left: 125px; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-action-pane { left: 985px; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-low-pane img { left: -100px; top: -1300px; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-action-pane img { left: -930px; top: -520px; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-pane-label {
+      position: absolute;
+      top: 824px;
+      font: 500 18px/1.3 "IBM Plex Mono";
+      letter-spacing: 0.14em;
+      color: #73e4cb;
+      text-transform: uppercase;
+    }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-low-label { left: 125px; }
+    [data-composition-id="02-local-evidence"] .\30 2-local-evidence-action-label { left: 985px; }</style><style data-hf-scene="03-independent-verification">@font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("assets/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      container-type: size;
+      overflow: hidden;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-ground,
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-stage {
+      position: absolute;
+      inset: 0;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-ground {
+      background: #081219;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-stage {
+      color: #edf4f7;
+      font-family: "Inter", sans-serif;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-kicker {
+      position: absolute;
+      left: 106px;
+      top: 81px;
+      min-width: 420px;
+      color: #73e4cb;
+      font: 500 19px/1.4 "IBM Plex Mono", monospace;
+      letter-spacing: 0.14em;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-headline {
+      position: absolute;
+      left: 106px;
+      top: 127px;
+      font-size: 116px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-headline em {
+      color: #73e4cb;
+      font-style: normal;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-divider {
+      position: absolute;
+      left: 106px;
+      top: 268px;
+      width: 1708px;
+      height: 1px;
+      background: #253641;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-card {
+      position: absolute;
+      top: 315px;
+      overflow: hidden;
+      border: 1px solid #253641;
+      background: #101e28;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-risk {
+      left: 106px;
+      width: 1000px;
+      height: 390px;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-risk img {
+      position: absolute;
+      width: 2592px;
+      height: 3024px;
+      left: -252px;
+      top: -1908px;
+      max-width: none;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-verify {
+      left: 1140px;
+      width: 674px;
+      height: 390px;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-verify img {
+      position: absolute;
+      width: 1728px;
+      height: 2016px;
+      left: -890px;
+      top: -1002px;
+      max-width: none;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-rule {
+      position: absolute;
+      left: 106px;
+      top: 752px;
+      width: 1708px;
+      height: 1px;
+      background: #253641;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-note {
+      position: absolute;
+      left: 106px;
+      top: 775px;
+      color: #9cadb9;
+      font: 500 18px/1.4 "IBM Plex Mono", monospace;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-words {
+      position: absolute;
+      left: 106px;
+      top: 138px;
+      width: 1708px;
+      display: flex;
+      gap: 75px;
+      align-items: baseline;
+      white-space: nowrap;
+      color: #edf4f7;
+      font-size: 78px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    [data-composition-id="03-independent-verification"] [data-hf-authored-id="root"] .f03-independent-verification-words span:nth-child(2) {
+      color: #73e4cb;
+    }</style><style data-hf-scene="04-high-blocked">@font-face { font-family: Inter; src: url("assets/fonts/Inter-Variable.ttf") format("truetype"); font-style: normal; font-weight: 100 900; }
+    @font-face { font-family: "IBM Plex Mono"; src: url("assets/fonts/IBMPlexMono-Medium.ttf") format("truetype"); font-style: normal; font-weight: 500; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] { position: relative; width: 1920px; height: 1080px; overflow: hidden; container-type: size; font-family: Inter; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] .clip { position: absolute; inset: 0; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="ground"] { background: #081219; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="stage"] { overflow: hidden; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="provenance"] { position: absolute; left: 5.5cqw; top: 7cqh; z-index: 2; font: 500 0.72cqw "IBM Plex Mono"; letter-spacing: 0.14em; color: #73e4cb; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="rule"] { position: absolute; left: 5.5cqw; top: 11cqh; width: 36px; height: 2px; background: #73e4cb; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="world"] { position: absolute; inset: 0; transform-origin: 50% 50%; will-change: transform; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="pane"] { position: absolute; top: 25cqh; width: 40.5cqw; height: 37cqh; overflow: hidden; border-top: 1px solid #253641; background: #101e28; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role-variant="risk"] { left: 7cqw; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role-variant="action"] { left: 52.5cqw; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="pane-label"] { position: absolute; top: 0; left: 0; height: 5.1cqh; display: flex; align-items: center; font: 500 0.72cqw "IBM Plex Mono"; letter-spacing: 0.14em; color: #9cadb9; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="crop"] { position: absolute; left: 0; right: 0; top: 5.1cqh; bottom: 0; overflow: hidden; border: 1px solid #253641; background: #081219; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="crop"] img { position: absolute; display: block; max-width: none; width: 2088px; height: auto; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role-variant="risk"] img { left: -231px; top: -1545px; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role-variant="action"] img { left: -1100px; top: -1043px; }
+    [data-composition-id="04-high-blocked"] [data-hf-authored-id="root"] [data-role="source"] { position: absolute; left: 7cqw; top: 66cqh; color: #9cadb9; font: 500 0.72cqw "IBM Plex Mono"; letter-spacing: 0.14em; }</style><style data-hf-scene="05-honest-boundary">@font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("assets/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+    }
+
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      color: #edf4f7;
+      font-family: "Inter";
+    }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] .clip { position: absolute; inset: 0; }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="ground"] { background: #081219; }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="stage"] { text-align: center; }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="statement"] {
+      position: absolute;
+      top: 24cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      height: 30cqh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6.2cqw;
+      font-weight: 900;
+      line-height: 0.94;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      white-space: pre-line;
+    }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="rule"] {
+      position: absolute;
+      top: 57cqh;
+      left: calc(50% - 18px);
+      width: 36px;
+      height: 2px;
+      background: #73e4cb;
+    }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="support"] {
+      position: absolute;
+      top: 61cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      display: flex;
+      justify-content: center;
+      gap: 0.45em;
+      color: #9cadb9;
+      font-size: 2.8cqw;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="support"] span { display: inline-block; }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="brand"] {
+      position: absolute;
+      top: 69cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      font-size: 2.8cqw;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+    [data-composition-id="05-honest-boundary"] [data-hf-authored-id="root"] [data-role="label"] {
+      position: absolute;
+      top: 76cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      color: #73e4cb;
+      font: 500 0.9cqw/1.5 "IBM Plex Mono";
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }</style>
+  <script data-hyperframes-preview-runtime="1" src="/api/runtime.js"></script>
+<meta name="hyperframes-project-signature" content="1bf3ce69305effb83b3fcf3c">
+</head>
+  <body>
+    <div data-hf-id="hf-1os4" id="root" data-composition-id="main" data-start="0" data-duration="22.848" data-width="1920" data-height="1080">
+      <div data-hf-scene-no-swap="a script outside the scene selects #el-01-voice-not-approval" data-composition-file="compositions/frames/01-voice-not-approval.html" data-height="1080" data-width="1920" data-hf-scene="01-voice-not-approval" data-hf-id="hf-viln" id="el-01-voice-not-approval" class="scene" data-composition-id="01-voice-not-approval" data-start="0" data-duration="2.783" data-track-index="0"><div style="width:1920px;height:1080px" data-hf-inner-root="true" data-hf-authored-id="root" data-hf-id="hf-pvn7" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-nyql" class="clip" data-role="ground" data-start="0" data-duration="2.783" data-track-index="0"></div>
+    <div data-hf-id="hf-l41b" class="clip" data-role="stage" data-start="0" data-duration="2.783" data-track-index="1">
+      <div data-hf-id="hf-o45l" id="01-voice-not-approval-opening" data-role="state" data-role-variant="opening">voice</div>
+      <div data-hf-id="hf-jirh" id="01-voice-not-approval-middle" data-role="state" data-role-variant="middle">voice is <span data-hf-id="hf-n3nb" data-role="mint">&#160;evidence</span></div>
+      <div data-hf-id="hf-6eda" id="01-voice-not-approval-resolve" data-role="state" data-role-variant="resolve"><span data-hf-id="hf-0hir" data-role="mint">not&#160;</span>approval</div>
+      <div data-hf-id="hf-8sv0" id="01-voice-not-approval-brand" data-role="brand"><span data-hf-id="hf-zlxf" id="01-voice-not-approval-brand-a">Vigil</span><span data-hf-id="hf-2mnf" id="01-voice-not-approval-brand-b">Voice</span></div>
+    </div>
+  </div></div>
+      <audio data-hf-id="hf-vna5" id="el-01-voice-not-approval-voice" src="assets/voice/01.wav" data-start="0" data-duration="2.283" data-track-index="10" data-volume="1" data-end="2.283"></audio>
+
+      <div data-hf-scene-no-swap="a script outside the scene selects #el-02-local-evidence" data-composition-file="compositions/frames/02-local-evidence.html" data-height="1080" data-width="1920" data-hf-scene="02-local-evidence" data-hf-id="hf-6cvb" id="el-02-local-evidence" class="scene" data-composition-id="02-local-evidence" data-start="2.283" data-duration="5.641" data-track-index="1"><div style="width:1920px;height:1080px" data-hf-inner-root="true" data-hf-authored-id="root" data-hf-id="hf-o12t" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-qrfc" class="clip 02-local-evidence-ground" data-start="0" data-duration="5.641" data-track-index="0"></div>
+    <div data-hf-id="hf-0iy5" id="02-local-evidence-kicker" class="clip 02-local-evidence-kicker" data-start="0" data-duration="5.641" data-track-index="2">01 / EVIDENCE</div>
+    <div data-hf-id="hf-rew5" class="clip 02-local-evidence-provenance" data-start="0" data-duration="5.641" data-track-index="3">PUBLIC WAV / TEST CAPTURE</div>
+    <div data-hf-id="hf-r5n5" class="clip 02-local-evidence-wide" data-start="0" data-duration="3.5" data-track-index="1">
+      <div data-hf-id="hf-cuu2" id="02-local-evidence-surface" class="02-local-evidence-surface">
+        <div data-hf-id="hf-gcij" id="02-local-evidence-world" class="02-local-evidence-world" data-layout-allow-overflow="">
+          <img data-hf-id="hf-2d97" class="02-local-evidence-wide-image" src="assets/image_002.png" alt="Actual VigilVoice operator screen from an isolated public-WAV low-risk test">
+        </div>
+      </div>
+      <div data-hf-id="hf-mwyd" class="02-local-evidence-hairline"></div>
+      <div data-hf-id="hf-blef" class="02-local-evidence-stage-label">LOCAL SIGNAL</div>
+    </div>
+    <div data-hf-id="hf-bc6q" class="clip 02-local-evidence-split" data-start="3.5" data-duration="2.141" data-track-index="1">
+      <div data-hf-id="hf-bsol" id="02-local-evidence-low-pane" class="02-local-evidence-pane 02-local-evidence-low-pane">
+        <img data-hf-id="hf-f3uh" src="assets/image_002.png" alt="LOW assessment and speech evidence from the same operator test screen" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-ikjx" id="02-local-evidence-action-pane" class="02-local-evidence-pane 02-local-evidence-action-pane">
+        <img data-hf-id="hf-s1ks" src="assets/image_002.png" alt="Protected simulated transfer panel from the same operator test screen" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-cdqh" class="02-local-evidence-hairline"></div>
+      <div data-hf-id="hf-ckqv" class="02-local-evidence-pane-label 02-local-evidence-low-label">LOW RISK</div>
+      <div data-hf-id="hf-bsq8" class="02-local-evidence-pane-label 02-local-evidence-action-label">SIMULATED ACTION</div>
+    </div>
+  </div></div>
+      <audio data-hf-id="hf-qz3r" id="el-02-local-evidence-voice" src="assets/voice/02.wav" data-start="2.283" data-duration="5.141" data-track-index="10" data-volume="1" data-end="7.4239999999999995"></audio>
+
+      <div data-hf-scene-no-swap="a script outside the scene selects #el-03-independent-verification" data-composition-file="compositions/frames/03-independent-verification.html" data-height="1080" data-width="1920" data-hf-scene="03-independent-verification" data-hf-id="hf-77ik" id="el-03-independent-verification" class="scene" data-composition-id="03-independent-verification" data-start="7.4239999999999995" data-duration="6.949" data-track-index="0"><div style="width:1920px;height:1080px" data-hf-inner-root="true" data-hf-authored-id="root" data-hf-id="hf-3jk5" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-ofaq" class="clip f03-independent-verification-ground" data-start="0" data-duration="6.949" data-track-index="0"></div>
+    <div data-hf-id="hf-3k1q" class="clip f03-independent-verification-stage" data-start="0" data-duration="6.949" data-track-index="1">
+      <div data-hf-id="hf-tsyb" id="03-independent-verification-kicker" class="f03-independent-verification-kicker">VOICE EVIDENCE</div>
+      <div data-hf-id="hf-lmg6" id="03-independent-verification-headline" class="f03-independent-verification-headline">low <em data-hf-id="hf-av58">≠ approval</em></div>
+      <div data-hf-id="hf-8q4w" class="f03-independent-verification-divider"></div>
+      <div data-hf-id="hf-lg6v" id="03-independent-verification-risk" class="f03-independent-verification-card f03-independent-verification-risk">
+        <img data-hf-id="hf-paax" src="assets/image_002.png" alt="Real LOW-risk operator screen; independent verification is still required" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-nd9z" id="03-independent-verification-verify" class="f03-independent-verification-card f03-independent-verification-verify">
+        <img data-hf-id="hf-4fwg" src="assets/image_002.png" alt="Real independent-verification guidance on the operator screen" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-4guv" class="f03-independent-verification-rule"></div>
+      <div data-hf-id="hf-zsqr" class="f03-independent-verification-note">ISOLATED PUBLIC-AUDIO TEST · SIMULATED ACTION</div>
+      <div data-hf-id="hf-2jjk" id="03-independent-verification-words" class="f03-independent-verification-words">
+        <span data-hf-id="hf-fekz">action</span><span data-hf-id="hf-b32k">recipient</span><span data-hf-id="hf-4kgd">amount</span>
+      </div>
+    </div>
+  </div></div>
+      <audio data-hf-id="hf-760f" id="el-03-independent-verification-voice" src="assets/voice/03.wav" data-start="7.4239999999999995" data-duration="6.549" data-track-index="10" data-volume="1" data-end="13.972999999999999"></audio>
+
+      <div data-hf-scene-no-swap="a script outside the scene selects #el-04-high-blocked" data-composition-file="compositions/frames/04-high-blocked.html" data-height="1080" data-width="1920" data-hf-scene="04-high-blocked" data-hf-id="hf-aura" id="el-04-high-blocked" class="scene" data-composition-id="04-high-blocked" data-start="13.972999999999999" data-duration="2.996" data-track-index="1"><div style="width:1920px;height:1080px" data-hf-inner-root="true" data-hf-authored-id="root" data-hf-id="hf-jpb9" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-kyvt" class="clip" data-role="ground" data-start="0" data-duration="2.996" data-track-index="0"></div>
+    <div data-hf-id="hf-9ktf" class="clip" data-role="stage" data-start="0" data-duration="2.996" data-track-index="1">
+      <div data-hf-id="hf-vrg5" data-role="provenance">ISOLATED PUBLIC-WAV TEST CAPTURE</div>
+      <div data-hf-id="hf-98at" data-role="rule"></div>
+      <div data-hf-id="hf-7hin" id="04-high-blocked-world" data-role="world" data-layout-allow-overflow="">
+        <div data-hf-id="hf-41d8" id="04-high-blocked-risk" data-role="pane" data-role-variant="risk">
+          <div data-hf-id="hf-zvzy" data-role="pane-label">01 / RISK EVIDENCE</div>
+          <div data-hf-id="hf-cgdu" data-role="crop" data-layout-allow-overflow=""><img data-hf-id="hf-biom" src="assets/image_001.png" alt="Actual HIGH voice-risk panel in isolated public-WAV test"></div>
+        </div>
+        <div data-hf-id="hf-0etg" id="04-high-blocked-action" data-role="pane" data-role-variant="action">
+          <div data-hf-id="hf-84w2" data-role="pane-label">02 / ACTION STATE</div>
+          <div data-hf-id="hf-bhrq" data-role="crop" data-layout-allow-overflow=""><img data-hf-id="hf-2tdo" src="assets/image_001.png" alt="Actual BLOCKED simulated-transfer panel in the same test"></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-knc7" id="04-high-blocked-source" data-role="source">SAME SCREENSHOT · NO FUNDS MOVED</div>
+    </div>
+  </div></div>
+      <audio data-hf-id="hf-px40" id="el-04-high-blocked-voice" src="assets/voice/04.wav" data-start="13.972999999999999" data-duration="2.496" data-track-index="10" data-volume="1" data-end="16.468999999999998"></audio>
+
+      <div data-hf-scene-no-swap="a script outside the scene selects #el-05-honest-boundary" data-composition-file="compositions/frames/05-honest-boundary.html" data-height="1080" data-width="1920" data-hf-scene="05-honest-boundary" data-hf-id="hf-tu0q" id="el-05-honest-boundary" class="scene" data-composition-id="05-honest-boundary" data-start="16.468999999999998" data-duration="6.379" data-track-index="0"><div style="width:1920px;height:1080px" data-hf-inner-root="true" data-hf-authored-id="root" data-hf-id="hf-kuf9" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-awro" class="clip" data-role="ground" data-start="0" data-duration="6.379" data-track-index="0"></div>
+    <div data-hf-id="hf-dfzo" class="clip" data-role="stage" data-start="0" data-duration="6.379" data-track-index="1">
+      <div data-hf-id="hf-g4vb" id="05-honest-boundary-statement" data-role="statement">simulated transfer</div>
+      <div data-hf-id="hf-98at" data-role="rule"></div>
+      <div data-hf-id="hf-usw6" id="05-honest-boundary-support" data-role="support">
+        <span data-hf-id="hf-44h3" id="05-honest-boundary-no">no</span>
+        <span data-hf-id="hf-l4l5" id="05-honest-boundary-money">money</span>
+        <span data-hf-id="hf-f26p" id="05-honest-boundary-moves">moves</span>
+      </div>
+      <div data-hf-id="hf-6a6p" id="05-honest-boundary-brand" data-role="brand">VigilVoice</div>
+      <div data-hf-id="hf-qvr6" id="05-honest-boundary-label" data-role="label">working prototype · Jev optional · offline demo</div>
+    </div>
+  </div></div>
+      <audio data-hf-id="hf-hxx5" id="el-05-honest-boundary-voice" src="assets/voice/05.wav" data-start="16.468999999999998" data-duration="6.379" data-track-index="10" data-volume="1" data-end="22.848"></audio>
+
+    </div>
+
+    
+  <script>window.__timelines = window.__timelines || {};
+window.__timelines["main"] = gsap.timeline({ paused: true });
+(function() {
+  var tl = window.__timelines["main"];
+  tl.to("#el-01-voice-not-approval", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 2.283);
+  tl.fromTo("#el-02-local-evidence", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 2.283);
+  tl.to("#el-02-local-evidence", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 7.424);
+  tl.fromTo("#el-03-independent-verification", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 7.424);
+  tl.to("#el-03-independent-verification", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.4, ease: "power3.in" }, 13.973);
+  tl.fromTo("#el-04-high-blocked", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 13.973);
+  tl.to("#el-04-high-blocked", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 16.469);
+  tl.fromTo("#el-05-honest-boundary", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 16.469);
+  tl.to({}, { duration: 22.848 }, 0);
+})();</script><script data-hf-scene="01-voice-not-approval">(function(){
+  var __hfCompId = "01-voice-not-approval";
+  var __hfTimelineCompId = "01-voice-not-approval";
+  var __hfErrorLabel = "[HyperFrames] composition script error:";
+  var __hfAuthoredRootId = "root";
+  var __hfCompositionSrc = "compositions/frames/01-voice-not-approval.html";
+  var __hfAuthoredRootAttr = "data-hf-authored-id";
+  var __hfEscapeAttr = function(value) {
+    return (value + "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  };
+  var __hfRootSelector = "[data-composition-id=\"01-voice-not-approval\"]" || (__hfCompId
+    ? '[data-composition-id="' + __hfEscapeAttr(__hfCompId) + '"]'
+    : "");
+  var __hfRoot = null;
+  var __hfRootSelectorPattern = "\\[\\s*data-composition-id\\s*=\\s*(?:\"01-voice-not-approval\"|'01-voice-not-approval')\\s*\\]";
+  var __hfTimingSelectorPattern = "\\s*\\[\\s*data-(?:start|duration)\\s*=\\s*(?:\"[^\"]*\"|'[^']*')\\s*\\]";
+  var __hfAuthoredRootIdForms = ["root"];
+  var __hfAuthoredRootSelector = __hfAuthoredRootId
+    ? "[" + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(__hfAuthoredRootId) + '"]'
+    : "";
+  var __hfIsSelectorNameChar = function(char) {
+    return !!char && /[\w-]/.test(char);
+  };
+  var __hfReplaceAuthoredRootIdSelectors = function(selector) {
+    if (!__hfAuthoredRootSelector || !__hfAuthoredRootIdForms.length || typeof selector !== "string") {
+      return selector;
+    }
+    var result = "";
+    var bracketDepth = 0;
+    var quote = null;
+    for (var index = 0; index < selector.length; index += 1) {
+      var char = selector[index];
+      var previousChar = index > 0 ? selector[index - 1] : "";
+      if (quote) {
+        result += char;
+        if (char === quote && previousChar !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        result += char;
+        continue;
+      }
+      if (char === "[") {
+        bracketDepth += 1;
+        result += char;
+        continue;
+      }
+      if (char === "]") {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        result += char;
+        continue;
+      }
+      if (char === "#" && bracketDepth === 0) {
+        var matchedForm = null;
+        for (var formIndex = 0; formIndex < __hfAuthoredRootIdForms.length; formIndex += 1) {
+          var form = __hfAuthoredRootIdForms[formIndex];
+          if (selector.slice(index + 1, index + 1 + form.length) === form) {
+            matchedForm = form;
+            break;
+          }
+        }
+        if (matchedForm) {
+          var nextChar = selector[index + 1 + matchedForm.length];
+          if (!__hfIsSelectorNameChar(nextChar)) {
+            result += __hfAuthoredRootSelector;
+            index += matchedForm.length;
+            continue;
+          }
+        }
+      }
+      result += char;
+    }
+    return result;
+  };
+  var __hfNormalizeSelector = function(selector) {
+    if (!__hfCompId || typeof selector !== "string") return selector;
+    var normalized = selector
+      .replace(new RegExp(__hfRootSelectorPattern + '(?:' + __hfTimingSelectorPattern + ')+', 'g'), __hfRootSelector)
+      .replace(new RegExp('(?:' + __hfTimingSelectorPattern + ')+' + __hfRootSelectorPattern, 'g'), __hfRootSelector);
+    if (__hfAuthoredRootSelector) {
+      normalized = __hfReplaceAuthoredRootIdSelectors(normalized);
+    }
+    return normalized;
+  };
+  var __hfFindRoot = function() {
+    if (!__hfRoot && __hfRootSelector) {
+      __hfRoot = window.document.querySelector(__hfRootSelector);
+    }
+    return __hfRoot;
+  };
+  var __hfContains = function(node) {
+    var root = __hfFindRoot();
+    return !root || node === root || root.contains(node);
+  };
+  var __hfQueryAll = function(selector) {
+    var root = __hfFindRoot();
+    if (!root || typeof selector !== "string") {
+      return window.document.querySelectorAll(selector);
+    }
+    return Array.prototype.filter.call(window.document.querySelectorAll(__hfNormalizeSelector(selector)), function(node) {
+      return __hfContains(node);
+    });
+  };
+  var __hfQueryOne = function(selector) {
+    var matches = __hfQueryAll(selector);
+    return matches[0] || null;
+  };
+  var __hfGetElementById = function(id) {
+    var found = window.document.getElementById(id);
+    if (found && __hfContains(found)) return found;
+    var root = __hfFindRoot();
+    if (!root) return found || null;
+    var idValue = id + "";
+    if (__hfAuthoredRootId && __hfAuthoredRootId === idValue && root.getAttribute && root.getAttribute(__hfAuthoredRootAttr) === idValue) {
+      return root;
+    }
+    if (root.id === idValue) return root;
+    if (typeof root.querySelector !== "function") return null;
+    try {
+      var authoredRootMatch = root.querySelector('[' + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(idValue) + '"]');
+      if (authoredRootMatch) return authoredRootMatch;
+    } catch {}
+    if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+      try {
+        return root.querySelector("#" + CSS.escape(idValue)) || null;
+      } catch {}
+    }
+    try {
+      return root.querySelector('[id="' + __hfEscapeAttr(idValue) + '"]') || null;
+    } catch {}
+    return null;
+  };
+  var __hfScopedDocument = typeof Proxy === "function"
+    ? new Proxy(window.document, {
+        get: function(target, prop, receiver) {
+          if (prop === "querySelector") return __hfQueryOne;
+          if (prop === "querySelectorAll") return __hfQueryAll;
+          if (prop === "getElementById") return __hfGetElementById;
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      })
+    : window.document;
+  var __hfTimelineRegistryProxy = null;
+  var __hfGetTimelineRegistry = function() {
+    window.__timelines = window.__timelines || {};
+    if (!__hfCompId || __hfCompId === __hfTimelineCompId || typeof Proxy !== "function") {
+      return window.__timelines;
+    }
+    if (!__hfTimelineRegistryProxy) {
+      __hfTimelineRegistryProxy = new Proxy(window.__timelines, {
+        get: function(target, prop, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.get(target, prop, target);
+          }
+          var authoredValue = Reflect.get(target, prop, target);
+          return authoredValue === undefined
+            ? Reflect.get(target, __hfTimelineCompId, target)
+            : authoredValue;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.set(target, prop, value, target);
+          }
+          // The authored node remains in the compiled DOM when its local id
+          // differs from the runtime mount id, so readiness legitimately sees
+          // both compositions. Publish the same timeline under both identities
+          // instead of replacing one with the other.
+          var authoredSet = Reflect.set(target, __hfCompId, value, target);
+          var runtimeSet = Reflect.set(target, __hfTimelineCompId, value, target);
+          return authoredSet && runtimeSet;
+        },
+      });
+    }
+    return __hfTimelineRegistryProxy;
+  };
+  var __hfScopedWindow = typeof Proxy === "function"
+    ? new Proxy(window, {
+        get: function(target, prop, receiver) {
+          if (prop === "__timelines") return __hfGetTimelineRegistry();
+          // Inside a sub-composition, __hyperframes is passed as a bare script
+          // param bound to the SCOPED variant (per-comp getVariables). But
+          // authors routinely write the documented window.__hyperframes.
+          // getVariables() form, which would otherwise fall through to the host
+          // page's base __hyperframes and return the WRONG (or empty) variables
+          // for this instance. Route it to the scoped variant too so both
+          // spellings resolve to this composition's own variables.
+          // (__hfScopedHyperframes is a hoisted var assigned below, before any
+          // sub-comp script -- the only code that reads this -- runs.)
+          if (prop === "__hyperframes") return __hfScopedHyperframes;
+          // Native window methods must stay bound to the real window. Handed
+          // back unbound, "this" at call time is this Proxy and Chrome rejects
+          // it with "Illegal invocation", which broke window.addEventListener,
+          // setTimeout, matchMedia and getComputedStyle inside every
+          // sub-composition -- including the window.addEventListener("hf-seek",
+          // ...) form the Three.js and TypeGPU adapters document. The sibling
+          // document and gsap proxies here already bind.
+          //
+          // Only bind non-constructors. Function.prototype.bind drops static
+          // members, so binding a class exposed on window (window.Texts and
+          // friends) would silently strip its statics. Built-in methods have
+          // no .prototype; classes and constructor functions do.
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" && value.prototype === undefined
+            ? value.bind(target)
+            : value;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop === "__timelines") {
+            // Common authoring boilerplate assigns the registry back to
+            // itself (window.__timelines = window.__timelines || {}). The
+            // getter above returns our proxy; do not replace the canonical
+            // registry with that proxy or later wrappers will stack proxies.
+            if (value === __hfTimelineRegistryProxy) return true;
+            target.__timelines = value || {};
+            __hfTimelineRegistryProxy = null;
+            return true;
+          }
+          return Reflect.set(target, prop, value, target);
+        },
+      })
+    : window;
+  var __hfResolveGsapTarget = function(target) {
+    if (typeof target === "string") return __hfQueryAll(target);
+    if (!Array.isArray(target)) return target;
+    return target.reduce(function(resolved, item) {
+      if (typeof item === "string") {
+        return resolved.concat(Array.prototype.slice.call(__hfQueryAll(item)));
+      }
+      resolved.push(item);
+      return resolved;
+    }, []);
+  };
+  var __hfScopeTimeline = function(timeline) {
+    if (!timeline || timeline.__hfScopedCompositionRoot === __hfFindRoot()) return timeline;
+    ["to", "from", "fromTo", "set"].forEach(function(method) {
+      var original = timeline[method];
+      if (typeof original !== "function") return;
+      timeline[method] = function(target) {
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = __hfResolveGsapTarget(target);
+        return original.apply(timeline, args);
+      };
+    });
+    try {
+      Object.defineProperty(timeline, "__hfScopedCompositionRoot", {
+        value: __hfFindRoot(),
+        configurable: true,
+      });
+    } catch {
+      // Best-effort: timelines coming from user code may have a frozen target
+      // or a non-extensible defineProperty path. Swallow — the scoped root
+      // is an enrichment, not a correctness invariant for playback.
+    }
+    return timeline;
+  };
+  var __hfBaseGsap = typeof gsap === "undefined" ? window.gsap : gsap;
+  var __hfScopedGsap = !__hfBaseGsap || typeof Proxy !== "function"
+    ? __hfBaseGsap
+    : new Proxy(__hfBaseGsap, {
+        get: function(target, prop, receiver) {
+          if (prop === "timeline") {
+            return function() {
+              return __hfScopeTimeline(target.timeline.apply(target, arguments));
+            };
+          }
+          if (prop === "to" || prop === "from" || prop === "fromTo" || prop === "set") {
+            return function(firstArg) {
+              var args = Array.prototype.slice.call(arguments);
+              args[0] = __hfResolveGsapTarget(firstArg);
+              return target[prop].apply(target, args);
+            };
+          }
+          if (prop === "utils" && target.utils && typeof Proxy === "function") {
+            return new Proxy(target.utils, {
+              get: function(utilsTarget, utilsProp, utilsReceiver) {
+                if (utilsProp === "toArray") {
+                  return function(firstArg) {
+                    var args = Array.prototype.slice.call(arguments);
+                    args[0] = __hfResolveGsapTarget(firstArg);
+                    return utilsTarget.toArray.apply(utilsTarget, args);
+                  };
+                }
+                if (utilsProp === "selector") {
+                  return function(base) {
+                    var baseEl = typeof base === "string" ? __hfQueryOne(base) : base;
+                    var root = baseEl || __hfFindRoot();
+                    return function(selector) {
+                      if (!root || typeof selector !== "string") return [];
+                      return Array.prototype.filter.call(
+                        window.document.querySelectorAll(__hfNormalizeSelector(selector)),
+                        function(node) {
+                          return node === root || (typeof root.contains === "function" && root.contains(node));
+                        },
+                      );
+                    };
+                  };
+                }
+                var value = Reflect.get(utilsTarget, utilsProp, utilsTarget);
+                return typeof value === "function" ? value.bind(utilsTarget) : value;
+              },
+            });
+          }
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+  var __hfBaseHyperframes = window.__hyperframes;
+  var __hfScopedHyperframes = !__hfBaseHyperframes
+    ? __hfBaseHyperframes
+    : Object.assign({}, __hfBaseHyperframes, {
+        assetUrl: function(path) {
+          var page = window.document.baseURI;
+          return new URL(path, __hfCompositionSrc ? new URL(__hfCompositionSrc, page) : page).href;
+        },
+        getVariables: function() {
+          var byComp = window.__hfVariablesByComp;
+          var scoped = byComp && __hfTimelineCompId ? byComp[__hfTimelineCompId] : null;
+          return scoped ? Object.assign({}, scoped) : {};
+        },
+      });
+  var __hfRun = function() {
+    try {
+      (function(document, gsap, window, __hyperframes) {
+
+    (() => {
+      const id = "01-voice-not-approval";
+      const states = [
+        { t: 0, el: document.getElementById(`${id}-opening`) },
+        { t: 0.6, el: document.getElementById(`${id}-middle`) },
+        { t: 1.5, el: document.getElementById(`${id}-resolve`) },
+      ];
+      const tl = gsap.timeline({ paused: true });
+      const driver = { t: 0 };
+      let current = 0;
+
+      function stateAt(t) {
+        for (let i = states.length - 1; i >= 0; i--) {
+          if (t >= states[i].t) return i;
+        }
+        return 0;
+      }
+
+      tl.to(driver, {
+        t: 2.283,
+        duration: 2.283,
+        ease: "none",
+        onUpdate: () => {
+          const next = stateAt(driver.t);
+          if (next === current) return;
+          states[current].el.style.visibility = "hidden";
+          states[next].el.style.visibility = "visible";
+          current = next;
+        },
+      }, 0);
+
+      const parts = ["Vigil", "Voice"];
+      let cue = 1.62;
+      parts.forEach((part, i) => {
+        tl.fromTo(document.getElementById(`${id}-brand-${i ? "b" : "a"}`),
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.18, ease: "power2.out" }, cue);
+        cue += 0.08 + part.length * 0.015;
+      });
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines[id] = tl;
+    })();
+  
+      }).call(window, __hfScopedDocument, __hfScopedGsap, __hfScopedWindow, __hfScopedHyperframes);
+    } catch (_err) {
+      console.error(__hfErrorLabel, __hfCompId, _err);
+    }
+  };
+  __hfFindRoot();
+  __hfRun();
+})();</script><script data-hf-scene="02-local-evidence">(function(){
+  var __hfCompId = "02-local-evidence";
+  var __hfTimelineCompId = "02-local-evidence";
+  var __hfErrorLabel = "[HyperFrames] composition script error:";
+  var __hfAuthoredRootId = "root";
+  var __hfCompositionSrc = "compositions/frames/02-local-evidence.html";
+  var __hfAuthoredRootAttr = "data-hf-authored-id";
+  var __hfEscapeAttr = function(value) {
+    return (value + "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  };
+  var __hfRootSelector = "[data-composition-id=\"02-local-evidence\"]" || (__hfCompId
+    ? '[data-composition-id="' + __hfEscapeAttr(__hfCompId) + '"]'
+    : "");
+  var __hfRoot = null;
+  var __hfRootSelectorPattern = "\\[\\s*data-composition-id\\s*=\\s*(?:\"02-local-evidence\"|'02-local-evidence')\\s*\\]";
+  var __hfTimingSelectorPattern = "\\s*\\[\\s*data-(?:start|duration)\\s*=\\s*(?:\"[^\"]*\"|'[^']*')\\s*\\]";
+  var __hfAuthoredRootIdForms = ["root"];
+  var __hfAuthoredRootSelector = __hfAuthoredRootId
+    ? "[" + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(__hfAuthoredRootId) + '"]'
+    : "";
+  var __hfIsSelectorNameChar = function(char) {
+    return !!char && /[\w-]/.test(char);
+  };
+  var __hfReplaceAuthoredRootIdSelectors = function(selector) {
+    if (!__hfAuthoredRootSelector || !__hfAuthoredRootIdForms.length || typeof selector !== "string") {
+      return selector;
+    }
+    var result = "";
+    var bracketDepth = 0;
+    var quote = null;
+    for (var index = 0; index < selector.length; index += 1) {
+      var char = selector[index];
+      var previousChar = index > 0 ? selector[index - 1] : "";
+      if (quote) {
+        result += char;
+        if (char === quote && previousChar !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        result += char;
+        continue;
+      }
+      if (char === "[") {
+        bracketDepth += 1;
+        result += char;
+        continue;
+      }
+      if (char === "]") {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        result += char;
+        continue;
+      }
+      if (char === "#" && bracketDepth === 0) {
+        var matchedForm = null;
+        for (var formIndex = 0; formIndex < __hfAuthoredRootIdForms.length; formIndex += 1) {
+          var form = __hfAuthoredRootIdForms[formIndex];
+          if (selector.slice(index + 1, index + 1 + form.length) === form) {
+            matchedForm = form;
+            break;
+          }
+        }
+        if (matchedForm) {
+          var nextChar = selector[index + 1 + matchedForm.length];
+          if (!__hfIsSelectorNameChar(nextChar)) {
+            result += __hfAuthoredRootSelector;
+            index += matchedForm.length;
+            continue;
+          }
+        }
+      }
+      result += char;
+    }
+    return result;
+  };
+  var __hfNormalizeSelector = function(selector) {
+    if (!__hfCompId || typeof selector !== "string") return selector;
+    var normalized = selector
+      .replace(new RegExp(__hfRootSelectorPattern + '(?:' + __hfTimingSelectorPattern + ')+', 'g'), __hfRootSelector)
+      .replace(new RegExp('(?:' + __hfTimingSelectorPattern + ')+' + __hfRootSelectorPattern, 'g'), __hfRootSelector);
+    if (__hfAuthoredRootSelector) {
+      normalized = __hfReplaceAuthoredRootIdSelectors(normalized);
+    }
+    return normalized;
+  };
+  var __hfFindRoot = function() {
+    if (!__hfRoot && __hfRootSelector) {
+      __hfRoot = window.document.querySelector(__hfRootSelector);
+    }
+    return __hfRoot;
+  };
+  var __hfContains = function(node) {
+    var root = __hfFindRoot();
+    return !root || node === root || root.contains(node);
+  };
+  var __hfQueryAll = function(selector) {
+    var root = __hfFindRoot();
+    if (!root || typeof selector !== "string") {
+      return window.document.querySelectorAll(selector);
+    }
+    return Array.prototype.filter.call(window.document.querySelectorAll(__hfNormalizeSelector(selector)), function(node) {
+      return __hfContains(node);
+    });
+  };
+  var __hfQueryOne = function(selector) {
+    var matches = __hfQueryAll(selector);
+    return matches[0] || null;
+  };
+  var __hfGetElementById = function(id) {
+    var found = window.document.getElementById(id);
+    if (found && __hfContains(found)) return found;
+    var root = __hfFindRoot();
+    if (!root) return found || null;
+    var idValue = id + "";
+    if (__hfAuthoredRootId && __hfAuthoredRootId === idValue && root.getAttribute && root.getAttribute(__hfAuthoredRootAttr) === idValue) {
+      return root;
+    }
+    if (root.id === idValue) return root;
+    if (typeof root.querySelector !== "function") return null;
+    try {
+      var authoredRootMatch = root.querySelector('[' + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(idValue) + '"]');
+      if (authoredRootMatch) return authoredRootMatch;
+    } catch {}
+    if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+      try {
+        return root.querySelector("#" + CSS.escape(idValue)) || null;
+      } catch {}
+    }
+    try {
+      return root.querySelector('[id="' + __hfEscapeAttr(idValue) + '"]') || null;
+    } catch {}
+    return null;
+  };
+  var __hfScopedDocument = typeof Proxy === "function"
+    ? new Proxy(window.document, {
+        get: function(target, prop, receiver) {
+          if (prop === "querySelector") return __hfQueryOne;
+          if (prop === "querySelectorAll") return __hfQueryAll;
+          if (prop === "getElementById") return __hfGetElementById;
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      })
+    : window.document;
+  var __hfTimelineRegistryProxy = null;
+  var __hfGetTimelineRegistry = function() {
+    window.__timelines = window.__timelines || {};
+    if (!__hfCompId || __hfCompId === __hfTimelineCompId || typeof Proxy !== "function") {
+      return window.__timelines;
+    }
+    if (!__hfTimelineRegistryProxy) {
+      __hfTimelineRegistryProxy = new Proxy(window.__timelines, {
+        get: function(target, prop, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.get(target, prop, target);
+          }
+          var authoredValue = Reflect.get(target, prop, target);
+          return authoredValue === undefined
+            ? Reflect.get(target, __hfTimelineCompId, target)
+            : authoredValue;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.set(target, prop, value, target);
+          }
+          // The authored node remains in the compiled DOM when its local id
+          // differs from the runtime mount id, so readiness legitimately sees
+          // both compositions. Publish the same timeline under both identities
+          // instead of replacing one with the other.
+          var authoredSet = Reflect.set(target, __hfCompId, value, target);
+          var runtimeSet = Reflect.set(target, __hfTimelineCompId, value, target);
+          return authoredSet && runtimeSet;
+        },
+      });
+    }
+    return __hfTimelineRegistryProxy;
+  };
+  var __hfScopedWindow = typeof Proxy === "function"
+    ? new Proxy(window, {
+        get: function(target, prop, receiver) {
+          if (prop === "__timelines") return __hfGetTimelineRegistry();
+          // Inside a sub-composition, __hyperframes is passed as a bare script
+          // param bound to the SCOPED variant (per-comp getVariables). But
+          // authors routinely write the documented window.__hyperframes.
+          // getVariables() form, which would otherwise fall through to the host
+          // page's base __hyperframes and return the WRONG (or empty) variables
+          // for this instance. Route it to the scoped variant too so both
+          // spellings resolve to this composition's own variables.
+          // (__hfScopedHyperframes is a hoisted var assigned below, before any
+          // sub-comp script -- the only code that reads this -- runs.)
+          if (prop === "__hyperframes") return __hfScopedHyperframes;
+          // Native window methods must stay bound to the real window. Handed
+          // back unbound, "this" at call time is this Proxy and Chrome rejects
+          // it with "Illegal invocation", which broke window.addEventListener,
+          // setTimeout, matchMedia and getComputedStyle inside every
+          // sub-composition -- including the window.addEventListener("hf-seek",
+          // ...) form the Three.js and TypeGPU adapters document. The sibling
+          // document and gsap proxies here already bind.
+          //
+          // Only bind non-constructors. Function.prototype.bind drops static
+          // members, so binding a class exposed on window (window.Texts and
+          // friends) would silently strip its statics. Built-in methods have
+          // no .prototype; classes and constructor functions do.
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" && value.prototype === undefined
+            ? value.bind(target)
+            : value;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop === "__timelines") {
+            // Common authoring boilerplate assigns the registry back to
+            // itself (window.__timelines = window.__timelines || {}). The
+            // getter above returns our proxy; do not replace the canonical
+            // registry with that proxy or later wrappers will stack proxies.
+            if (value === __hfTimelineRegistryProxy) return true;
+            target.__timelines = value || {};
+            __hfTimelineRegistryProxy = null;
+            return true;
+          }
+          return Reflect.set(target, prop, value, target);
+        },
+      })
+    : window;
+  var __hfResolveGsapTarget = function(target) {
+    if (typeof target === "string") return __hfQueryAll(target);
+    if (!Array.isArray(target)) return target;
+    return target.reduce(function(resolved, item) {
+      if (typeof item === "string") {
+        return resolved.concat(Array.prototype.slice.call(__hfQueryAll(item)));
+      }
+      resolved.push(item);
+      return resolved;
+    }, []);
+  };
+  var __hfScopeTimeline = function(timeline) {
+    if (!timeline || timeline.__hfScopedCompositionRoot === __hfFindRoot()) return timeline;
+    ["to", "from", "fromTo", "set"].forEach(function(method) {
+      var original = timeline[method];
+      if (typeof original !== "function") return;
+      timeline[method] = function(target) {
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = __hfResolveGsapTarget(target);
+        return original.apply(timeline, args);
+      };
+    });
+    try {
+      Object.defineProperty(timeline, "__hfScopedCompositionRoot", {
+        value: __hfFindRoot(),
+        configurable: true,
+      });
+    } catch {
+      // Best-effort: timelines coming from user code may have a frozen target
+      // or a non-extensible defineProperty path. Swallow — the scoped root
+      // is an enrichment, not a correctness invariant for playback.
+    }
+    return timeline;
+  };
+  var __hfBaseGsap = typeof gsap === "undefined" ? window.gsap : gsap;
+  var __hfScopedGsap = !__hfBaseGsap || typeof Proxy !== "function"
+    ? __hfBaseGsap
+    : new Proxy(__hfBaseGsap, {
+        get: function(target, prop, receiver) {
+          if (prop === "timeline") {
+            return function() {
+              return __hfScopeTimeline(target.timeline.apply(target, arguments));
+            };
+          }
+          if (prop === "to" || prop === "from" || prop === "fromTo" || prop === "set") {
+            return function(firstArg) {
+              var args = Array.prototype.slice.call(arguments);
+              args[0] = __hfResolveGsapTarget(firstArg);
+              return target[prop].apply(target, args);
+            };
+          }
+          if (prop === "utils" && target.utils && typeof Proxy === "function") {
+            return new Proxy(target.utils, {
+              get: function(utilsTarget, utilsProp, utilsReceiver) {
+                if (utilsProp === "toArray") {
+                  return function(firstArg) {
+                    var args = Array.prototype.slice.call(arguments);
+                    args[0] = __hfResolveGsapTarget(firstArg);
+                    return utilsTarget.toArray.apply(utilsTarget, args);
+                  };
+                }
+                if (utilsProp === "selector") {
+                  return function(base) {
+                    var baseEl = typeof base === "string" ? __hfQueryOne(base) : base;
+                    var root = baseEl || __hfFindRoot();
+                    return function(selector) {
+                      if (!root || typeof selector !== "string") return [];
+                      return Array.prototype.filter.call(
+                        window.document.querySelectorAll(__hfNormalizeSelector(selector)),
+                        function(node) {
+                          return node === root || (typeof root.contains === "function" && root.contains(node));
+                        },
+                      );
+                    };
+                  };
+                }
+                var value = Reflect.get(utilsTarget, utilsProp, utilsTarget);
+                return typeof value === "function" ? value.bind(utilsTarget) : value;
+              },
+            });
+          }
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+  var __hfBaseHyperframes = window.__hyperframes;
+  var __hfScopedHyperframes = !__hfBaseHyperframes
+    ? __hfBaseHyperframes
+    : Object.assign({}, __hfBaseHyperframes, {
+        assetUrl: function(path) {
+          var page = window.document.baseURI;
+          return new URL(path, __hfCompositionSrc ? new URL(__hfCompositionSrc, page) : page).href;
+        },
+        getVariables: function() {
+          var byComp = window.__hfVariablesByComp;
+          var scoped = byComp && __hfTimelineCompId ? byComp[__hfTimelineCompId] : null;
+          return scoped ? Object.assign({}, scoped) : {};
+        },
+      });
+  var __hfRun = function() {
+    try {
+      (function(document, gsap, window, __hyperframes) {
+
+    (() => {
+      const root = document.querySelector('[data-composition-id="02-local-evidence"]');
+      const surface = root.querySelector('[id="02-local-evidence-surface"]');
+      const world = root.querySelector('[id="02-local-evidence-world"]');
+      const lowPane = root.querySelector('[id="02-local-evidence-low-pane"]');
+      const actionPane = root.querySelector('[id="02-local-evidence-action-pane"]');
+      const kicker = root.querySelector('[id="02-local-evidence-kicker"]');
+      const cam = { scale: 1, x: 0, y: 0 };
+      const applyCamera = () => {
+        world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
+      };
+      applyCamera();
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines['02-local-evidence'] = tl;
+
+      tl.fromTo(surface, { x: 160, opacity: 0 }, { x: 0, opacity: 1, duration: 0.72, ease: 'power3.out' }, 0);
+      tl.to(cam, { y: -800, duration: 1.92, ease: 'power2.inOut', onUpdate: applyCamera }, 1.5);
+
+      // The final screen state is an instant cut to two measured crops of the same capture.
+      const states = [{ t: 0, text: '01 / EVIDENCE' }, { t: 3.5, text: '02 / ACTION' }];
+      const driver = { t: 0 };
+      tl.to(driver, {
+        t: 5.141,
+        duration: 5.141,
+        ease: 'none',
+        onUpdate: () => {
+          let state = states[0];
+          for (let i = states.length - 1; i >= 0; i--) {
+            if (driver.t >= states[i].t) { state = states[i]; break; }
+          }
+          kicker.textContent = state.text;
+        },
+      }, 0);
+      tl.fromTo(lowPane, { x: -24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.28, ease: 'power2.out' }, 3.5);
+      tl.fromTo(actionPane, { x: 24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.28, ease: 'power2.out' }, 3.5);
+    })();
+  
+      }).call(window, __hfScopedDocument, __hfScopedGsap, __hfScopedWindow, __hfScopedHyperframes);
+    } catch (_err) {
+      console.error(__hfErrorLabel, __hfCompId, _err);
+    }
+  };
+  __hfFindRoot();
+  __hfRun();
+})();</script><script data-hf-scene="03-independent-verification">(function(){
+  var __hfCompId = "03-independent-verification";
+  var __hfTimelineCompId = "03-independent-verification";
+  var __hfErrorLabel = "[HyperFrames] composition script error:";
+  var __hfAuthoredRootId = "root";
+  var __hfCompositionSrc = "compositions/frames/03-independent-verification.html";
+  var __hfAuthoredRootAttr = "data-hf-authored-id";
+  var __hfEscapeAttr = function(value) {
+    return (value + "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  };
+  var __hfRootSelector = "[data-composition-id=\"03-independent-verification\"]" || (__hfCompId
+    ? '[data-composition-id="' + __hfEscapeAttr(__hfCompId) + '"]'
+    : "");
+  var __hfRoot = null;
+  var __hfRootSelectorPattern = "\\[\\s*data-composition-id\\s*=\\s*(?:\"03-independent-verification\"|'03-independent-verification')\\s*\\]";
+  var __hfTimingSelectorPattern = "\\s*\\[\\s*data-(?:start|duration)\\s*=\\s*(?:\"[^\"]*\"|'[^']*')\\s*\\]";
+  var __hfAuthoredRootIdForms = ["root"];
+  var __hfAuthoredRootSelector = __hfAuthoredRootId
+    ? "[" + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(__hfAuthoredRootId) + '"]'
+    : "";
+  var __hfIsSelectorNameChar = function(char) {
+    return !!char && /[\w-]/.test(char);
+  };
+  var __hfReplaceAuthoredRootIdSelectors = function(selector) {
+    if (!__hfAuthoredRootSelector || !__hfAuthoredRootIdForms.length || typeof selector !== "string") {
+      return selector;
+    }
+    var result = "";
+    var bracketDepth = 0;
+    var quote = null;
+    for (var index = 0; index < selector.length; index += 1) {
+      var char = selector[index];
+      var previousChar = index > 0 ? selector[index - 1] : "";
+      if (quote) {
+        result += char;
+        if (char === quote && previousChar !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        result += char;
+        continue;
+      }
+      if (char === "[") {
+        bracketDepth += 1;
+        result += char;
+        continue;
+      }
+      if (char === "]") {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        result += char;
+        continue;
+      }
+      if (char === "#" && bracketDepth === 0) {
+        var matchedForm = null;
+        for (var formIndex = 0; formIndex < __hfAuthoredRootIdForms.length; formIndex += 1) {
+          var form = __hfAuthoredRootIdForms[formIndex];
+          if (selector.slice(index + 1, index + 1 + form.length) === form) {
+            matchedForm = form;
+            break;
+          }
+        }
+        if (matchedForm) {
+          var nextChar = selector[index + 1 + matchedForm.length];
+          if (!__hfIsSelectorNameChar(nextChar)) {
+            result += __hfAuthoredRootSelector;
+            index += matchedForm.length;
+            continue;
+          }
+        }
+      }
+      result += char;
+    }
+    return result;
+  };
+  var __hfNormalizeSelector = function(selector) {
+    if (!__hfCompId || typeof selector !== "string") return selector;
+    var normalized = selector
+      .replace(new RegExp(__hfRootSelectorPattern + '(?:' + __hfTimingSelectorPattern + ')+', 'g'), __hfRootSelector)
+      .replace(new RegExp('(?:' + __hfTimingSelectorPattern + ')+' + __hfRootSelectorPattern, 'g'), __hfRootSelector);
+    if (__hfAuthoredRootSelector) {
+      normalized = __hfReplaceAuthoredRootIdSelectors(normalized);
+    }
+    return normalized;
+  };
+  var __hfFindRoot = function() {
+    if (!__hfRoot && __hfRootSelector) {
+      __hfRoot = window.document.querySelector(__hfRootSelector);
+    }
+    return __hfRoot;
+  };
+  var __hfContains = function(node) {
+    var root = __hfFindRoot();
+    return !root || node === root || root.contains(node);
+  };
+  var __hfQueryAll = function(selector) {
+    var root = __hfFindRoot();
+    if (!root || typeof selector !== "string") {
+      return window.document.querySelectorAll(selector);
+    }
+    return Array.prototype.filter.call(window.document.querySelectorAll(__hfNormalizeSelector(selector)), function(node) {
+      return __hfContains(node);
+    });
+  };
+  var __hfQueryOne = function(selector) {
+    var matches = __hfQueryAll(selector);
+    return matches[0] || null;
+  };
+  var __hfGetElementById = function(id) {
+    var found = window.document.getElementById(id);
+    if (found && __hfContains(found)) return found;
+    var root = __hfFindRoot();
+    if (!root) return found || null;
+    var idValue = id + "";
+    if (__hfAuthoredRootId && __hfAuthoredRootId === idValue && root.getAttribute && root.getAttribute(__hfAuthoredRootAttr) === idValue) {
+      return root;
+    }
+    if (root.id === idValue) return root;
+    if (typeof root.querySelector !== "function") return null;
+    try {
+      var authoredRootMatch = root.querySelector('[' + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(idValue) + '"]');
+      if (authoredRootMatch) return authoredRootMatch;
+    } catch {}
+    if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+      try {
+        return root.querySelector("#" + CSS.escape(idValue)) || null;
+      } catch {}
+    }
+    try {
+      return root.querySelector('[id="' + __hfEscapeAttr(idValue) + '"]') || null;
+    } catch {}
+    return null;
+  };
+  var __hfScopedDocument = typeof Proxy === "function"
+    ? new Proxy(window.document, {
+        get: function(target, prop, receiver) {
+          if (prop === "querySelector") return __hfQueryOne;
+          if (prop === "querySelectorAll") return __hfQueryAll;
+          if (prop === "getElementById") return __hfGetElementById;
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      })
+    : window.document;
+  var __hfTimelineRegistryProxy = null;
+  var __hfGetTimelineRegistry = function() {
+    window.__timelines = window.__timelines || {};
+    if (!__hfCompId || __hfCompId === __hfTimelineCompId || typeof Proxy !== "function") {
+      return window.__timelines;
+    }
+    if (!__hfTimelineRegistryProxy) {
+      __hfTimelineRegistryProxy = new Proxy(window.__timelines, {
+        get: function(target, prop, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.get(target, prop, target);
+          }
+          var authoredValue = Reflect.get(target, prop, target);
+          return authoredValue === undefined
+            ? Reflect.get(target, __hfTimelineCompId, target)
+            : authoredValue;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.set(target, prop, value, target);
+          }
+          // The authored node remains in the compiled DOM when its local id
+          // differs from the runtime mount id, so readiness legitimately sees
+          // both compositions. Publish the same timeline under both identities
+          // instead of replacing one with the other.
+          var authoredSet = Reflect.set(target, __hfCompId, value, target);
+          var runtimeSet = Reflect.set(target, __hfTimelineCompId, value, target);
+          return authoredSet && runtimeSet;
+        },
+      });
+    }
+    return __hfTimelineRegistryProxy;
+  };
+  var __hfScopedWindow = typeof Proxy === "function"
+    ? new Proxy(window, {
+        get: function(target, prop, receiver) {
+          if (prop === "__timelines") return __hfGetTimelineRegistry();
+          // Inside a sub-composition, __hyperframes is passed as a bare script
+          // param bound to the SCOPED variant (per-comp getVariables). But
+          // authors routinely write the documented window.__hyperframes.
+          // getVariables() form, which would otherwise fall through to the host
+          // page's base __hyperframes and return the WRONG (or empty) variables
+          // for this instance. Route it to the scoped variant too so both
+          // spellings resolve to this composition's own variables.
+          // (__hfScopedHyperframes is a hoisted var assigned below, before any
+          // sub-comp script -- the only code that reads this -- runs.)
+          if (prop === "__hyperframes") return __hfScopedHyperframes;
+          // Native window methods must stay bound to the real window. Handed
+          // back unbound, "this" at call time is this Proxy and Chrome rejects
+          // it with "Illegal invocation", which broke window.addEventListener,
+          // setTimeout, matchMedia and getComputedStyle inside every
+          // sub-composition -- including the window.addEventListener("hf-seek",
+          // ...) form the Three.js and TypeGPU adapters document. The sibling
+          // document and gsap proxies here already bind.
+          //
+          // Only bind non-constructors. Function.prototype.bind drops static
+          // members, so binding a class exposed on window (window.Texts and
+          // friends) would silently strip its statics. Built-in methods have
+          // no .prototype; classes and constructor functions do.
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" && value.prototype === undefined
+            ? value.bind(target)
+            : value;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop === "__timelines") {
+            // Common authoring boilerplate assigns the registry back to
+            // itself (window.__timelines = window.__timelines || {}). The
+            // getter above returns our proxy; do not replace the canonical
+            // registry with that proxy or later wrappers will stack proxies.
+            if (value === __hfTimelineRegistryProxy) return true;
+            target.__timelines = value || {};
+            __hfTimelineRegistryProxy = null;
+            return true;
+          }
+          return Reflect.set(target, prop, value, target);
+        },
+      })
+    : window;
+  var __hfResolveGsapTarget = function(target) {
+    if (typeof target === "string") return __hfQueryAll(target);
+    if (!Array.isArray(target)) return target;
+    return target.reduce(function(resolved, item) {
+      if (typeof item === "string") {
+        return resolved.concat(Array.prototype.slice.call(__hfQueryAll(item)));
+      }
+      resolved.push(item);
+      return resolved;
+    }, []);
+  };
+  var __hfScopeTimeline = function(timeline) {
+    if (!timeline || timeline.__hfScopedCompositionRoot === __hfFindRoot()) return timeline;
+    ["to", "from", "fromTo", "set"].forEach(function(method) {
+      var original = timeline[method];
+      if (typeof original !== "function") return;
+      timeline[method] = function(target) {
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = __hfResolveGsapTarget(target);
+        return original.apply(timeline, args);
+      };
+    });
+    try {
+      Object.defineProperty(timeline, "__hfScopedCompositionRoot", {
+        value: __hfFindRoot(),
+        configurable: true,
+      });
+    } catch {
+      // Best-effort: timelines coming from user code may have a frozen target
+      // or a non-extensible defineProperty path. Swallow — the scoped root
+      // is an enrichment, not a correctness invariant for playback.
+    }
+    return timeline;
+  };
+  var __hfBaseGsap = typeof gsap === "undefined" ? window.gsap : gsap;
+  var __hfScopedGsap = !__hfBaseGsap || typeof Proxy !== "function"
+    ? __hfBaseGsap
+    : new Proxy(__hfBaseGsap, {
+        get: function(target, prop, receiver) {
+          if (prop === "timeline") {
+            return function() {
+              return __hfScopeTimeline(target.timeline.apply(target, arguments));
+            };
+          }
+          if (prop === "to" || prop === "from" || prop === "fromTo" || prop === "set") {
+            return function(firstArg) {
+              var args = Array.prototype.slice.call(arguments);
+              args[0] = __hfResolveGsapTarget(firstArg);
+              return target[prop].apply(target, args);
+            };
+          }
+          if (prop === "utils" && target.utils && typeof Proxy === "function") {
+            return new Proxy(target.utils, {
+              get: function(utilsTarget, utilsProp, utilsReceiver) {
+                if (utilsProp === "toArray") {
+                  return function(firstArg) {
+                    var args = Array.prototype.slice.call(arguments);
+                    args[0] = __hfResolveGsapTarget(firstArg);
+                    return utilsTarget.toArray.apply(utilsTarget, args);
+                  };
+                }
+                if (utilsProp === "selector") {
+                  return function(base) {
+                    var baseEl = typeof base === "string" ? __hfQueryOne(base) : base;
+                    var root = baseEl || __hfFindRoot();
+                    return function(selector) {
+                      if (!root || typeof selector !== "string") return [];
+                      return Array.prototype.filter.call(
+                        window.document.querySelectorAll(__hfNormalizeSelector(selector)),
+                        function(node) {
+                          return node === root || (typeof root.contains === "function" && root.contains(node));
+                        },
+                      );
+                    };
+                  };
+                }
+                var value = Reflect.get(utilsTarget, utilsProp, utilsTarget);
+                return typeof value === "function" ? value.bind(utilsTarget) : value;
+              },
+            });
+          }
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+  var __hfBaseHyperframes = window.__hyperframes;
+  var __hfScopedHyperframes = !__hfBaseHyperframes
+    ? __hfBaseHyperframes
+    : Object.assign({}, __hfBaseHyperframes, {
+        assetUrl: function(path) {
+          var page = window.document.baseURI;
+          return new URL(path, __hfCompositionSrc ? new URL(__hfCompositionSrc, page) : page).href;
+        },
+        getVariables: function() {
+          var byComp = window.__hfVariablesByComp;
+          var scoped = byComp && __hfTimelineCompId ? byComp[__hfTimelineCompId] : null;
+          return scoped ? Object.assign({}, scoped) : {};
+        },
+      });
+  var __hfRun = function() {
+    try {
+      (function(document, gsap, window, __hyperframes) {
+
+    (() => {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["03-independent-verification"] = tl;
+
+      const risk = document.getElementById("03-independent-verification-risk");
+      const verify = document.getElementById("03-independent-verification-verify");
+      const headline = document.getElementById("03-independent-verification-headline");
+      const kicker = document.getElementById("03-independent-verification-kicker");
+      const words = [...document.getElementById("03-independent-verification-words").querySelectorAll("span")];
+
+      tl.fromTo(risk, { x: -110, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0);
+      tl.fromTo(headline, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0.1);
+      tl.fromTo(verify, { x: 120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.52, ease: "power3.out" }, 1.7);
+
+      const labels = [
+        { t: 0, text: "VOICE EVIDENCE" },
+        { t: 1.7, text: "INDEPENDENT VERIFICATION" }
+      ];
+      const labelClock = { t: 0 };
+      let lastLabel = labels[0].text;
+      tl.to(labelClock, {
+        t: 4.5, duration: 4.5, ease: "none",
+        onUpdate: () => {
+          let current = labels[0].text;
+          for (let i = labels.length - 1; i >= 0; i--) {
+            if (labelClock.t >= labels[i].t) { current = labels[i].text; break; }
+          }
+          if (current !== lastLabel) { kicker.textContent = current; lastLabel = current; }
+        }
+      }, 0);
+
+      tl.to(headline, { y: -95, opacity: 0, duration: 0.32, ease: "power4.in" }, 4.1);
+      const wordStart = 4.61;
+      let elapsed = 0;
+      words.forEach((word) => {
+        const at = wordStart + elapsed;
+        tl.fromTo(word, { x: 68, opacity: 0 }, { x: 0, opacity: 1, duration: 0.32, ease: "power4.out" }, at);
+        elapsed += 0.24 + word.textContent.length * 0.03;
+      });
+      tl.to(words, { opacity: 0, duration: 0.25, ease: "power2.in" }, 6.15);
+    })();
+  
+      }).call(window, __hfScopedDocument, __hfScopedGsap, __hfScopedWindow, __hfScopedHyperframes);
+    } catch (_err) {
+      console.error(__hfErrorLabel, __hfCompId, _err);
+    }
+  };
+  __hfFindRoot();
+  __hfRun();
+})();</script><script data-hf-scene="04-high-blocked">(function(){
+  var __hfCompId = "04-high-blocked";
+  var __hfTimelineCompId = "04-high-blocked";
+  var __hfErrorLabel = "[HyperFrames] composition script error:";
+  var __hfAuthoredRootId = "root";
+  var __hfCompositionSrc = "compositions/frames/04-high-blocked.html";
+  var __hfAuthoredRootAttr = "data-hf-authored-id";
+  var __hfEscapeAttr = function(value) {
+    return (value + "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  };
+  var __hfRootSelector = "[data-composition-id=\"04-high-blocked\"]" || (__hfCompId
+    ? '[data-composition-id="' + __hfEscapeAttr(__hfCompId) + '"]'
+    : "");
+  var __hfRoot = null;
+  var __hfRootSelectorPattern = "\\[\\s*data-composition-id\\s*=\\s*(?:\"04-high-blocked\"|'04-high-blocked')\\s*\\]";
+  var __hfTimingSelectorPattern = "\\s*\\[\\s*data-(?:start|duration)\\s*=\\s*(?:\"[^\"]*\"|'[^']*')\\s*\\]";
+  var __hfAuthoredRootIdForms = ["root"];
+  var __hfAuthoredRootSelector = __hfAuthoredRootId
+    ? "[" + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(__hfAuthoredRootId) + '"]'
+    : "";
+  var __hfIsSelectorNameChar = function(char) {
+    return !!char && /[\w-]/.test(char);
+  };
+  var __hfReplaceAuthoredRootIdSelectors = function(selector) {
+    if (!__hfAuthoredRootSelector || !__hfAuthoredRootIdForms.length || typeof selector !== "string") {
+      return selector;
+    }
+    var result = "";
+    var bracketDepth = 0;
+    var quote = null;
+    for (var index = 0; index < selector.length; index += 1) {
+      var char = selector[index];
+      var previousChar = index > 0 ? selector[index - 1] : "";
+      if (quote) {
+        result += char;
+        if (char === quote && previousChar !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        result += char;
+        continue;
+      }
+      if (char === "[") {
+        bracketDepth += 1;
+        result += char;
+        continue;
+      }
+      if (char === "]") {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        result += char;
+        continue;
+      }
+      if (char === "#" && bracketDepth === 0) {
+        var matchedForm = null;
+        for (var formIndex = 0; formIndex < __hfAuthoredRootIdForms.length; formIndex += 1) {
+          var form = __hfAuthoredRootIdForms[formIndex];
+          if (selector.slice(index + 1, index + 1 + form.length) === form) {
+            matchedForm = form;
+            break;
+          }
+        }
+        if (matchedForm) {
+          var nextChar = selector[index + 1 + matchedForm.length];
+          if (!__hfIsSelectorNameChar(nextChar)) {
+            result += __hfAuthoredRootSelector;
+            index += matchedForm.length;
+            continue;
+          }
+        }
+      }
+      result += char;
+    }
+    return result;
+  };
+  var __hfNormalizeSelector = function(selector) {
+    if (!__hfCompId || typeof selector !== "string") return selector;
+    var normalized = selector
+      .replace(new RegExp(__hfRootSelectorPattern + '(?:' + __hfTimingSelectorPattern + ')+', 'g'), __hfRootSelector)
+      .replace(new RegExp('(?:' + __hfTimingSelectorPattern + ')+' + __hfRootSelectorPattern, 'g'), __hfRootSelector);
+    if (__hfAuthoredRootSelector) {
+      normalized = __hfReplaceAuthoredRootIdSelectors(normalized);
+    }
+    return normalized;
+  };
+  var __hfFindRoot = function() {
+    if (!__hfRoot && __hfRootSelector) {
+      __hfRoot = window.document.querySelector(__hfRootSelector);
+    }
+    return __hfRoot;
+  };
+  var __hfContains = function(node) {
+    var root = __hfFindRoot();
+    return !root || node === root || root.contains(node);
+  };
+  var __hfQueryAll = function(selector) {
+    var root = __hfFindRoot();
+    if (!root || typeof selector !== "string") {
+      return window.document.querySelectorAll(selector);
+    }
+    return Array.prototype.filter.call(window.document.querySelectorAll(__hfNormalizeSelector(selector)), function(node) {
+      return __hfContains(node);
+    });
+  };
+  var __hfQueryOne = function(selector) {
+    var matches = __hfQueryAll(selector);
+    return matches[0] || null;
+  };
+  var __hfGetElementById = function(id) {
+    var found = window.document.getElementById(id);
+    if (found && __hfContains(found)) return found;
+    var root = __hfFindRoot();
+    if (!root) return found || null;
+    var idValue = id + "";
+    if (__hfAuthoredRootId && __hfAuthoredRootId === idValue && root.getAttribute && root.getAttribute(__hfAuthoredRootAttr) === idValue) {
+      return root;
+    }
+    if (root.id === idValue) return root;
+    if (typeof root.querySelector !== "function") return null;
+    try {
+      var authoredRootMatch = root.querySelector('[' + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(idValue) + '"]');
+      if (authoredRootMatch) return authoredRootMatch;
+    } catch {}
+    if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+      try {
+        return root.querySelector("#" + CSS.escape(idValue)) || null;
+      } catch {}
+    }
+    try {
+      return root.querySelector('[id="' + __hfEscapeAttr(idValue) + '"]') || null;
+    } catch {}
+    return null;
+  };
+  var __hfScopedDocument = typeof Proxy === "function"
+    ? new Proxy(window.document, {
+        get: function(target, prop, receiver) {
+          if (prop === "querySelector") return __hfQueryOne;
+          if (prop === "querySelectorAll") return __hfQueryAll;
+          if (prop === "getElementById") return __hfGetElementById;
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      })
+    : window.document;
+  var __hfTimelineRegistryProxy = null;
+  var __hfGetTimelineRegistry = function() {
+    window.__timelines = window.__timelines || {};
+    if (!__hfCompId || __hfCompId === __hfTimelineCompId || typeof Proxy !== "function") {
+      return window.__timelines;
+    }
+    if (!__hfTimelineRegistryProxy) {
+      __hfTimelineRegistryProxy = new Proxy(window.__timelines, {
+        get: function(target, prop, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.get(target, prop, target);
+          }
+          var authoredValue = Reflect.get(target, prop, target);
+          return authoredValue === undefined
+            ? Reflect.get(target, __hfTimelineCompId, target)
+            : authoredValue;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.set(target, prop, value, target);
+          }
+          // The authored node remains in the compiled DOM when its local id
+          // differs from the runtime mount id, so readiness legitimately sees
+          // both compositions. Publish the same timeline under both identities
+          // instead of replacing one with the other.
+          var authoredSet = Reflect.set(target, __hfCompId, value, target);
+          var runtimeSet = Reflect.set(target, __hfTimelineCompId, value, target);
+          return authoredSet && runtimeSet;
+        },
+      });
+    }
+    return __hfTimelineRegistryProxy;
+  };
+  var __hfScopedWindow = typeof Proxy === "function"
+    ? new Proxy(window, {
+        get: function(target, prop, receiver) {
+          if (prop === "__timelines") return __hfGetTimelineRegistry();
+          // Inside a sub-composition, __hyperframes is passed as a bare script
+          // param bound to the SCOPED variant (per-comp getVariables). But
+          // authors routinely write the documented window.__hyperframes.
+          // getVariables() form, which would otherwise fall through to the host
+          // page's base __hyperframes and return the WRONG (or empty) variables
+          // for this instance. Route it to the scoped variant too so both
+          // spellings resolve to this composition's own variables.
+          // (__hfScopedHyperframes is a hoisted var assigned below, before any
+          // sub-comp script -- the only code that reads this -- runs.)
+          if (prop === "__hyperframes") return __hfScopedHyperframes;
+          // Native window methods must stay bound to the real window. Handed
+          // back unbound, "this" at call time is this Proxy and Chrome rejects
+          // it with "Illegal invocation", which broke window.addEventListener,
+          // setTimeout, matchMedia and getComputedStyle inside every
+          // sub-composition -- including the window.addEventListener("hf-seek",
+          // ...) form the Three.js and TypeGPU adapters document. The sibling
+          // document and gsap proxies here already bind.
+          //
+          // Only bind non-constructors. Function.prototype.bind drops static
+          // members, so binding a class exposed on window (window.Texts and
+          // friends) would silently strip its statics. Built-in methods have
+          // no .prototype; classes and constructor functions do.
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" && value.prototype === undefined
+            ? value.bind(target)
+            : value;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop === "__timelines") {
+            // Common authoring boilerplate assigns the registry back to
+            // itself (window.__timelines = window.__timelines || {}). The
+            // getter above returns our proxy; do not replace the canonical
+            // registry with that proxy or later wrappers will stack proxies.
+            if (value === __hfTimelineRegistryProxy) return true;
+            target.__timelines = value || {};
+            __hfTimelineRegistryProxy = null;
+            return true;
+          }
+          return Reflect.set(target, prop, value, target);
+        },
+      })
+    : window;
+  var __hfResolveGsapTarget = function(target) {
+    if (typeof target === "string") return __hfQueryAll(target);
+    if (!Array.isArray(target)) return target;
+    return target.reduce(function(resolved, item) {
+      if (typeof item === "string") {
+        return resolved.concat(Array.prototype.slice.call(__hfQueryAll(item)));
+      }
+      resolved.push(item);
+      return resolved;
+    }, []);
+  };
+  var __hfScopeTimeline = function(timeline) {
+    if (!timeline || timeline.__hfScopedCompositionRoot === __hfFindRoot()) return timeline;
+    ["to", "from", "fromTo", "set"].forEach(function(method) {
+      var original = timeline[method];
+      if (typeof original !== "function") return;
+      timeline[method] = function(target) {
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = __hfResolveGsapTarget(target);
+        return original.apply(timeline, args);
+      };
+    });
+    try {
+      Object.defineProperty(timeline, "__hfScopedCompositionRoot", {
+        value: __hfFindRoot(),
+        configurable: true,
+      });
+    } catch {
+      // Best-effort: timelines coming from user code may have a frozen target
+      // or a non-extensible defineProperty path. Swallow — the scoped root
+      // is an enrichment, not a correctness invariant for playback.
+    }
+    return timeline;
+  };
+  var __hfBaseGsap = typeof gsap === "undefined" ? window.gsap : gsap;
+  var __hfScopedGsap = !__hfBaseGsap || typeof Proxy !== "function"
+    ? __hfBaseGsap
+    : new Proxy(__hfBaseGsap, {
+        get: function(target, prop, receiver) {
+          if (prop === "timeline") {
+            return function() {
+              return __hfScopeTimeline(target.timeline.apply(target, arguments));
+            };
+          }
+          if (prop === "to" || prop === "from" || prop === "fromTo" || prop === "set") {
+            return function(firstArg) {
+              var args = Array.prototype.slice.call(arguments);
+              args[0] = __hfResolveGsapTarget(firstArg);
+              return target[prop].apply(target, args);
+            };
+          }
+          if (prop === "utils" && target.utils && typeof Proxy === "function") {
+            return new Proxy(target.utils, {
+              get: function(utilsTarget, utilsProp, utilsReceiver) {
+                if (utilsProp === "toArray") {
+                  return function(firstArg) {
+                    var args = Array.prototype.slice.call(arguments);
+                    args[0] = __hfResolveGsapTarget(firstArg);
+                    return utilsTarget.toArray.apply(utilsTarget, args);
+                  };
+                }
+                if (utilsProp === "selector") {
+                  return function(base) {
+                    var baseEl = typeof base === "string" ? __hfQueryOne(base) : base;
+                    var root = baseEl || __hfFindRoot();
+                    return function(selector) {
+                      if (!root || typeof selector !== "string") return [];
+                      return Array.prototype.filter.call(
+                        window.document.querySelectorAll(__hfNormalizeSelector(selector)),
+                        function(node) {
+                          return node === root || (typeof root.contains === "function" && root.contains(node));
+                        },
+                      );
+                    };
+                  };
+                }
+                var value = Reflect.get(utilsTarget, utilsProp, utilsTarget);
+                return typeof value === "function" ? value.bind(utilsTarget) : value;
+              },
+            });
+          }
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+  var __hfBaseHyperframes = window.__hyperframes;
+  var __hfScopedHyperframes = !__hfBaseHyperframes
+    ? __hfBaseHyperframes
+    : Object.assign({}, __hfBaseHyperframes, {
+        assetUrl: function(path) {
+          var page = window.document.baseURI;
+          return new URL(path, __hfCompositionSrc ? new URL(__hfCompositionSrc, page) : page).href;
+        },
+        getVariables: function() {
+          var byComp = window.__hfVariablesByComp;
+          var scoped = byComp && __hfTimelineCompId ? byComp[__hfTimelineCompId] : null;
+          return scoped ? Object.assign({}, scoped) : {};
+        },
+      });
+  var __hfRun = function() {
+    try {
+      (function(document, gsap, window, __hyperframes) {
+
+    (() => {
+      const id = "04-high-blocked";
+      const risk = document.getElementById(`${id}-risk`);
+      const action = document.getElementById(`${id}-action`);
+      const source = document.getElementById(`${id}-source`);
+      const world = document.getElementById(`${id}-world`);
+      const cam = { scale: 1, x: 0, y: 0 };
+      const applyCamera = () => { world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`; };
+      applyCamera();
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(risk, { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.38, ease: "power2.out" }, 0);
+      tl.to(cam, { scale: 1.08, x: 470, duration: 0.45, ease: "power3.inOut", onUpdate: applyCamera }, 0.27);
+      tl.fromTo(action, { opacity: 0, x: 230 }, { opacity: 1, x: 0, duration: 0.31, ease: "power4.out" }, 0.96);
+      tl.to(cam, { scale: 1, x: 0, duration: 0.65, ease: "power3.inOut", onUpdate: applyCamera }, 0.83);
+      tl.fromTo(source, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.55);
+      window.__timelines = window.__timelines || {};
+      window.__timelines[id] = tl;
+    })();
+  
+      }).call(window, __hfScopedDocument, __hfScopedGsap, __hfScopedWindow, __hfScopedHyperframes);
+    } catch (_err) {
+      console.error(__hfErrorLabel, __hfCompId, _err);
+    }
+  };
+  __hfFindRoot();
+  __hfRun();
+})();</script><script data-hf-scene="05-honest-boundary">(function(){
+  var __hfCompId = "05-honest-boundary";
+  var __hfTimelineCompId = "05-honest-boundary";
+  var __hfErrorLabel = "[HyperFrames] composition script error:";
+  var __hfAuthoredRootId = "root";
+  var __hfCompositionSrc = "compositions/frames/05-honest-boundary.html";
+  var __hfAuthoredRootAttr = "data-hf-authored-id";
+  var __hfEscapeAttr = function(value) {
+    return (value + "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  };
+  var __hfRootSelector = "[data-composition-id=\"05-honest-boundary\"]" || (__hfCompId
+    ? '[data-composition-id="' + __hfEscapeAttr(__hfCompId) + '"]'
+    : "");
+  var __hfRoot = null;
+  var __hfRootSelectorPattern = "\\[\\s*data-composition-id\\s*=\\s*(?:\"05-honest-boundary\"|'05-honest-boundary')\\s*\\]";
+  var __hfTimingSelectorPattern = "\\s*\\[\\s*data-(?:start|duration)\\s*=\\s*(?:\"[^\"]*\"|'[^']*')\\s*\\]";
+  var __hfAuthoredRootIdForms = ["root"];
+  var __hfAuthoredRootSelector = __hfAuthoredRootId
+    ? "[" + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(__hfAuthoredRootId) + '"]'
+    : "";
+  var __hfIsSelectorNameChar = function(char) {
+    return !!char && /[\w-]/.test(char);
+  };
+  var __hfReplaceAuthoredRootIdSelectors = function(selector) {
+    if (!__hfAuthoredRootSelector || !__hfAuthoredRootIdForms.length || typeof selector !== "string") {
+      return selector;
+    }
+    var result = "";
+    var bracketDepth = 0;
+    var quote = null;
+    for (var index = 0; index < selector.length; index += 1) {
+      var char = selector[index];
+      var previousChar = index > 0 ? selector[index - 1] : "";
+      if (quote) {
+        result += char;
+        if (char === quote && previousChar !== "\\") {
+          quote = null;
+        }
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        result += char;
+        continue;
+      }
+      if (char === "[") {
+        bracketDepth += 1;
+        result += char;
+        continue;
+      }
+      if (char === "]") {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        result += char;
+        continue;
+      }
+      if (char === "#" && bracketDepth === 0) {
+        var matchedForm = null;
+        for (var formIndex = 0; formIndex < __hfAuthoredRootIdForms.length; formIndex += 1) {
+          var form = __hfAuthoredRootIdForms[formIndex];
+          if (selector.slice(index + 1, index + 1 + form.length) === form) {
+            matchedForm = form;
+            break;
+          }
+        }
+        if (matchedForm) {
+          var nextChar = selector[index + 1 + matchedForm.length];
+          if (!__hfIsSelectorNameChar(nextChar)) {
+            result += __hfAuthoredRootSelector;
+            index += matchedForm.length;
+            continue;
+          }
+        }
+      }
+      result += char;
+    }
+    return result;
+  };
+  var __hfNormalizeSelector = function(selector) {
+    if (!__hfCompId || typeof selector !== "string") return selector;
+    var normalized = selector
+      .replace(new RegExp(__hfRootSelectorPattern + '(?:' + __hfTimingSelectorPattern + ')+', 'g'), __hfRootSelector)
+      .replace(new RegExp('(?:' + __hfTimingSelectorPattern + ')+' + __hfRootSelectorPattern, 'g'), __hfRootSelector);
+    if (__hfAuthoredRootSelector) {
+      normalized = __hfReplaceAuthoredRootIdSelectors(normalized);
+    }
+    return normalized;
+  };
+  var __hfFindRoot = function() {
+    if (!__hfRoot && __hfRootSelector) {
+      __hfRoot = window.document.querySelector(__hfRootSelector);
+    }
+    return __hfRoot;
+  };
+  var __hfContains = function(node) {
+    var root = __hfFindRoot();
+    return !root || node === root || root.contains(node);
+  };
+  var __hfQueryAll = function(selector) {
+    var root = __hfFindRoot();
+    if (!root || typeof selector !== "string") {
+      return window.document.querySelectorAll(selector);
+    }
+    return Array.prototype.filter.call(window.document.querySelectorAll(__hfNormalizeSelector(selector)), function(node) {
+      return __hfContains(node);
+    });
+  };
+  var __hfQueryOne = function(selector) {
+    var matches = __hfQueryAll(selector);
+    return matches[0] || null;
+  };
+  var __hfGetElementById = function(id) {
+    var found = window.document.getElementById(id);
+    if (found && __hfContains(found)) return found;
+    var root = __hfFindRoot();
+    if (!root) return found || null;
+    var idValue = id + "";
+    if (__hfAuthoredRootId && __hfAuthoredRootId === idValue && root.getAttribute && root.getAttribute(__hfAuthoredRootAttr) === idValue) {
+      return root;
+    }
+    if (root.id === idValue) return root;
+    if (typeof root.querySelector !== "function") return null;
+    try {
+      var authoredRootMatch = root.querySelector('[' + __hfAuthoredRootAttr + '="' + __hfEscapeAttr(idValue) + '"]');
+      if (authoredRootMatch) return authoredRootMatch;
+    } catch {}
+    if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+      try {
+        return root.querySelector("#" + CSS.escape(idValue)) || null;
+      } catch {}
+    }
+    try {
+      return root.querySelector('[id="' + __hfEscapeAttr(idValue) + '"]') || null;
+    } catch {}
+    return null;
+  };
+  var __hfScopedDocument = typeof Proxy === "function"
+    ? new Proxy(window.document, {
+        get: function(target, prop, receiver) {
+          if (prop === "querySelector") return __hfQueryOne;
+          if (prop === "querySelectorAll") return __hfQueryAll;
+          if (prop === "getElementById") return __hfGetElementById;
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      })
+    : window.document;
+  var __hfTimelineRegistryProxy = null;
+  var __hfGetTimelineRegistry = function() {
+    window.__timelines = window.__timelines || {};
+    if (!__hfCompId || __hfCompId === __hfTimelineCompId || typeof Proxy !== "function") {
+      return window.__timelines;
+    }
+    if (!__hfTimelineRegistryProxy) {
+      __hfTimelineRegistryProxy = new Proxy(window.__timelines, {
+        get: function(target, prop, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.get(target, prop, target);
+          }
+          var authoredValue = Reflect.get(target, prop, target);
+          return authoredValue === undefined
+            ? Reflect.get(target, __hfTimelineCompId, target)
+            : authoredValue;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop !== __hfCompId) {
+            return Reflect.set(target, prop, value, target);
+          }
+          // The authored node remains in the compiled DOM when its local id
+          // differs from the runtime mount id, so readiness legitimately sees
+          // both compositions. Publish the same timeline under both identities
+          // instead of replacing one with the other.
+          var authoredSet = Reflect.set(target, __hfCompId, value, target);
+          var runtimeSet = Reflect.set(target, __hfTimelineCompId, value, target);
+          return authoredSet && runtimeSet;
+        },
+      });
+    }
+    return __hfTimelineRegistryProxy;
+  };
+  var __hfScopedWindow = typeof Proxy === "function"
+    ? new Proxy(window, {
+        get: function(target, prop, receiver) {
+          if (prop === "__timelines") return __hfGetTimelineRegistry();
+          // Inside a sub-composition, __hyperframes is passed as a bare script
+          // param bound to the SCOPED variant (per-comp getVariables). But
+          // authors routinely write the documented window.__hyperframes.
+          // getVariables() form, which would otherwise fall through to the host
+          // page's base __hyperframes and return the WRONG (or empty) variables
+          // for this instance. Route it to the scoped variant too so both
+          // spellings resolve to this composition's own variables.
+          // (__hfScopedHyperframes is a hoisted var assigned below, before any
+          // sub-comp script -- the only code that reads this -- runs.)
+          if (prop === "__hyperframes") return __hfScopedHyperframes;
+          // Native window methods must stay bound to the real window. Handed
+          // back unbound, "this" at call time is this Proxy and Chrome rejects
+          // it with "Illegal invocation", which broke window.addEventListener,
+          // setTimeout, matchMedia and getComputedStyle inside every
+          // sub-composition -- including the window.addEventListener("hf-seek",
+          // ...) form the Three.js and TypeGPU adapters document. The sibling
+          // document and gsap proxies here already bind.
+          //
+          // Only bind non-constructors. Function.prototype.bind drops static
+          // members, so binding a class exposed on window (window.Texts and
+          // friends) would silently strip its statics. Built-in methods have
+          // no .prototype; classes and constructor functions do.
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" && value.prototype === undefined
+            ? value.bind(target)
+            : value;
+        },
+        set: function(target, prop, value, receiver) {
+          if (prop === "__timelines") {
+            // Common authoring boilerplate assigns the registry back to
+            // itself (window.__timelines = window.__timelines || {}). The
+            // getter above returns our proxy; do not replace the canonical
+            // registry with that proxy or later wrappers will stack proxies.
+            if (value === __hfTimelineRegistryProxy) return true;
+            target.__timelines = value || {};
+            __hfTimelineRegistryProxy = null;
+            return true;
+          }
+          return Reflect.set(target, prop, value, target);
+        },
+      })
+    : window;
+  var __hfResolveGsapTarget = function(target) {
+    if (typeof target === "string") return __hfQueryAll(target);
+    if (!Array.isArray(target)) return target;
+    return target.reduce(function(resolved, item) {
+      if (typeof item === "string") {
+        return resolved.concat(Array.prototype.slice.call(__hfQueryAll(item)));
+      }
+      resolved.push(item);
+      return resolved;
+    }, []);
+  };
+  var __hfScopeTimeline = function(timeline) {
+    if (!timeline || timeline.__hfScopedCompositionRoot === __hfFindRoot()) return timeline;
+    ["to", "from", "fromTo", "set"].forEach(function(method) {
+      var original = timeline[method];
+      if (typeof original !== "function") return;
+      timeline[method] = function(target) {
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = __hfResolveGsapTarget(target);
+        return original.apply(timeline, args);
+      };
+    });
+    try {
+      Object.defineProperty(timeline, "__hfScopedCompositionRoot", {
+        value: __hfFindRoot(),
+        configurable: true,
+      });
+    } catch {
+      // Best-effort: timelines coming from user code may have a frozen target
+      // or a non-extensible defineProperty path. Swallow — the scoped root
+      // is an enrichment, not a correctness invariant for playback.
+    }
+    return timeline;
+  };
+  var __hfBaseGsap = typeof gsap === "undefined" ? window.gsap : gsap;
+  var __hfScopedGsap = !__hfBaseGsap || typeof Proxy !== "function"
+    ? __hfBaseGsap
+    : new Proxy(__hfBaseGsap, {
+        get: function(target, prop, receiver) {
+          if (prop === "timeline") {
+            return function() {
+              return __hfScopeTimeline(target.timeline.apply(target, arguments));
+            };
+          }
+          if (prop === "to" || prop === "from" || prop === "fromTo" || prop === "set") {
+            return function(firstArg) {
+              var args = Array.prototype.slice.call(arguments);
+              args[0] = __hfResolveGsapTarget(firstArg);
+              return target[prop].apply(target, args);
+            };
+          }
+          if (prop === "utils" && target.utils && typeof Proxy === "function") {
+            return new Proxy(target.utils, {
+              get: function(utilsTarget, utilsProp, utilsReceiver) {
+                if (utilsProp === "toArray") {
+                  return function(firstArg) {
+                    var args = Array.prototype.slice.call(arguments);
+                    args[0] = __hfResolveGsapTarget(firstArg);
+                    return utilsTarget.toArray.apply(utilsTarget, args);
+                  };
+                }
+                if (utilsProp === "selector") {
+                  return function(base) {
+                    var baseEl = typeof base === "string" ? __hfQueryOne(base) : base;
+                    var root = baseEl || __hfFindRoot();
+                    return function(selector) {
+                      if (!root || typeof selector !== "string") return [];
+                      return Array.prototype.filter.call(
+                        window.document.querySelectorAll(__hfNormalizeSelector(selector)),
+                        function(node) {
+                          return node === root || (typeof root.contains === "function" && root.contains(node));
+                        },
+                      );
+                    };
+                  };
+                }
+                var value = Reflect.get(utilsTarget, utilsProp, utilsTarget);
+                return typeof value === "function" ? value.bind(utilsTarget) : value;
+              },
+            });
+          }
+          var value = Reflect.get(target, prop, target);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+  var __hfBaseHyperframes = window.__hyperframes;
+  var __hfScopedHyperframes = !__hfBaseHyperframes
+    ? __hfBaseHyperframes
+    : Object.assign({}, __hfBaseHyperframes, {
+        assetUrl: function(path) {
+          var page = window.document.baseURI;
+          return new URL(path, __hfCompositionSrc ? new URL(__hfCompositionSrc, page) : page).href;
+        },
+        getVariables: function() {
+          var byComp = window.__hfVariablesByComp;
+          var scoped = byComp && __hfTimelineCompId ? byComp[__hfTimelineCompId] : null;
+          return scoped ? Object.assign({}, scoped) : {};
+        },
+      });
+  var __hfRun = function() {
+    try {
+      (function(document, gsap, window, __hyperframes) {
+
+    (() => {
+      const id = "05-honest-boundary";
+      const statement = document.getElementById(`${id}-statement`);
+      const support = document.getElementById(`${id}-support`);
+      const brand = document.getElementById(`${id}-brand`);
+      const label = document.getElementById(`${id}-label`);
+      const states = [
+        { t: 0, text: "simulated transfer", size: "6.2cqw" },
+        { t: 1.7, text: "not speaker authentication", size: "5.15cqw" },
+        { t: 3.8, text: "Indian-language accuracy:\nnot validated", size: "4.45cqw" },
+      ];
+      const tl = gsap.timeline({ paused: true });
+      const driver = { t: 0 };
+      let current = 0;
+
+      function stateAt(t) {
+        for (let i = states.length - 1; i >= 0; i--) {
+          if (t >= states[i].t) return i;
+        }
+        return 0;
+      }
+
+      tl.to(driver, {
+        t: 6.379,
+        duration: 6.379,
+        ease: "none",
+        onUpdate: () => {
+          const next = stateAt(driver.t);
+          if (next === current) return;
+          statement.textContent = states[next].text;
+          statement.style.fontSize = states[next].size;
+          current = next;
+        },
+      }, 0);
+
+      tl.fromTo(statement, { x: 230, opacity: 0.35 },
+        { x: 0, opacity: 1, duration: 0.35, ease: "power4.out" }, 0.05);
+
+      // The three words arrive at reading pace inside Scene 1.
+      const words = ["no", "money", "moves"];
+      let cue = 0.68;
+      words.forEach((word) => {
+        tl.fromTo(document.getElementById(`${id}-${word}`),
+          { x: 26, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.28, ease: "power4.out" }, cue);
+        cue += 0.11 + word.length * 0.018;
+      });
+      tl.to(support, { opacity: 0, duration: 0.25, ease: "none" }, 1.42);
+
+      // Match leftward velocity at both internal text-state seams.
+      [1.7, 3.8].forEach((cut) => {
+        tl.to(statement, { x: -230, duration: 0.3, ease: "power4.in" }, cut - 0.3);
+        tl.to(statement, { opacity: 0, duration: 0.28, ease: "none" }, cut - 0.28);
+        tl.set(statement, { x: 230, opacity: 0.35 }, cut);
+        tl.to(statement, { x: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, cut);
+      });
+
+      tl.fromTo(brand, { y: 24, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 4.75);
+      tl.fromTo(label, { y: 18, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 5.3);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines[id] = tl;
+    })();
+  
+      }).call(window, __hfScopedDocument, __hfScopedGsap, __hfScopedWindow, __hfScopedHyperframes);
+    } catch (_err) {
+      console.error(__hfErrorLabel, __hfCompId, _err);
+    }
+  };
+  __hfFindRoot();
+  __hfRun();
+})();</script></body>
+</html>

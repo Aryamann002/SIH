@@ -1,0 +1,2 @@
+VigilVoice — Voice risk, action control.
+The operator can start live detection or analyze a PCM WAV file. Local evidence becomes LOW, ELEVATED, HIGH, or unavailable. Voice evidence does not authenticate a person or complete a simulated transfer. LOW and ELEVATED still require separate action-bound verification. HIGH or unavailable evidence blocks completion. Every completed action is simulated and audited. Accuracy across the target Indian languages remains unvalidated.

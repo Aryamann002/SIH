@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #edf4f7;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-1os4" id="root" data-composition-id="main" data-start="0" data-duration="22.848" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-viln" id="el-01-voice-not-approval" class="scene" data-composition-id="01-voice-not-approval" data-composition-src="compositions/frames/01-voice-not-approval.html" data-start="0" data-duration="2.783" data-track-index="0"></div>
+      <audio data-hf-id="hf-vna5" id="el-01-voice-not-approval-voice" src="assets/voice/01.wav" data-start="0" data-duration="2.283" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-6cvb" id="el-02-local-evidence" class="scene" data-composition-id="02-local-evidence" data-composition-src="compositions/frames/02-local-evidence.html" data-start="2.283" data-duration="5.641" data-track-index="1"></div>
+      <audio data-hf-id="hf-qz3r" id="el-02-local-evidence-voice" src="assets/voice/02.wav" data-start="2.283" data-duration="5.141" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-77ik" id="el-03-independent-verification" class="scene" data-composition-id="03-independent-verification" data-composition-src="compositions/frames/03-independent-verification.html" data-start="7.4239999999999995" data-duration="6.949" data-track-index="0"></div>
+      <audio data-hf-id="hf-760f" id="el-03-independent-verification-voice" src="assets/voice/03.wav" data-start="7.4239999999999995" data-duration="6.549" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-aura" id="el-04-high-blocked" class="scene" data-composition-id="04-high-blocked" data-composition-src="compositions/frames/04-high-blocked.html" data-start="13.972999999999999" data-duration="2.996" data-track-index="1"></div>
+      <audio data-hf-id="hf-px40" id="el-04-high-blocked-voice" src="assets/voice/04.wav" data-start="13.972999999999999" data-duration="2.496" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-tu0q" id="el-05-honest-boundary" class="scene" data-composition-id="05-honest-boundary" data-composition-src="compositions/frames/05-honest-boundary.html" data-start="16.468999999999998" data-duration="6.379" data-track-index="0"></div>
+      <audio data-hf-id="hf-hxx5" id="el-05-honest-boundary-voice" src="assets/voice/05.wav" data-start="16.468999999999998" data-duration="6.379" data-track-index="10" data-volume="1"></audio>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+      // ── frame transitions (injected by transitions.mjs) ──
+      (function () { var tl = window.__timelines["main"];
+        tl.to("#el-01-voice-not-approval", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 2.283);
+        tl.fromTo("#el-02-local-evidence", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 2.283);
+        tl.to("#el-02-local-evidence", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 7.424);
+        tl.fromTo("#el-03-independent-verification", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 7.424);
+        tl.to("#el-03-independent-verification", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.4, ease: "power3.in" }, 13.973);
+        tl.fromTo("#el-04-high-blocked", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 13.973);
+        tl.to("#el-04-high-blocked", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 16.469);
+        tl.fromTo("#el-05-honest-boundary", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 16.469);
+        tl.to({}, { duration: 22.848 }, 0); // full-span anchor — main.duration() == composition total (Studio master duration)
+      })();
+    </script>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import asyncio
 import argparse
 import json
+import math
 import struct
 import statistics
 import time
@@ -15,6 +16,16 @@ def create_session(base_uri: str):
                       headers={"Content-Type": "application/json"})
     with urlopen(request, timeout=5) as response:
         return json.load(response)
+
+
+def response_summary(latencies):
+    ordered = sorted(latencies)
+    separated_minutes = len(latencies) >= 600
+    return {"frames": len(latencies),
+            "median_response_ms": round(statistics.median(latencies) * 1000, 2),
+            "p95_response_ms": round(ordered[math.ceil(.95 * len(ordered)) - 1] * 1000, 2),
+            "first_60_response_ms": round(statistics.median(latencies[:300]) * 1000, 2) if separated_minutes else None,
+            "last_60_response_ms": round(statistics.median(latencies[-300:]) * 1000, 2) if separated_minutes else None}
 
 
 async def run_client_simulation(server_uri: str = "ws://localhost:8000/api/v1/stream/ws",
@@ -64,13 +75,8 @@ async def run_client_simulation(server_uri: str = "ws://localhost:8000/api/v1/st
             if duration_seconds and time.perf_counter() - started >= duration_seconds:
                 break
         if duration_seconds:
-            ordered = sorted(latencies)
-            print(json.dumps({"frames": sequence, "elapsed_seconds": round(time.perf_counter() - started, 2),
-                              "median_response_ms": round(statistics.median(latencies) * 1000, 2),
-                              "p95_response_ms": round(ordered[max(0, int(.95 * len(ordered)) - 1)] * 1000, 2),
-                              "first_60_response_ms": round(statistics.median(latencies[:300]) * 1000, 2),
-                              "last_60_response_ms": round(statistics.median(latencies[-300:]) * 1000, 2)},
-                             indent=2))
+            print(json.dumps({"elapsed_seconds": round(time.perf_counter() - started, 2),
+                              **response_summary(latencies)}, indent=2))
 
 
 if __name__ == "__main__":

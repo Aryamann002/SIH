@@ -36,10 +36,13 @@ The evaluator calls the actual upload function `evaluate_wav`: identical WAV val
 ## Read the evidence correctly
 
 - `docs/evaluation-output/report.md`: teacher-readable results and limitations.
-- `docs/evaluation-output/report.json`: confusion counts, denominators, quality/service rejection counts, model digests, source hashes, active profile and latency.
+- `docs/evaluation-output/report.json`: confusion counts, denominators, two-sided 95% Wilson intervals for scorable synthetic HIGH recall and genuine HIGH false-block rate (also in available metadata slices), quality/service rejection counts, model digests, source hashes, active profile and latency.
 - `docs/evaluation-output/results.json`: every file, label, split, digest, default risk, maximum chunk score and elapsed time.
 
 **FAR** here means spoof clips still eligible for independent OTP divided by scorable spoof clips. **FRR** means genuine clips blocked as HIGH divided by scorable genuine clips. Quality failures and unavailable service are shown separately and excluded from those denominators; they must never disappear into an apparent accuracy improvement. Eligible for OTP does not mean a transaction completed.
+
+Intervals in `report.json` and the Markdown rate table are clip-level Wilson bounds. They describe the scored clips, not population certainty: repeated clips or speakers can make those bounds too narrow. Do not treat them as the final independent-source intervals until manifest lineage and source counts are audited.
+The Markdown table shows synthetic HIGH recall and genuine HIGH false blocks; JSON also retains the complementary spoof-eligible FAR and genuine FRR fields.
 
 For this historical five-column run, the candidate HIGH threshold is chosen on validation only: minimum balanced error over a 0.01 grid at or above the existing elevated threshold; ties favor lower FAR, then lower threshold. The rich-manifest path instead follows the [frozen protocol](evaluation-protocol.md): maximize scorable synthetic recall subject to at most 10% HIGH false blocks among scorable genuine validation clips. It checks exact observed-score cutoffs, then favors fewer false blocks and a higher threshold on ties. If no cutoff meets that bound, selection fails. Neither path deploys its candidate. Offline replay retains the original quality/service disposition; the report keeps deployed-risk and candidate metrics separate. Small validation results do not justify deployment.
 
@@ -50,6 +53,8 @@ python scripts/validate_manifest.py <corpus>/manifest.csv --heldout-generator <f
 python scripts/evaluate_audio.py <corpus>/manifest.csv --heldout-generator <family> --phase validation --output docs/evaluation-output/<validation-run>
 ```
 
+Add `--prefix-study` to either phase to score exact 0.5, 1, 2 and 4-second start-of-file excerpts through the same upload pipeline. The flag is off by default. It writes `prefix-results.json` and a separate `prefix_study` block in `report.json`; full-file validation alone selects the candidate threshold. A final-test run still requires its previously frozen threshold. Short source files are skipped for durations they cannot supply, never padded or repeated. Insufficient speech, quality rejection and service failure stay visible in the per-duration counts. These excerpts are not a live first-alert or inserted-partial-spoof study.
+
 The validator checks declared speaker, source-recording, transcript, derivative and generator isolation plus duplicate audio hashes/PCM. A Stage 0 manifest may contain only validation and test rows; a training split becomes required only when training data is included. It cannot detect hidden cross-dataset ancestry. The validation command checks the full manifest's integrity but runs inference only on validation clips. Keep train/validation/test decisions fixed before scoring. After freezing model, preprocessing, threshold, quality and temporal policy, run the final test once with the value recorded from validation:
 
 ```powershell
@@ -58,4 +63,4 @@ python scripts/evaluate_audio.py <corpus>/manifest.csv --heldout-generator <fami
 
 The final-test command scores no validation clips and does not select a threshold. Record source/model/profile and manifest hashes for both runs; the CLI cannot itself prove the freeze or prevent a second test invocation. Do not copy a passing validation score into a final-test claim.
 
-Before making accuracy claims, expand the held-out corpus to consented Indian-language speakers, actual replay attacks, phone channels, background noise and generators absent from training. Predefine the acceptable missed-attack and false-block tradeoff; keep test data untouched during tuning. Current score values remain model outputs, not verified fraud probabilities.
+Before making accuracy claims, expand the held-out corpus with rights-cleared **public** Indian-language data, actual replay attacks, phone channels, background noise and generators absent from training. The team cannot supply consented recordings; do not solicit or generate private team audio for this path. Predefine the acceptable missed-attack and false-block tradeoff; keep test data untouched during tuning. Current score values remain model outputs, not verified fraud probabilities.

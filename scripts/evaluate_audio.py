@@ -17,6 +17,35 @@ import wave
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 QUALITY = {"POOR_QUALITY", "INSUFFICIENT_EVIDENCE", "INVALID_AUDIO"}
+DURATIONS = (.5, 1, 2, 4)
+
+
+def wav_prefix(data, seconds):
+    with wave.open(io.BytesIO(data), "rb") as source:
+        if (source.getnchannels(), source.getsampwidth(), source.getframerate(), source.getcomptype()) != (1, 2, 16000, "NONE"):
+            raise ValueError("Prefix study requires mono 16 kHz PCM16 WAV")
+        frames = int(seconds * 16000)
+        if source.getnframes() < frames:
+            return None
+        pcm = source.readframes(frames)
+        if len(pcm) != frames * 2:
+            raise ValueError("Truncated WAV prefix")
+    output = io.BytesIO()
+    with wave.open(output, "wb") as target:
+        target.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+        target.writeframes(pcm)
+    return output.getvalue()
+
+
+def wilson_interval(successes, total):
+    if total == 0:
+        return None
+    z = statistics.NormalDist().inv_cdf(.975)
+    proportion = successes / total
+    denominator = 1 + z * z / total
+    center = (proportion + z * z / (2 * total)) / denominator
+    radius = z * math.sqrt(proportion * (1 - proportion) / total + z * z / (4 * total * total)) / denominator
+    return max(0.0, center - radius), min(1.0, center + radius)
 
 
 def read_manifest(path, heldout_generator=None):
@@ -129,6 +158,8 @@ def metrics(rows, threshold=None):
             "quality_rejection_count": sum(row["risk_state"] in {"POOR_QUALITY", "INVALID_AUDIO"} for row in rows),
             "no_alert_synthetic_attacks": sum(row["label"] == "spoof" for row in rows) - true_positive,
             "HIGH_recall_scorable_spoof": recall, "HIGH_false_positive_rate_scorable_genuine": frr,
+            "HIGH_recall_scorable_spoof_95ci": wilson_interval(true_positive, spoof),
+            "HIGH_false_positive_rate_scorable_genuine_95ci": wilson_interval(false_positive, genuine),
             "HIGH_precision": precision, "HIGH_F1": f1, "ROC_AUC": auc, "EER": eer}
 
 
@@ -204,6 +235,8 @@ def main():
     parser.add_argument("--frozen-high-threshold", type=float,
                         help="Required for final-test; selected and frozen before this run")
     parser.add_argument("--output", type=Path, default=ROOT / "docs/evaluation-output")
+    parser.add_argument("--prefix-study", action="store_true",
+                        help="Separately score exact 0.5/1/2/4-second WAV prefixes; never select a threshold from them")
     args = parser.parse_args()
     try:
         rows, rich = select_phase(read_manifest(args.manifest, args.heldout_generator),
@@ -226,30 +259,52 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     results = []
+    prefixes = []
     process = AudioPipeline.process_chunk
-    for index, row in enumerate(rows, 1):
+    def assess(data):
         chunks = []
 
-        def capture(self, data):
-            result = process(self, data)
-            chunks.append(result)
+        def capture(self, chunk):
+            result = process(self, chunk)
+            chunks.append((result, len(chunk)))
             return result
 
         started = time.perf_counter()
         try:
             with patch.object(AudioPipeline, "process_chunk", capture):
-                result = evaluate_wav(Path(row["absolute_path"]).read_bytes())
+                result = evaluate_wav(data)
         except ValueError as exc:
             result = {"risk_state": "INVALID_AUDIO", "spoof_score": None, "reason_codes": [str(exc)]}
         latency = time.perf_counter() - started
-        scores = [chunk["spoof_score"] for chunk in chunks if chunk["spoof_score"] is not None]
-        first_alert = next((index * .2 for index, chunk in enumerate(chunks, 1)
-                            if chunk["risk_state"] == "HIGH"), None)
-        results.append({**{key: value for key, value in row.items() if key != "absolute_path"}, **result,
-                        "maximum_chunk_score": max(scores) if scores else None,
-                        "chunk_count": len(chunks), "latency_seconds": latency,
-                        "first_alert_audio_seconds": first_alert})
-        print(f"{index}/{len(rows)} {row['split']} {row['label']} {result['risk_state']} {latency:.2f}s", flush=True)
+        scores = [chunk["spoof_score"] for chunk, _ in chunks if chunk["spoof_score"] is not None]
+        elapsed_audio = 0
+        first_alert = None
+        for chunk, size in chunks:
+            elapsed_audio += size / 32000
+            if chunk["risk_state"] == "HIGH":
+                first_alert = elapsed_audio
+                break
+        return {**result, "maximum_chunk_score": max(scores) if scores else None,
+                "chunk_count": len(chunks), "latency_seconds": latency,
+                "first_alert_audio_seconds": first_alert}
+
+    for index, row in enumerate(rows, 1):
+        data = Path(row["absolute_path"]).read_bytes()
+        result = assess(data)
+        results.append({**{key: value for key, value in row.items() if key != "absolute_path"}, **result})
+        if args.prefix_study:
+            for seconds in DURATIONS:
+                identity = {key: value for key, value in row.items() if key != "absolute_path"}
+                if result["risk_state"] == "INVALID_AUDIO":
+                    prefixes.append({**identity, "requested_seconds": seconds, "source_status": "INVALID_SOURCE"})
+                    continue
+                excerpt = wav_prefix(data, seconds)
+                if excerpt is None:
+                    prefixes.append({**identity, "requested_seconds": seconds, "source_status": "SOURCE_TOO_SHORT"})
+                    continue
+                prefixes.append({**identity, "requested_seconds": seconds, "source_status": "EVALUATED",
+                                 **assess(excerpt)})
+        print(f"{index}/{len(rows)} {row['split']} {row['label']} {result['risk_state']} {result['latency_seconds']:.2f}s", flush=True)
     validation = [row for row in results if row["split"] == "validation"]
     test = [row for row in results if row["split"] == "test"]
     if validation:
@@ -270,6 +325,7 @@ def main():
         "runtime": {"python": platform.python_version(), "platform": platform.platform()},
         "pipeline": "Exact evaluate_wav decoding, 6400-byte chunks, VAD, quality gates, EMA, and upload file aggregation",
         "definitions": "FAR = spoof files eligible for OTP / scorable spoof files; FRR = HIGH-blocked genuine files / scorable genuine files. Eligibility never means a completed transaction. Quality and service failures are reported separately, excluded from these denominators.",
+        "confidence_interval_method": "Two-sided 95% Wilson score intervals on scorable clip counts. Descriptive only: related clips or speakers may make clip-level intervals too narrow; independence requires a source-lineage audit.",
         "default_high_threshold": settings.HIGH_RISK_SPOOF_THRESHOLD,
         "default_validation": metrics(validation) if validation else None,
         "default_test": metrics(test) if test else None,
@@ -296,10 +352,23 @@ def main():
                          "Scores are not calibrated fraud probabilities; candidate is not deployed",
                          "Offline file latency excludes HTTP/database overhead and does not establish streaming latency"]),
     }
+    if args.prefix_study:
+        report["prefix_study"] = {
+            "description": "Exact start-of-file excerpts; no padding, repetition or threshold selection. Not a live capture-to-alert measurement.",
+            "durations": {str(seconds): {
+                "evaluated": sum(row["source_status"] == "EVALUATED" for row in prefixes if row["requested_seconds"] == seconds),
+                "source_too_short": sum(row["source_status"] == "SOURCE_TOO_SHORT" for row in prefixes if row["requested_seconds"] == seconds),
+                "invalid_source": sum(row["source_status"] == "INVALID_SOURCE" for row in prefixes if row["requested_seconds"] == seconds),
+                "default": metrics([row for row in prefixes if row["requested_seconds"] == seconds and row["source_status"] == "EVALUATED"]),
+                "candidate": metrics([row for row in prefixes if row["requested_seconds"] == seconds and row["source_status"] == "EVALUATED"], threshold),
+            } for seconds in DURATIONS},
+        }
     (output / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    if args.prefix_study:
+        (output / "prefix-results.json").write_text(json.dumps(prefixes, indent=2) + "\n", encoding="utf-8")
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    lines = ["# Audio evaluation" if rich else "# Exploratory audio evaluation", "", report["purpose"], "", report["definitions"], "",
-             "| Run | Scorable/total | Spoof eligible / scorable spoof (FAR) | Genuine blocked / scorable genuine (FRR) | Quality rejected | Unavailable |",
+    lines = ["# Audio evaluation" if rich else "# Exploratory audio evaluation", "", report["purpose"], "", report["definitions"], "", report["confidence_interval_method"], "",
+             "| Run | Scorable/total | Spoof HIGH / scorable spoof (recall) | Genuine blocked / scorable genuine (FRR) | Quality rejected | Unavailable |",
              "|---|---:|---:|---:|---:|---:|"]
     for name, result in (("Default validation", report["default_validation"]), ("Default test", report["default_test"]),
                          (f"Candidate {threshold:.2f} validation", validation_metrics), (f"Frozen candidate {threshold:.2f} test", report["candidate"]["test"])):
@@ -308,13 +377,23 @@ def main():
         counts = result["confusion"]
         def rate(label, key, rate_key):
             value = result[rate_key]
-            return f"{counts[label][key]}/{sum(counts[label].values())} ({value:.1%})" if value is not None else "n/a"
-        lines.append(f"| {name} | {result['scorable']}/{result['total']} | {rate('spoof', 'eligible_for_otp', 'FAR_spoof_eligible_for_otp')} | {rate('genuine', 'high_risk_blocked', 'FRR_genuine_high_risk_blocked')} | {sum(result['quality_rejections'].values())} | {sum(result['service_unavailable'].values())} |")
+            count, total = counts[label][key], sum(counts[label].values())
+            interval = wilson_interval(count, total)
+            return f"{count}/{total} ({value:.1%}; 95% CI {interval[0]:.1%}–{interval[1]:.1%})" if interval else "n/a"
+        lines.append(f"| {name} | {result['scorable']}/{result['total']} | {rate('spoof', 'high_risk_blocked', 'HIGH_recall_scorable_spoof')} | {rate('genuine', 'high_risk_blocked', 'FRR_genuine_high_risk_blocked')} | {sum(result['quality_rejections'].values())} | {sum(result['service_unavailable'].values())} |")
     lines.extend(["", f"Median file inference: {statistics.median(latencies):.2f}s; p95: {percentile(latencies, .95):.2f}s. Model loading: {startup:.2f}s.",
                   "", ("Final test used the supplied frozen threshold; no validation audio was scored in this run." if args.phase == "final-test" else
                        "Validation only; no test audio was scored." if args.phase == "validation" else
                        "Candidate selection uses validation only. Test results never influence selection. The candidate remains offline."), "",
                   *[f"- {item}" for item in report["limitations"]], "", "See report.json for confusion counts, model/config/source hashes and results.json for every clip."])
+    if args.prefix_study:
+        lines.extend(["", "## Start-of-file prefix study", "", report["prefix_study"]["description"], "",
+                      "| Seconds | Evaluated | Too short | Invalid source | Insufficient evidence | Scorable |",
+                      "|---:|---:|---:|---:|---:|---:|"])
+        for seconds, summary in report["prefix_study"]["durations"].items():
+            default = summary["default"]
+            lines.append(f"| {seconds} | {summary['evaluated']} | {summary['source_too_short']} | {summary['invalid_source']} | {default['insufficient_evidence_count']} | {default['scorable']} |")
+        lines.extend(["", "See prefix-results.json for per-excerpt dispositions and report.json for default/frozen-candidate counts. Prefix results do not select the candidate threshold."])
     (output / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"Report written: {output / 'report.md'}", flush=True)
 

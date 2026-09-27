@@ -1,0 +1,124 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      color: #edf4f7;
+      font-family: "Inter";
+    }
+
+    #root [data-role="ground"] {
+      position: absolute;
+      inset: 0;
+      background: #081219;
+    }
+
+    #root [data-role="stage"] {
+      position: absolute;
+      inset: 0;
+    }
+
+    #root [data-role="state"] {
+      position: absolute;
+      top: 22cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      height: 43cqh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      text-transform: lowercase;
+    }
+
+    #root [data-role-variant="opening"] { font-size: 13cqw; }
+    #root [data-role-variant="middle"] { font-size: 7.5cqw; visibility: hidden; }
+    #root [data-role-variant="resolve"] { font-size: 9cqw; visibility: hidden; }
+    #root [data-role="mint"] { color: #73e4cb; }
+
+    #root [data-role="brand"] {
+      position: absolute;
+      top: 64cqh;
+      left: 5.5cqw;
+      width: 89cqw;
+      display: flex;
+      justify-content: center;
+      color: #9cadb9;
+      font-size: 1.6cqw;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    #root [data-role="brand"] span { display: inline-block; }
+  </style>
+
+  <div data-hf-id="hf-pvn7" id="root" data-composition-id="01-voice-not-approval" data-width="1920" data-height="1080" data-duration="2.783">
+    <div data-hf-id="hf-nyql" class="clip" data-role="ground" data-start="0" data-duration="2.783" data-track-index="0"></div>
+    <div data-hf-id="hf-l41b" class="clip" data-role="stage" data-start="0" data-duration="2.783" data-track-index="1">
+      <div data-hf-id="hf-o45l" id="01-voice-not-approval-opening" data-role="state" data-role-variant="opening">voice</div>
+      <div data-hf-id="hf-jirh" id="01-voice-not-approval-middle" data-role="state" data-role-variant="middle">voice is <span data-hf-id="hf-n3nb" data-role="mint">&#160;evidence</span></div>
+      <div data-hf-id="hf-6eda" id="01-voice-not-approval-resolve" data-role="state" data-role-variant="resolve"><span data-hf-id="hf-0hir" data-role="mint">not&#160;</span>approval</div>
+      <div data-hf-id="hf-8sv0" id="01-voice-not-approval-brand" data-role="brand"><span data-hf-id="hf-zlxf" id="01-voice-not-approval-brand-a">Vigil</span><span data-hf-id="hf-2mnf" id="01-voice-not-approval-brand-b">Voice</span></div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const id = "01-voice-not-approval";
+      const states = [
+        { t: 0, el: document.getElementById(`${id}-opening`) },
+        { t: 0.6, el: document.getElementById(`${id}-middle`) },
+        { t: 1.5, el: document.getElementById(`${id}-resolve`) },
+      ];
+      const tl = gsap.timeline({ paused: true });
+      const driver = { t: 0 };
+      let current = 0;
+
+      function stateAt(t) {
+        for (let i = states.length - 1; i >= 0; i--) {
+          if (t >= states[i].t) return i;
+        }
+        return 0;
+      }
+
+      tl.to(driver, {
+        t: 2.283,
+        duration: 2.283,
+        ease: "none",
+        onUpdate: () => {
+          const next = stateAt(driver.t);
+          if (next === current) return;
+          states[current].el.style.visibility = "hidden";
+          states[next].el.style.visibility = "visible";
+          current = next;
+        },
+      }, 0);
+
+      const parts = ["Vigil", "Voice"];
+      let cue = 1.62;
+      parts.forEach((part, i) => {
+        tl.fromTo(document.getElementById(`${id}-brand-${i ? "b" : "a"}`),
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.18, ease: "power2.out" }, cue);
+        cue += 0.08 + part.length * 0.015;
+      });
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines[id] = tl;
+    })();
+  </script>
+</template>

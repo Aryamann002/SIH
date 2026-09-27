@@ -1,0 +1,194 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/Inter-Variable.ttf") format("truetype");
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("assets/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+    }
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      container-type: size;
+      overflow: hidden;
+    }
+    #root .f03-independent-verification-ground,
+    #root .f03-independent-verification-stage {
+      position: absolute;
+      inset: 0;
+    }
+    #root .f03-independent-verification-ground {
+      background: #081219;
+    }
+    #root .f03-independent-verification-stage {
+      color: #edf4f7;
+      font-family: "Inter", sans-serif;
+    }
+    #root .f03-independent-verification-kicker {
+      position: absolute;
+      left: 106px;
+      top: 81px;
+      min-width: 420px;
+      color: #73e4cb;
+      font: 500 19px/1.4 "IBM Plex Mono", monospace;
+      letter-spacing: 0.14em;
+    }
+    #root .f03-independent-verification-headline {
+      position: absolute;
+      left: 106px;
+      top: 127px;
+      font-size: 116px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+    #root .f03-independent-verification-headline em {
+      color: #73e4cb;
+      font-style: normal;
+    }
+    #root .f03-independent-verification-divider {
+      position: absolute;
+      left: 106px;
+      top: 268px;
+      width: 1708px;
+      height: 1px;
+      background: #253641;
+    }
+    #root .f03-independent-verification-card {
+      position: absolute;
+      top: 315px;
+      overflow: hidden;
+      border: 1px solid #253641;
+      background: #101e28;
+    }
+    #root .f03-independent-verification-risk {
+      left: 106px;
+      width: 1000px;
+      height: 390px;
+    }
+    #root .f03-independent-verification-risk img {
+      position: absolute;
+      width: 2592px;
+      height: 3024px;
+      left: -252px;
+      top: -1908px;
+      max-width: none;
+    }
+    #root .f03-independent-verification-verify {
+      left: 1140px;
+      width: 674px;
+      height: 390px;
+    }
+    #root .f03-independent-verification-verify img {
+      position: absolute;
+      width: 1728px;
+      height: 2016px;
+      left: -890px;
+      top: -1002px;
+      max-width: none;
+    }
+    #root .f03-independent-verification-rule {
+      position: absolute;
+      left: 106px;
+      top: 752px;
+      width: 1708px;
+      height: 1px;
+      background: #253641;
+    }
+    #root .f03-independent-verification-note {
+      position: absolute;
+      left: 106px;
+      top: 775px;
+      color: #9cadb9;
+      font: 500 18px/1.4 "IBM Plex Mono", monospace;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #root .f03-independent-verification-words {
+      position: absolute;
+      left: 106px;
+      top: 138px;
+      width: 1708px;
+      display: flex;
+      gap: 75px;
+      align-items: baseline;
+      white-space: nowrap;
+      color: #edf4f7;
+      font-size: 78px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    #root .f03-independent-verification-words span:nth-child(2) {
+      color: #73e4cb;
+    }
+  </style>
+  <div data-hf-id="hf-3jk5" id="root" data-composition-id="03-independent-verification" data-width="1920" data-height="1080" data-duration="6.949">
+    <div data-hf-id="hf-ofaq" class="clip f03-independent-verification-ground" data-start="0" data-duration="6.949" data-track-index="0"></div>
+    <div data-hf-id="hf-3k1q" class="clip f03-independent-verification-stage" data-start="0" data-duration="6.949" data-track-index="1">
+      <div data-hf-id="hf-tsyb" id="03-independent-verification-kicker" class="f03-independent-verification-kicker">VOICE EVIDENCE</div>
+      <div data-hf-id="hf-lmg6" id="03-independent-verification-headline" class="f03-independent-verification-headline">low <em data-hf-id="hf-av58">≠ approval</em></div>
+      <div data-hf-id="hf-8q4w" class="f03-independent-verification-divider"></div>
+      <div data-hf-id="hf-lg6v" id="03-independent-verification-risk" class="f03-independent-verification-card f03-independent-verification-risk">
+        <img data-hf-id="hf-paax" src="assets/image_002.png" alt="Real LOW-risk operator screen; independent verification is still required" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-nd9z" id="03-independent-verification-verify" class="f03-independent-verification-card f03-independent-verification-verify">
+        <img data-hf-id="hf-4fwg" src="assets/image_002.png" alt="Real independent-verification guidance on the operator screen" data-layout-allow-overflow="">
+      </div>
+      <div data-hf-id="hf-4guv" class="f03-independent-verification-rule"></div>
+      <div data-hf-id="hf-zsqr" class="f03-independent-verification-note">ISOLATED PUBLIC-AUDIO TEST · SIMULATED ACTION</div>
+      <div data-hf-id="hf-2jjk" id="03-independent-verification-words" class="f03-independent-verification-words">
+        <span data-hf-id="hf-fekz">action</span><span data-hf-id="hf-b32k">recipient</span><span data-hf-id="hf-4kgd">amount</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["03-independent-verification"] = tl;
+
+      const risk = document.getElementById("03-independent-verification-risk");
+      const verify = document.getElementById("03-independent-verification-verify");
+      const headline = document.getElementById("03-independent-verification-headline");
+      const kicker = document.getElementById("03-independent-verification-kicker");
+      const words = [...document.getElementById("03-independent-verification-words").querySelectorAll("span")];
+
+      tl.fromTo(risk, { x: -110, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0);
+      tl.fromTo(headline, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0.1);
+      tl.fromTo(verify, { x: 120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.52, ease: "power3.out" }, 1.7);
+
+      const labels = [
+        { t: 0, text: "VOICE EVIDENCE" },
+        { t: 1.7, text: "INDEPENDENT VERIFICATION" }
+      ];
+      const labelClock = { t: 0 };
+      let lastLabel = labels[0].text;
+      tl.to(labelClock, {
+        t: 4.5, duration: 4.5, ease: "none",
+        onUpdate: () => {
+          let current = labels[0].text;
+          for (let i = labels.length - 1; i >= 0; i--) {
+            if (labelClock.t >= labels[i].t) { current = labels[i].text; break; }
+          }
+          if (current !== lastLabel) { kicker.textContent = current; lastLabel = current; }
+        }
+      }, 0);
+
+      tl.to(headline, { y: -95, opacity: 0, duration: 0.32, ease: "power4.in" }, 4.1);
+      const wordStart = 4.61;
+      let elapsed = 0;
+      words.forEach((word) => {
+        const at = wordStart + elapsed;
+        tl.fromTo(word, { x: 68, opacity: 0 }, { x: 0, opacity: 1, duration: 0.32, ease: "power4.out" }, at);
+        elapsed += 0.24 + word.textContent.length * 0.03;
+      });
+      tl.to(words, { opacity: 0, duration: 0.25, ease: "power2.in" }, 6.15);
+    })();
+  </script>
+</template>
