@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-09-28T02:53:36.975332+00:00",
+  "passed": true,
+  "elapsed_seconds": 3.762,
+  "checks": [
+    {
+      "name": "Completed action and exactly-once audit survive restart",
+      "passed": true
+    },
+    {
+      "name": "Restart invalidates live evidence and denies prior approval",
+      "passed": true
+    },
+    {
+      "name": "Expired approval is not revived by restart",
+      "passed": true
+    },
+    {
+      "name": "Lost verifier delivery expires action and stores no plaintext code",
+      "passed": true
+    },
+    {
+      "name": "New action recovers after restart with fresh verification",
+      "passed": true
+    }
+  ],
+  "error": null,
+  "scope": "Hard backend restart with isolated test records; no plaintext OTP persisted.",
+  "script_sha256": "2465ab301098d281dc2bc15427ee3366787a731b65e967d06e0bdb0e35f64067"
+}

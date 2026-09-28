@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-28",
+  "backend_image": "sha256:76da2d773d40211451876c653c044deb042cbf1e95408aabc46efeb5d8d83aa5",
+  "stream": {
+    "command": "docker exec vv-finalcheck-0928-backend python scripts/test_client.py --duration-seconds 600",
+    "exit_code": 0,
+    "elapsed_seconds": 600.17,
+    "frames": 2999,
+    "median_response_ms": 9.07,
+    "p95_response_ms": 407.67,
+    "first_60_response_ms": 9.0,
+    "last_60_response_ms": 9.08
+  },
+  "warm_wav": {
+    "scope": "12 warmed repeated-public 10-second WAV uploads; latency only, not accuracy",
+    "latencies_ms": [5257.48, 5267.96, 5303.4, 5321.02, 5232.72, 5261.29, 5307.41, 5229.56, 5318.55, 5206.39, 5248.73, 5320.54],
+    "median_ms": 5264.625,
+    "p95_ms": 5321.02,
+    "all_risk_states": "ELEVATED",
+    "method": "Read models/demo/genuine.wav PCM; repeat/truncate in memory to 320000 PCM bytes, wrap in 16 kHz mono PCM16 WAV with scripts.check_demo.wav, create 12 sessions, time authenticated upload calls via scripts.check_demo.upload; nearest-rank p95."
+  },
+  "resources": {
+    "samples_per_container": 15,
+    "start": "2026-09-28T08:25:04+05:30",
+    "end": "2026-09-28T08:32:32+05:30",
+    "interval_approx_seconds": 32,
+    "backend_memory_mib_range": [784.5, 785.1],
+    "backend_cpu_percent_range": [118.37, 289.84],
+    "laya_memory_gib_range": [1.914, 1.942],
+    "laya_cpu_percent_range": [0.14, 20.96],
+    "limitations": "Sampled values, not continuous peaks; CPU percentage is relative to one logical CPU. Not physical capture-to-alert or minimum hardware evidence."
+  }
+}
