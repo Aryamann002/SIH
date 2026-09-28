@@ -15,8 +15,9 @@ def test_offline_package_is_reproducible_and_keeps_readme_docs(tmp_path):
         assert count == len(names) == len(source_files())
         assert {"README.md", "docker-compose.yml", "pytest.ini",
                 "tests/test_package_offline.py", "tests/ui_smoke.cjs",
-                "tests/microphone_smoke.cjs", "tests/jev_scenarios.json",
-                "docs/model-setup.md",
+                "tests/microphone_smoke.cjs", "tests/laya_scenarios.json",
+                "tests/test_laya.py", "scripts/evaluate_laya.py",
+                "docs/laya-integration.md", "docs/model-setup.md",
                 "docs/prototype-runbook.md", "docs/teacher-presentation.pdf",
                 "docs/validation/r02-narration-draft-2026-09-27.txt",
                 "docs/validation/r02-video-preview-2026-09-27.md",

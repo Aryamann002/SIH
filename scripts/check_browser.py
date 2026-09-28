@@ -191,7 +191,7 @@ async def check(browser, output, presentation, base_url="http://127.0.0.1:8000/"
                     await until("state.action?.status === 'BLOCKED' && !state.busy")
                     assert await js("document.getElementById('request-verification').disabled && document.getElementById('complete-action').hidden")
                     assert await js("[...document.querySelectorAll('#audit-list strong')].some(node => node.textContent === 'ACTION CREATED')")
-                    assert await js("[...document.querySelectorAll('#audit-list strong')].some(node => node.textContent === 'JEV DECISION')")
+                    assert await js("[...document.querySelectorAll('#audit-list strong')].some(node => node.textContent === 'LAYA DECISION')")
                     action_result = {"genuine": "COMPLETED after action-bound verification",
                                      "live_transition": "verified action BLOCKED by HIGH on same stream; completion denied after later LOW",
                                      "source_replacement": "pending action BLOCKED and visible in browser",

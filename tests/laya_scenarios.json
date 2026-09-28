@@ -15,8 +15,8 @@
   {"name":"expired_verification","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"CONTINUE_MONITORING","fallback_reason":null,"expected":"BLOCKED"},
   {"name":"wrong_action_approval","label":"unknown","deterministic":"BLOCKED","mode":"advisory","choice":"STANDARD_VERIFICATION","fallback_reason":null,"expected":"BLOCKED"},
   {"name":"high_value_elevated_action","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":"BLOCK_RECOMMENDED","fallback_reason":null,"expected":"BLOCKED"},
-  {"name":"jev_timeout","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"timeout","expected":"PENDING"},
-  {"name":"jev_malformed_response","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"malformed_response","expected":"PENDING"},
-  {"name":"jev_authentication_error","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"authentication","expected":"PENDING"},
+  {"name":"laya_timeout","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"timeout","expected":"PENDING"},
+  {"name":"laya_malformed_response","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"malformed_response","expected":"PENDING"},
+  {"name":"laya_service_error","label":"unknown","deterministic":"PENDING","mode":"advisory","choice":null,"fallback_reason":"http_error","expected":"PENDING"},
   {"name":"offline_operation","label":"unknown","deterministic":"PENDING","mode":"shadow","choice":null,"fallback_reason":"missing_key","expected":"PENDING"}
 ]

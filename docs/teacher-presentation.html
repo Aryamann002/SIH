@@ -22,7 +22,7 @@
 <div class="flow"><div class="node">Live mic PCM<br>or WAV upload</div><span class="arrow">→</span><div class="node">Silero VAD<br>+ quality gate</div><span class="arrow">→</span><div class="node">INT8 Wav2Vec2/XLS-R<br>spoof signal</div><span class="arrow">→</span><div class="node">Freshness +<br>hard-safety gate</div></div>
 <div class="flow"><div class="node">Exact action<br>recipient + amount</div><span class="arrow">→</span><div class="node">Separate verifier<br>one-time code</div><span class="arrow">→</span><div class="node">Fresh evidence<br>+ single-use approval</div><span class="arrow">→</span><div class="node">Simulated result<br>+ audit trail</div></div>
 <p class="muted">FastAPI · PostgreSQL · ONNX Runtime on CPU · Native browser UI · Docker</p>
-<p class="small">Pretrained third-party models run locally. The browser streams sequenced 200 ms PCM16 frames; record-then-analyze WAV remains a fallback. Optional Jev shadow sees metadata only and cannot authorize an action.</p>
+<p class="small">Pretrained third-party models run locally. The browser streams sequenced 200 ms PCM16 frames; record-then-analyze WAV remains a fallback. Optional local Laya shadow sees metadata only and cannot authorize an action.</p>
 <footer><span>Implemented system</span><span>03 / 07</span></footer></section>
 <section class="slide">
 <p class="eyebrow">Live demonstration · localhost:8000</p><h2>Three cases the audience can follow.</h2>
@@ -48,7 +48,7 @@
 <tr><td>Real pretrained VAD and spoof inference</td><td>Defensible model/threshold freeze and untouched final test</td></tr>
 <tr><td>Hard safety gate, local verifier and simulated action audit</td><td>Trusted delivery and real payment integration</td></tr>
 <tr><td>Bounded single-stream test and isolated failure checks</td><td>Final-build offline and separate-verifier rehearsal</td></tr>
-<tr><td>Optional metadata-only Jev shadow fallback</td><td>Live-key shadow evaluation; advisory is not approved</td></tr>
+<tr><td>Optional metadata-only local Laya shadow</td><td>Labeled shadow evaluation; advisory is not approved</td></tr>
 </tbody></table>
 <p class="note">Present this as an engineering prototype. Do not claim an accuracy percentage for real-world use or that all SIH PDF promises are complete.</p>
 <footer><span>Known limitations are part of the result</span><span>06 / 07</span></footer></section>

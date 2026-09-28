@@ -1,4 +1,4 @@
-"""Optional, metadata-only Jev advice. This module never authorizes an action."""
+"""Optional local Laya advice. This module never authorizes an action."""
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
@@ -12,7 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from app.core.config import settings
 
 
-QUESTION = "vigilvoice_route_v1"
+QUESTION = "vigilvoice_route_laya_v1"
+MODEL = "english"
+MODEL_REVISION = "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851"
 CHOICES = ("CONTINUE_MONITORING", "STANDARD_VERIFICATION", "ENHANCED_REVIEW", "BLOCK_RECOMMENDED")
 Choice = Literal["CONTINUE_MONITORING", "STANDARD_VERIFICATION", "ENHANCED_REVIEW", "BLOCK_RECOMMENDED"]
 CRITERIA = {
@@ -21,7 +23,7 @@ CRITERIA = {
     "ENHANCED_REVIEW": "Ambiguity warrants extra review; do not complete the action.",
     "BLOCK_RECOMMENDED": "The structured soft-risk pattern warrants blocking the action.",
 }
-_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="jev-advice")
+_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="laya-advice")
 _slot = asyncio.Lock()
 _failures = 0
 _open_until = 0.0
@@ -35,24 +37,37 @@ class Answer(BaseModel):
     confidence: float | None = Field(default=None, ge=0, le=1)
 
 
+class Routing(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    model: Literal["english"]
+
+
 class Reply(BaseModel):
     model_config = ConfigDict(extra="ignore")
     model: str
     answers: dict[str, Answer]
+    routing: Routing
 
 
-def _request(state, key, model, timeout):
-    body = json.dumps({"model": model, "state": state, "questions": {QUESTION: {
+def _request(state, timeout):
+    body = json.dumps({"model": MODEL, "state": state, "questions": {QUESTION: {
         "type": "choice",
         "instructions": "Recommend only from the supplied structured metadata. Never authorize, verify identity, validate a code, or explain acoustic causes.",
         "criteria": CRITERIA,
     }}}, separators=(",", ":"), allow_nan=False)
-    connection = http.client.HTTPSConnection("api.typesafe.ai", timeout=timeout)
+    connection = http.client.HTTPConnection("laya", 8000, timeout=timeout)
     try:
+        connection.request("GET", "/health")
+        health_response = connection.getresponse()
+        if health_response.status != 200:
+            raise ValueError("model_unavailable")
+        health = json.loads(health_response.read(4097))
+        if (not isinstance(health, dict) or health.get("status") != "ok"
+                or not isinstance(health.get("revisions"), dict)
+                or health["revisions"].get(MODEL) != MODEL_REVISION):
+            raise ValueError("model_unavailable")
         connection.request("POST", "/v1/systemone", body=body.encode(), headers={
-            "Authorization": f"Bearer {key}", "Content-Type": "application/json",
-            "Accept": "application/json",
-        })
+            "Content-Type": "application/json", "Accept": "application/json"})
         response = connection.getresponse()
         if response.status != 200:
             raise ValueError("authentication" if response.status in (401, 403) else "http_error")
@@ -64,9 +79,9 @@ def _request(state, key, model, timeout):
         connection.close()
 
 
-def _validate(payload, model):
+def _validate(payload):
     reply = Reply.model_validate(payload)
-    if reply.model != model or set(reply.answers) != {QUESTION}:
+    if reply.model != "laya-rl-agent" or reply.routing.model != MODEL or set(reply.answers) != {QUESTION}:
         raise ValueError("malformed_response")
     answer = reply.answers[QUESTION]
     if answer.probabilities is not None:
@@ -107,16 +122,17 @@ def final_action_status(deterministic, advice):
 
 async def advise(state):
     global _failures, _open_until
-    mode = settings.JEV_MODE
+    mode = settings.LAYA_MODE
     record = {"mode": mode, "state_hash": state_digest(state),
-              "question_version": QUESTION, "jev_model_version": settings.JEV_MODEL,
+              "provider": "laya", "question_version": QUESTION,
+              "laya_model_version": f"{MODEL}@{MODEL_REVISION}",
               "choice": None, "probabilities": None, "confidence": None,
               "latency_ms": None, "fallback_reason": None}
     if mode == "disabled":
         record["fallback_reason"] = "disabled"
         return record
-    if not settings.JEV_API_KEY:
-        record["fallback_reason"] = "missing_key"
+    if not settings.LAYA_ENABLED:
+        record["fallback_reason"] = "not_configured"
         return record
     if time.monotonic() < _open_until:
         record["fallback_reason"] = "circuit_open"
@@ -130,19 +146,18 @@ async def advise(state):
     submitted = False
     try:
         future = asyncio.get_running_loop().run_in_executor(
-            _executor, _request, state, settings.JEV_API_KEY, settings.JEV_MODEL,
-            settings.JEV_TIMEOUT_SECONDS)
+            _executor, _request, state, settings.LAYA_TIMEOUT_SECONDS)
         submitted = True
         future.add_done_callback(lambda _: _slot.release())
-        payload = await asyncio.wait_for(asyncio.shield(future), timeout=settings.JEV_TIMEOUT_SECONDS)
-        answer = _validate(payload, settings.JEV_MODEL)
+        payload = await asyncio.wait_for(asyncio.shield(future), timeout=settings.LAYA_TIMEOUT_SECONDS)
+        answer = _validate(payload)
         record.update(choice=answer.choice, probabilities=answer.probabilities,
                       confidence=answer.confidence)
         _failures = 0
     except Exception as exc:
         if isinstance(exc, TimeoutError):
             reason = "timeout"
-        elif isinstance(exc, ValueError) and str(exc) in {"authentication", "http_error", "oversized_response", "malformed_response"}:
+        elif isinstance(exc, ValueError) and str(exc) in {"authentication", "http_error", "oversized_response", "malformed_response", "model_unavailable"}:
             reason = str(exc)
         elif isinstance(exc, (ValidationError, ValueError, TypeError, KeyError, json.JSONDecodeError)):
             reason = "malformed_response"

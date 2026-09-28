@@ -29,4 +29,4 @@ A short, factual offline backup for the live VigilVoice demonstration. Show the 
 
 - Use existing public demo evidence. Do not capture the presentation database, verifier key, one-time code, private recordings, or third-party media.
 - The screen asset is an isolated September 25 test capture, not a final frozen-build screenshot. Relabel or replace it after source freeze before final delivery.
-- No Internet or Jev required for playback or the primary demo. No real money moves.
+- No Internet or Laya required for playback or the primary demo. No real money moves.

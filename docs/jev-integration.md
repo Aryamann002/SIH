@@ -1,5 +1,7 @@
 # Jev decision support
 
+Historical design only. New actions now use the local Laya path; see [Laya integration](laya-integration.md). The commands and environment variables below describe the superseded Jev implementation and must not be used for the current build.
+
 This integration is optional and does not change the protected-action executor. The local Silero and ONNX pipeline supplies acoustic evidence. The backend validates evidence freshness, quality, model/profile provenance and action ownership before sending any metadata to Jev. The action is then re-read under a database lock before insertion. OTP issuance, attempts, expiry, payload/action ownership, one-time approval, completion and audit remain deterministic. An earlier HIGH result blocks an unfinished action permanently, even if later audio scores LOW.
 
 `JEV_MODE` is `disabled`, `shadow` (default), or `advisory`. `JEV_API_KEY` is read from the environment and is absent by default. Shadow records a recommendation but leaves the deterministic action status untouched. Advisory can change PENDING to BLOCKED for `ENHANCED_REVIEW` or `BLOCK_RECOMMENDED`; there is no separate review executor, so the operator must start a new action. `CONTINUE_MONITORING` and `STANDARD_VERIFICATION` cannot waive verification. Advisory startup requires `JEV_ADVISORY_ENABLED=true`, which is an explicit release gate; the current evidence does **not** justify enabling it. Leave shadow or disabled for the presentation.

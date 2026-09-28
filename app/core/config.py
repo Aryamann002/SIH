@@ -38,11 +38,10 @@ class Settings(BaseSettings):
     AUDIO_CAPACITY_WAIT_SECONDS: float = Field(default=0.1, gt=0, allow_inf_nan=False)
     AUDIO_INFERENCE_QUEUE_TIMEOUT_SECONDS: float = Field(default=1.0, gt=0, allow_inf_nan=False)
     AUDIO_INFERENCE_TIMEOUT_SECONDS: float = Field(default=10.0, gt=0, allow_inf_nan=False)
-    JEV_MODE: Literal["disabled", "shadow", "advisory"] = "shadow"
-    JEV_API_KEY: str = Field(default="", repr=False)
-    JEV_MODEL: str = "jev-1.13.0"
-    JEV_TIMEOUT_SECONDS: float = Field(default=0.75, gt=0, le=5, allow_inf_nan=False)
-    JEV_ADVISORY_ENABLED: bool = False
+    LAYA_MODE: Literal["disabled", "shadow", "advisory"] = "shadow"
+    LAYA_ENABLED: bool = False
+    LAYA_TIMEOUT_SECONDS: float = Field(default=1.5, gt=0, le=5, allow_inf_nan=False)
+    LAYA_ADVISORY_ENABLED: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
@@ -52,7 +51,7 @@ class Settings(BaseSettings):
             raise ValueError("ELEVATED_RISK_SPOOF_THRESHOLD must be below HIGH_RISK_SPOOF_THRESHOLD")
         if self.MIN_SPEECH_DURATION_MS > self.AUDIO_WINDOW_SECONDS * 1000:
             raise ValueError("MIN_SPEECH_DURATION_MS must fit inside AUDIO_WINDOW_SECONDS")
-        if self.JEV_MODE == "advisory" and not self.JEV_ADVISORY_ENABLED:
+        if self.LAYA_MODE == "advisory" and not self.LAYA_ADVISORY_ENABLED:
             raise ValueError("Advisory mode requires an explicit shadow-evaluation release gate")
         return self
 

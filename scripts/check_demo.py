@@ -5,7 +5,7 @@ Expiry checks age only rows created by this run; existing records are preserved.
 """
 import argparse
 import asyncio
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, suppress
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -32,7 +32,7 @@ from app.api.v1.actions import complete as complete_action, create_action
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, engine
 from app.models.schemas import ActionRequest, CompleteRequest
-from app.services import jev
+from app.services import laya
 
 BASE = os.getenv("VIGILVOICE_BASE_URL", "http://127.0.0.1:8000/api/v1").rstrip("/")
 WS_BASE = os.getenv("VIGILVOICE_WS_URL", "ws://127.0.0.1:8000/api/v1").rstrip("/")
@@ -152,25 +152,33 @@ async def main(output):
         request(f"/sessions/{owner['session_id']}", stranger, expected=404)
         empty = action(owner)
         assert empty["status"] == "BLOCKED" and not empty["allowed"]
-        hard_jev = next(row for row in request(f"/actions/{empty['action_id']}/audit", owner)["events"]
-                        if row["event_type"] == "JEV_DECISION")
-        assert hard_jev["details"]["fallback_reason"] == "deterministic_hard_gate"
-        assert hard_jev["details"]["final_backend_decision"] == "BLOCKED"
+        hard_laya = next(row for row in request(f"/actions/{empty['action_id']}/audit", owner)["events"]
+                         if row["event_type"] == "LAYA_DECISION")
+        assert hard_laya["details"]["fallback_reason"] == "deterministic_hard_gate"
+        assert hard_laya["details"]["final_backend_decision"] == "BLOCKED"
         passed("Missing evidence blocks; session credentials isolate access")
 
         result = upload(owner, genuine)
         assert result["risk_state"] in ("LOW", "ELEVATED"), result
         first, second = action(owner), action(owner)
         assert first["status"] == "PENDING" and first["otp_required"] and not first["allowed"]
-        jev_event = next(row for row in request(f"/actions/{first['action_id']}/audit", owner)["events"]
-                         if row["event_type"] == "JEV_DECISION")
-        assert settings.JEV_MODE in {"shadow", "disabled"}
-        assert jev_event["details"]["mode"] == settings.JEV_MODE
-        assert jev_event["details"]["fallback_reason"] == (
-            "missing_key" if settings.JEV_MODE == "shadow" else "disabled")
-        assert jev_event["details"]["deterministic_policy_result"] == "PENDING"
-        assert jev_event["details"]["final_backend_decision"] == "PENDING"
-        assert len(jev_event["details"]["state_hash"]) == 64
+        laya_event = next(row for row in request(f"/actions/{first['action_id']}/audit", owner)["events"]
+                          if row["event_type"] == "LAYA_DECISION")
+        assert settings.LAYA_MODE in {"shadow", "disabled"}
+        assert laya_event["details"]["mode"] == settings.LAYA_MODE
+        assert laya_event["details"]["provider"] == "laya"
+        if settings.LAYA_MODE == "disabled":
+            assert laya_event["details"]["fallback_reason"] == "disabled"
+        elif laya_event["details"]["choice"] is None:
+            assert laya_event["details"]["fallback_reason"] in {
+                "not_configured", "timeout", "busy", "circuit_open", "transport_error",
+                "http_error", "authentication", "malformed_response", "oversized_response", "model_unavailable", "evidence_changed"}
+        else:
+            assert laya_event["details"]["choice"] in laya.CHOICES
+            assert laya_event["details"]["fallback_reason"] is None
+        assert laya_event["details"]["deterministic_policy_result"] == "PENDING"
+        assert laya_event["details"]["final_backend_decision"] == "PENDING"
+        assert len(laya_event["details"]["state_hash"]) == 64
         request(f"/actions/{first['action_id']}", stranger, expected=404)
         request(f"/actions/{first['action_id']}/audit", stranger, expected=404)
         request(f"/demo/inbox/{first['action_id']}", owner, expected=403)
@@ -351,9 +359,23 @@ async def main(output):
                 return latest
 
             assert (await feed(genuine_pcm, 2, "LOW"))["risk_state"] in ("LOW", "ELEVATED")
-            pending_live = action(transition)
-            verified_live = action(transition)
-            live_approval = confirm(transition, verified_live, challenge(transition, verified_live))
+            async def keep_live():
+                while True:
+                    await feed(genuine_pcm)
+
+            keepalive = asyncio.create_task(keep_live())
+            try:
+                def prepare_live_actions():
+                    pending = action(transition)
+                    verified = action(transition)
+                    approval = confirm(transition, verified, challenge(transition, verified))
+                    return pending, verified, approval
+
+                pending_live, verified_live, live_approval = await asyncio.to_thread(prepare_live_actions)
+            finally:
+                keepalive.cancel()
+                with suppress(asyncio.CancelledError):
+                    await keepalive
             assert (await feed(synthetic_pcm, 3, "HIGH"))["risk_state"] == "HIGH"
             for item in (pending_live, verified_live):
                 stored = request(f"/actions/{item['action_id']}", transition)
@@ -540,28 +562,29 @@ async def main(output):
         async def recommend_block(state):
             observed_states.append(state)
             return {"mode": "advisory", "state_hash": sha256(json.dumps(state, sort_keys=True).encode()).hexdigest(),
-                    "question_version": jev.QUESTION, "jev_model_version": settings.JEV_MODEL,
+                    "provider": "laya", "question_version": laya.QUESTION,
+                    "laya_model_version": f"{laya.MODEL}@{laya.MODEL_REVISION}",
                     "choice": "BLOCK_RECOMMENDED", "probabilities": None, "confidence": None,
                     "latency_ms": 1, "fallback_reason": None}
 
         advisory_request = ActionRequest(session_id=UUID(advisory_owner["session_id"]),
                                          action_type="fund_transfer",
                                          payload={"amount": 100, "recipient": "Advisory fixture"})
-        with patch.object(settings, "JEV_MODE", "advisory"), patch.object(settings, "JEV_ADVISORY_ENABLED", True), patch.object(jev, "advise", recommend_block):
+        with patch.object(settings, "LAYA_MODE", "advisory"), patch.object(settings, "LAYA_ADVISORY_ENABLED", True), patch.object(laya, "advise", recommend_block):
             async with AsyncSessionLocal() as db:
                 escalated = await create_action(advisory_request, advisory_owner["session_token"], db)
         assert escalated.status == "BLOCKED" and not escalated.allowed and len(observed_states) == 1
         assert "recipient" not in observed_states[0] and "otp" not in str(observed_states[0]).lower()
         advisory_audit = request(f"/actions/{escalated.action_id}/audit", advisory_owner)["events"]
-        decision = next(row for row in advisory_audit if row["event_type"] == "JEV_DECISION")
+        decision = next(row for row in advisory_audit if row["event_type"] == "LAYA_DECISION")
         assert decision["details"]["deterministic_policy_result"] == "PENDING"
         assert decision["details"]["final_backend_decision"] == "BLOCKED"
         assert upload(advisory_owner, synthetic)["risk_state"] == "HIGH"
 
         async def should_not_call(_state):
-            raise AssertionError("Jev was called after a deterministic HIGH gate")
+            raise AssertionError("Laya was called after a deterministic HIGH gate")
 
-        with patch.object(settings, "JEV_MODE", "advisory"), patch.object(settings, "JEV_ADVISORY_ENABLED", True), patch.object(jev, "advise", should_not_call):
+        with patch.object(settings, "LAYA_MODE", "advisory"), patch.object(settings, "LAYA_ADVISORY_ENABLED", True), patch.object(laya, "advise", should_not_call):
             async with AsyncSessionLocal() as db:
                 hard_block = await create_action(advisory_request, advisory_owner["session_token"], db)
         assert hard_block.status == "BLOCKED" and hard_block.risk_state.value == "HIGH"
