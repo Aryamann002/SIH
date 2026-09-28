@@ -120,6 +120,12 @@ def final_action_status(deterministic, advice):
     return "PENDING"
 
 
+def _request_finished(future):
+    if not future.cancelled():
+        future.exception()  # Consume late transport errors without logging private details.
+    _slot.release()  # Retain admission until the worker actually finishes.
+
+
 async def advise(state):
     global _failures, _open_until
     mode = settings.LAYA_MODE
@@ -148,7 +154,7 @@ async def advise(state):
         future = asyncio.get_running_loop().run_in_executor(
             _executor, _request, state, settings.LAYA_TIMEOUT_SECONDS)
         submitted = True
-        future.add_done_callback(lambda _: _slot.release())
+        future.add_done_callback(_request_finished)
         payload = await asyncio.wait_for(asyncio.shield(future), timeout=settings.LAYA_TIMEOUT_SECONDS)
         answer = _validate(payload)
         record.update(choice=answer.choice, probabilities=answer.probabilities,

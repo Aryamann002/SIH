@@ -1,9 +1,52 @@
 import asyncio
+import gc
 import json
+import threading
 import time
 
 from app.core.config import settings
 from app.services import laya
+
+
+def test_late_timeout_exception_is_retrieved_and_worker_slot_recovers(monkeypatch):
+    release_worker = threading.Event()
+
+    def late_failure(*_):
+        assert release_worker.wait(2)
+        raise TimeoutError("private late transport detail")
+
+    async def checks():
+        loop = asyncio.get_running_loop()
+        errors = []
+        loop.set_exception_handler(lambda _, context: errors.append(context))
+        monkeypatch.setattr(laya, "_slot", asyncio.Lock())
+        monkeypatch.setattr(laya, "_failures", 0)
+        monkeypatch.setattr(laya, "_open_until", 0.0)
+        monkeypatch.setattr(settings, "LAYA_MODE", "shadow")
+        monkeypatch.setattr(settings, "LAYA_ENABLED", True)
+        monkeypatch.setattr(settings, "LAYA_TIMEOUT_SECONDS", .01)
+        monkeypatch.setattr(laya, "_request", late_failure)
+        try:
+            result = await laya.advise({"detector_score_bucket": "ELEVATED"})
+            assert result["fallback_reason"] == "timeout" and result["choice"] is None
+            assert laya.final_action_status("PENDING", result) == "PENDING"
+            assert laya._slot.locked()  # Timeout must not admit another worker.
+            assert (await laya.advise({}))["fallback_reason"] == "busy"
+        finally:
+            release_worker.set()
+        async with asyncio.timeout(1):
+            while laya._slot.locked():
+                await asyncio.sleep(.001)
+        gc.collect()
+        await asyncio.sleep(0)
+        assert errors == [], errors
+        monkeypatch.setattr(laya, "_request", lambda *_: {
+            "model": "laya-rl-agent", "routing": {"model": "english"},
+            "answers": {laya.QUESTION: {"type": "choice", "choice": "STANDARD_VERIFICATION"}},
+        })
+        assert (await laya.advise({}))["choice"] == "STANDARD_VERIFICATION"
+
+    asyncio.run(checks())
 
 
 def test_laya_modes_validation_timeout_and_redaction(monkeypatch):

@@ -3,3 +3,5 @@
 *.wav
 extracted-*/
 datasets/
+laya-timeout-*/
+laya-timeout-*.json
